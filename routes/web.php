@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Character;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,6 +19,18 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::prefix('character')->name('character.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/{character}', function (Character $character) {
+        return Inertia::render('Character', compact('character'));
+    })->name('show');
+
+    Route::put('/{character}', [CharacterController::class, 'update'])->name('update');
+
+    Route::put('/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('skill.update');
+});
+
+Route::put('/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

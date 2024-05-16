@@ -17,4 +17,11 @@ export default defineConfig({
             },
         }),
     ],
+    server: {
+        https: {
+            key: "/Users/sebastian/.config/valet/Certificates/cthulhu.test.key",
+            cert: "/Users/sebastian/.config/valet/Certificates/cthulhu.test.crt"
+        },
+        host: 'cthulhu.test',
+    },
 });
