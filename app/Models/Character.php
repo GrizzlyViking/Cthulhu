@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Characteristic as CharEnum;
+use App\Misc\CharacterCreation;
 use App\Misc\Roll;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $strength
@@ -29,6 +31,7 @@ use Illuminate\Support\Arr;
  * @property int $dodge
  * @property int $build
  * @property string $damage_bonus
+ * @property string $avatar
  * @property boolean $temporary_insanity
  * @property boolean $indefinite_insanity
  * @property boolean $major_wound
@@ -38,6 +41,17 @@ use Illuminate\Support\Arr;
 class Character extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'user_id',
+        'occupation',
+        'age',
+        'gender',
+        'residence',
+        'birthplace',
+        'avatar',
+    ];
 
     protected $with = ['skills', 'player', 'weapons'];
 
@@ -49,25 +63,20 @@ class Character extends Model
     public function addAllSkills(): self
     {
         Skill::all()
-            ->reject(fn (Skill $skill) => $this->whereRelation('skills', 'slug', '=', $skill->slug)->exists())
+            ->reject(fn(Skill $skill) => $this->whereRelation('skills', 'slug', '=', $skill->slug)->exists())
             ->each(function (Skill $skill) {
                 $this->skills()->attach($skill, [
-                'order' => $skill->order_by,
-                'value' => $skill->starting_value
-            ]);
-        });
+                    'order' => $skill->order_by,
+                    'value' => $skill->starting_value
+                ]);
+            });
 
         return $this;
     }
 
-    public function characteristics(): HasMany
-    {
-        return $this->hasMany(Characteristic::class);
-    }
-
     public function skills(): BelongsToMany
     {
-        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('order_by');
+        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('slug');
     }
 
     public function player(): BelongsTo
@@ -78,5 +87,10 @@ class Character extends Model
     public function weapons(): MorphToMany
     {
         return $this->morphedByMany(Weapon::class, 'equipable');
+    }
+
+    public function getDamageBonus(): string
+    {
+        return CharacterCreation::damageBonus($this);
     }
 }

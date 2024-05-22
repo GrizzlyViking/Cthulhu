@@ -15,7 +15,7 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
-        }),
+        })
     ],
     server: {
         https: {

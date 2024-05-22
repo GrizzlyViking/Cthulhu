@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\Character;
+use App\Models\User;
+use App\Models\Weapon;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'characters' => Character::all(),
+                'equipment' => Weapon::all(),
+                'users' => User::all(),
             ],
         ];
     }

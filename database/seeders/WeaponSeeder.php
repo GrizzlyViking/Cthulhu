@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Weapon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class WeaponSeeder extends Seeder
 {
@@ -232,7 +232,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".22 Short Automatic",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D6",
                 "base_range" => "10 yards",
                 "uses_per_round" => "1 (3)",
@@ -244,7 +244,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".25 Derringer (1B)",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D6",
                 "base_range" => "3 yards",
                 "uses_per_round" => "1",
@@ -256,7 +256,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".32 or 7.65mm Revolver",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D8",
                 "base_range" => "15 yards",
                 "uses_per_round" => "1 (3)",
@@ -268,7 +268,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".32 or 7.65mm Automatic",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D8",
                 "base_range" => "15 yards",
                 "uses_per_round" => "1 (3)",
@@ -280,7 +280,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "Model P08 Luger",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D10",
                 "base_range" => "15 yards",
                 "uses_per_round" => "1 (3)",
@@ -292,7 +292,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".45 Revolver",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D10+2",
                 "base_range" => "15 yards",
                 "uses_per_round" => "1 (3)",
@@ -304,7 +304,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => ".45 Automatic",
-                "skill" => "Firearms (handgun)",
+                "skill" => "Firearms (Handgun)",
                 "damage" => "1D10+2",
                 "base_range" => "15 yards",
                 "uses_per_round" => "1 (3)",
@@ -316,7 +316,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "20-gauge Shotgun (2B)",
-                "skill" => "Firearms (shotgun)",
+                "skill" => "Firearms (Shotgun)",
                 "damage" => "2D6/1D6/1D3",
                 "base_range" => "10/20/50 yards",
                 "uses_per_round" => "1 or 2",
@@ -328,7 +328,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "16-gauge Shotgun (2B)",
-                "skill" => "Firearms (shotgun)",
+                "skill" => "Firearms (Shotgun)",
                 "damage" => "2D6+2/1D6+1/1D4",
                 "base_range" => "10/20/50 yards",
                 "uses_per_round" => "1 or 2",
@@ -340,7 +340,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "12-gauge Shotgun (2B)",
-                "skill" => "Firearms (shotgun)",
+                "skill" => "Firearms (Shotgun)",
                 "damage" => "4D6/2D6/1D6",
                 "base_range" => "10/20/50 yards",
                 "uses_per_round" => "1 or 2",
@@ -352,7 +352,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "12-gauge Shotgun (semi-auto)",
-                "skill" => "Firearms (shotgun)",
+                "skill" => "Firearms (Shotgun)",
                 "damage" => "4D6/2D6/1D6",
                 "base_range" => "10/20/50 yards",
                 "uses_per_round" => "1 (2)",
@@ -364,7 +364,7 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "12-gauge Shotgun (2B sawed off)",
-                "skill" => "Firearms (shotgun)",
+                "skill" => "Firearms (Shotgun)",
                 "damage" => "4D6/1D6",
                 "base_range" => "5/10 yards",
                 "uses_per_round" => "1 or 2",
@@ -400,8 +400,8 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "Browning Auto",
-                "skill" => "Rifle M1918",
-                "damage" => "Firearms (MG) 2D6+4",
+                "skill" => "Firearms (MG)",
+                "damage" => "2D6+4",
                 "base_range" => "90 yards",
                 "uses_per_round" => "1 (2) or full",
                 "bullets_in_mag" => "auto",
@@ -448,18 +448,21 @@ class WeaponSeeder extends Seeder
             ],
             [
                 "name" => "Vickers .303",
-                "skill" => "Machine Gun",
-                "damage" => "Firearms (MG)",
-                "base_range" => "2D6+4",
-                "uses_per_round" => "110 yards",
-                "bullets_in_mag" => "Full auto",
-                "cost" => "250",
-                "malfunction" => "N/A",
+                "skill" => "Firearms (MG)",
+                "damage" => "2D6+4",
+                "base_range" => "110 yards",
+                "uses_per_round" => "Full auto",
+                "bullets_in_mag" => "250",
+                "cost" => "$3,000",
+                "malfunction" => "96",
                 "created_at" => "2024-05-05T08:17:30.000000Z",
                 "updated_at" => "2024-05-05T08:17:30.000000Z"
             ]
         ]);
 
-        $weapons->each(fn ($w) => Weapon::create($w));
+        $weapons->each(function($w) {
+            $weapon = Weapon::create($w);
+            $weapon->update(['skill' => Str::slug($w["skill"])]);
+        });
     }
 }

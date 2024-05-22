@@ -2,9 +2,14 @@
 
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SkillController;
 use App\Models\Character;
+use App\Models\Skill;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -25,10 +30,35 @@ Route::prefix('character')->name('character.')->middleware(['auth', 'verified'])
         return Inertia::render('Character', compact('character'));
     })->name('show');
 
-    Route::put('/{character}', [CharacterController::class, 'update'])->name('update');
+    Route::get('{character}/raw', function (Character $character) {
+        return $character;
+    })->name('raw');
+
+    Route::delete('{character}', function (Character $character) {
+        $character->delete();
+    })->name('delete');
+
+    Route::post('/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
 
     Route::put('/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('skill.update');
+    Route::put('/{character}/{skill}/{pivot}/update', [CharacterController::class, 'updatePivot'])->name('pivot.update');
+    Route::post('/{character}/weapon/add', [CharacterController::class, 'addWeapon'])->name('weapon.add');
 });
+
+Route::get('/create', function () {
+    return Inertia::render('Character/Create');
+})->middleware(['auth', 'verified'])->name('create');
+
+Route::post('/create/step/first', [CharacterController::class, 'firstStep'])->middleware(['auth', 'verified'])->name('create.step.first');
+
+Route::prefix('skills')->name('skill.')->middleware(['auth', 'verified'])->group(function () {
+    Route::post('/', [SkillController::class, 'store'])->name('store');
+    Route::get('/{character}/{skill}/', [SkillController::class, 'aptitude'])->name('aptitude');
+});
+
+Route::get('rename/{character}', [CharacterController::class, 'renameCharacter'])->name('rename.character');
+Route::get('increment/{character}/{skill}', [CharacterController::class, 'incrementExperience'])->name('experience.increment');
+Route::get('reset/{character}/{skill}', [CharacterController::class, 'resetExperience'])->name('experience.reset');
 
 Route::put('/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
 

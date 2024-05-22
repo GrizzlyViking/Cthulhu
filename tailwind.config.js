@@ -12,6 +12,14 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                'cthulhu-green': {
+                     50: '#FBFADA',
+                    200: '#ADBC9F',
+                    400: '#436850',
+                    800: '#12372A'
+                }
+            },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },

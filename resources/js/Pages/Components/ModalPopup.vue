@@ -39,18 +39,20 @@
                             </div>
                             <div class="mt-4 flex justify-between gap-2">
                                     <button
+                                        v-if="$slots.response1().length"
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="emit('response1')"
                                     >
-                                        <slot name="response1">Yes</slot>
+                                        <slot name="response1"></slot>
                                     </button>
                                     <button
+                                        v-if="$slots.response2().length"
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="emit('response2')"
                                     >
-                                        <slot name="response2">No</slot>
+                                        <slot name="response2"></slot>
                                     </button>
                             </div>
                         </DialogPanel>
@@ -69,6 +71,7 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
+import {useSlots} from "vue";
 
 
 function closeModal() {
@@ -86,4 +89,6 @@ const emit = defineEmits([
     'response1',
     'response2'
 ]);
+
+const slots = useSlots()
 </script>
