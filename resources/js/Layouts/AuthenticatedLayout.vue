@@ -6,6 +6,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import Character from "@/Pages/Character.vue";
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -31,6 +32,11 @@ const showingNavigationDropdown = ref(false);
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
+                                </NavLink>
+                            </div>
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('create')" :active="route().current('create')">
+                                    Create new Character
                                 </NavLink>
                             </div>
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
@@ -161,6 +167,8 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="mt-3 space-y-1">
+                            <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('create')"> Create Character </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                                 Log Out
@@ -172,7 +180,7 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Heading -->
             <header class="bg-white shadow" v-if="$slots.header">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
                     <slot name="header" />
                 </div>
             </header>

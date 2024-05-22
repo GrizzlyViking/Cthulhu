@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Characteristic as CharEnum;
+use App\Misc\CharacterCreation;
 use App\Misc\Roll;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -60,11 +61,6 @@ class Character extends Model
         return $this;
     }
 
-    public function characteristics(): HasMany
-    {
-        return $this->hasMany(Characteristic::class);
-    }
-
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('order_by');
@@ -78,5 +74,10 @@ class Character extends Model
     public function weapons(): MorphToMany
     {
         return $this->morphedByMany(Weapon::class, 'equipable');
+    }
+
+    public function getDamageBonus(): string
+    {
+        return CharacterCreation::damageBonus($this);
     }
 }

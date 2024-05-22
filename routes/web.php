@@ -25,10 +25,22 @@ Route::prefix('character')->name('character.')->middleware(['auth', 'verified'])
         return Inertia::render('Character', compact('character'));
     })->name('show');
 
-    Route::put('/{character}', [CharacterController::class, 'update'])->name('update');
+    Route::get('{character}/raw', function (Character $character) {
+        return $character;
+    })->name('raw');
 
     Route::put('/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('skill.update');
+    Route::put('/{character}/{skill}/{pivot}/update', [CharacterController::class, 'updatePivot'])->name('pivot.update');
+    Route::post('/{character}/weapon/add', [CharacterController::class, 'addWeapon'])->name('weapon.add');
 });
+
+Route::get('/create', function () {
+    return Inertia::render('Character/Create');
+})->name('create');
+
+Route::get('rename/{character}', [CharacterController::class, 'renameCharacter'])->name('rename.character');
+Route::get('increment/{character}/{skill}', [CharacterController::class, 'incrementExperience'])->name('experience.increment');
+Route::get('reset/{character}/{skill}', [CharacterController::class, 'resetExperience'])->name('experience.reset');
 
 Route::put('/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
 
