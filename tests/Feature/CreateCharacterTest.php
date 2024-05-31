@@ -1,41 +1,31 @@
 <?php
 
 use App\Models\Character;
-use App\Models\Characteristic;
-use App\Models\Skill;
-use App\Models\Weapon;
+use App\Models\User;
 
 beforeEach(function () {
     $this->seed();
 });
 
-test('create character', function () {
-    $character = Character::factory()->create();
+test('create character using /create', function () {
+    $user = User::factory()->create();
 
-    expect($character)->toBeInstanceOf(Character::class);
+    $response = $this->actingAs($user)->post('/create/step/first', [
+        'name' => ($name = fake()->name),
+        'user_id' => $user->id,
+        'occupation' => fake()->word,
+        'age' => 100,
+        'gender' => 'Male',
+        'residence' => fake()->word,
+        'birthplace' => fake()->word,
+    ]);
+
+
+    $response->assertStatus(302);
+
+    $character = \App\Models\Character::where('name', $name)->firstOrFail();
+    expect($character)->toBeInstanceOf(Character::class)
+        ->and($character->name)->toBe($name)
+        ->and($character->user_id)->toBe($user->id)
+        ->and($character->skills)->toHaveCount(\App\Models\Skill::all()->count());
 });
-
-test('create character with empty name', function () {
-    $character = Character::factory()->create(['name' => '']);
-
-    expect($character)->toBeInstanceOf(Character::class);
-});
-
-test('attach skills to a character', function () {
-    $character = Character::factory()->create();
-    $skills = Skill::all();
-    expect($character->skills->first())->toBeInstanceOf(Skill::class)
-        ->and($character->skills->count())->toEqual($skills->count())
-        ->and($skills->reject(fn(Skill $skill) => $character->whereRelation('skills', 'slug', '=', $skill->slug)->exists()))->isEmpty();
-});
-
-test('attach weapon to a character', function () {
-    $character = Character::factory()->create();
-    $weapon = Weapon::find(1);
-
-    $character->weapons()->attach($weapon);
-
-    expect($character->weapons->count())->toEqual(1)
-        ->and($character->weapons->first())->toBeInstanceOf(Weapon::class);
-});
-

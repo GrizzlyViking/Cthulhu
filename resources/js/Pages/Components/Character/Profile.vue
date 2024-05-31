@@ -1,8 +1,10 @@
 <script setup>
 import {useAdjustAttribute} from "@/Pages/Composables/useAdjustAttribute.js";
 import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import {UserCircleIcon} from "@heroicons/vue/24/solid/index.js";
+import {router} from "@inertiajs/vue3";
+
 const {updateAttribute} = useAdjustAttribute('character')
 
 const prop = defineProps({character: Object, editable: Boolean});
@@ -80,10 +82,11 @@ const avatarImg = computed(() => {
 })
 
 const renameCharacter = (event) => {
-    axios.get(route('rename.character', {
-        character: prop.character.slug,
+    router.get(route('rename.character', {
+        character: prop.character.slug
+    }), {
         value: event.target.value
-    }));
+    });
 }
 const handleFileUpload = async (event) => {
     const formData = new FormData();

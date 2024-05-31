@@ -3,7 +3,7 @@ import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
 import {debounce} from "lodash";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 import {ref} from "vue";
-import {useForm} from "@inertiajs/vue3";
+import {useForm, router} from "@inertiajs/vue3";
 
 const prop = defineProps({character: Object, editable: Boolean});
 
@@ -16,50 +16,48 @@ const openModal = () => {
 };
 
 let newSkill = useForm({
+    character_id: prop.character.id,
     display_name: '',
     starting_value: 0
 })
 
 const addSkill = () => {
-    axios.post(route('skill.store', {
-        character_id: prop.character.id,
-        display_name: newSkill.display_name,
-        starting_value: newSkill.starting_value,
-    })).then((response) => {
-        reloadSkills()
-        closeModal()
-    });
+    newSkill.post('/skills', {
+        preserveScroll: true,
+        onSuccess: () => {
+            reloadSkills()
+            closeModal()
+        },
+    })
 }
 
 let reloadSkills = () => {
     axios.get(route('character.raw', {
         character: prop.character.slug,
-    })).then((response) => {
-        prop.character.skills = response.data.skills;
-    });
+    })).then((response) => prop.character.skills = response.data.skills)
 }
 
 let adjustSkill = debounce((skill, event) => {
     axios.put(route('character.skill.update', {
         character: prop.character.slug,
-        skill: skill.slug,
+        skill: skill.slug
+    }), {
         value: Number(event.target.value)
-    }));
+    });
 }, 600);
 
 let incrementExperience = (skill) => {
     axios.get(route('experience.increment', {
         character: prop.character.slug,
         skill: skill.slug
-    }));
-    skill.pivot.experience = skill.pivot.experience + 1;
+    })).then(() => skill.pivot.experience = skill.pivot.experience + 1);
 }
+
 let resetExperience = (skill) => {
     axios.get(route('experience.reset', {
         character: prop.character.slug,
         skill: skill.slug
-    }));
-    skill.pivot.experience = 0;
+    })).then(() => skill.pivot.experience = 0);
 }
 </script>
 
@@ -112,18 +110,22 @@ let resetExperience = (skill) => {
         <template #title>Add skill</template>
         <template #default>
             <form>
-            <div>
-                <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display name</label>
-                <div class="mt-2">
-                    <input type="text" v-model="newSkill.display_name" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                <div>
+                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display
+                        name</label>
+                    <div class="mt-2">
+                        <input type="text" v-model="newSkill.display_name"
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting value</label>
-                <div class="mt-2">
-                    <input type="number" v-model="newSkill.starting_value" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                <div>
+                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting
+                        value</label>
+                    <div class="mt-2">
+                        <input type="number" v-model="newSkill.starting_value"
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                    </div>
                 </div>
-            </div>
             </form>
         </template>
         <template #response1>Cancel</template>

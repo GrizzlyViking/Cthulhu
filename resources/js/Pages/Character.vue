@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head} from '@inertiajs/vue3';
+import {Head, router} from '@inertiajs/vue3';
 import Skills from "@/Pages/Components/Character/Skills.vue";
 import Weapons from "@/Pages/Components/Character/Weapons.vue";
 import Characteristics from "@/Pages/Components/Character/Characteristics.vue";
@@ -12,12 +12,16 @@ import {Switch} from "@headlessui/vue";
 const prop = defineProps({character: Object});
 const editable = ref(false);
 
-const deleteCharacter = (character) => {
+const deleteCharacter = () => {
     if (confirm("Are you sure you want to delete?")) {
-        axios.delete(route('character.delete', {
+        router.delete(route('character.delete', {
             character: prop.character.slug,
         }))
     }
+}
+
+const appendAllMissingSkills = () => {
+    router.get(route('skill.missing.append', {character: prop.character.slug}))
 }
 </script>
 
@@ -83,9 +87,13 @@ const deleteCharacter = (character) => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
                     <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-2 gap-8">
-                    <button type="button" @click="deleteCharacter(prop.character)"
+                    <button type="button" @click="deleteCharacter"
                             class="rounded-md bg-cthulhu-green-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50">
                         Delete {{ prop.character.name }}
+                    </button>
+                    <button type="button" @click="appendAllMissingSkills"
+                            class="rounded-md bg-cthulhu-green-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50">
+                        Append missing skills
                     </button>
                     </div>
                 </div>

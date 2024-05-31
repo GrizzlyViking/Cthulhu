@@ -9,6 +9,13 @@ class Skill extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'slug',
+        'display_name',
+        'description',
+        'starting_value',
+    ];
+
     public function getRouteKeyName(): string
     {
         return 'slug';

@@ -41,8 +41,10 @@ let weaponSkill = computed(() => {
    return (slug) => {
        let answer = prop.character.skills.filter(skill => skill.slug === slug)
        let rawObject = JSON.parse(JSON.stringify(answer));
-       return rawObject[0];
-
+       if(rawObject[0] !== undefined) {
+           return rawObject[0].pivot;
+       }
+       return {}
    }
 });
 </script>
@@ -95,10 +97,10 @@ let weaponSkill = computed(() => {
                                 {{ weapon.name }}
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.skills.display_name }}
+                                <span v-if="weapon.skills">{{ weapon.skills.display_name }}</span>
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <regular-half-fifth v-model="weaponSkill(weapon.skill).pivot.value"></regular-half-fifth>
+                                <regular-half-fifth v-model="weaponSkill(weapon.skill).value"></regular-half-fifth>
                             </td>
                             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {{ weapon.damage }}

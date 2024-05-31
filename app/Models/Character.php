@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -63,7 +64,6 @@ class Character extends Model
     public function addAllSkills(): self
     {
         Skill::all()
-            ->reject(fn(Skill $skill) => $this->whereRelation('skills', 'slug', '=', $skill->slug)->exists())
             ->each(function (Skill $skill) {
                 $this->skills()->attach($skill, [
                     'order' => $skill->order_by,
@@ -72,6 +72,20 @@ class Character extends Model
             });
 
         return $this;
+    }
+
+    public function appendSkills(): Collection
+    {
+        return Skill::all()
+            ->reject(function (Skill $skill) {
+                return $this->skills->contains($skill);
+            })
+            ->each(function (Skill $skill) {
+            $this->skills()->attach($skill, [
+                'order' => $skill->order_by,
+                'value' => $skill->starting_value
+            ]);
+        });
     }
 
     public function skills(): BelongsToMany

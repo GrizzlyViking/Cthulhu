@@ -7,11 +7,11 @@ use App\Models\Skill;
 use App\Models\Weapon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class CharacterController extends Controller
 {
@@ -20,7 +20,7 @@ class CharacterController extends Controller
         return Inertia::render('Character/Create');
     }
 
-    public function firstStep(Request $request): Response|\Illuminate\Http\Response
+    public function firstStep(Request $request): RedirectResponse|Response
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:characters',
@@ -40,25 +40,23 @@ class CharacterController extends Controller
 
         $character = Character::make($validated);
         $character->slug = Str::slug($validated['name']);
-
+        $character->save();
+        $character->refresh();
         $character->addAllSkills();
 
-        $character->save();
-
-        return Inertia::render('Character', ['character' => $character]);
+        if ($character->skills->isNotEmpty()) {
+            return to_route('character.show', [$character->slug]);
+        } else {
+            return response($character->toJson(), 400);
+        }
     }
 
-    function updateAttribute(Character $character, Request $request): \Illuminate\Http\Response|RedirectResponse
+    function updateAttribute(Character $character, Request $request): \Inertia\Response
     {
         $validator = Validator::make($request->all(), [
             'attribute' => 'required',
             'value' => 'required',
         ]);
-
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
-
 
         $validated = $validator->safe()->only(['character_id', 'attribute', 'value']);
 
@@ -71,8 +69,9 @@ class CharacterController extends Controller
         }
 
         $character->save();
+        $character->refresh();
 
-        return \response('OK', 200);
+        return Inertia::render('Character', ['character' => $character]);
     }
 
     function updateSkill(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
@@ -126,8 +125,9 @@ class CharacterController extends Controller
         $character->setAttribute('slug', Str::slug($request->get('value')));
 
         $character->save();
+        $character->refresh();
 
-        return Inertia::location(route('character.show', ['character' => $character->slug]));
+        return to_route('character.show', [$character->slug]);
     }
 
     public function incrementExperience(Character $character, Skill $skill)

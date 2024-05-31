@@ -36,6 +36,7 @@ Route::prefix('character')->name('character.')->middleware(['auth', 'verified'])
 
     Route::delete('{character}', function (Character $character) {
         $character->delete();
+        return to_route('dashboard')->with('success', 'Character deleted.');
     })->name('delete');
 
     Route::post('/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
@@ -55,6 +56,7 @@ Route::prefix('skills')->name('skill.')->middleware(['auth', 'verified'])->group
     Route::post('/', [SkillController::class, 'store'])->name('store');
     Route::get('/{character}/{skill}/', [SkillController::class, 'aptitude'])->name('aptitude');
 });
+Route::get('/append/skills/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
 
 Route::get('rename/{character}', [CharacterController::class, 'renameCharacter'])->name('rename.character');
 Route::get('increment/{character}/{skill}', [CharacterController::class, 'incrementExperience'])->name('experience.increment');

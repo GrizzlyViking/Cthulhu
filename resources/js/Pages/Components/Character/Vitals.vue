@@ -2,6 +2,8 @@
 import {debounce} from "lodash";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 import {ref} from "vue";
+import {router} from "@inertiajs/vue3";
+import axios from "axios";
 
 const prop = defineProps({
     character: Object,
@@ -14,29 +16,35 @@ const isSanityModalOpen = ref(false);
 let adjustHitPoints = debounce((event) => {
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'hit_points',
         value: event.target.value
-    }));
-    if (Math.floor(prop.character.hit_points / 2) > Number(event.target.value)) {
-        openHitPointsModal();
-    }
-    prop.character.hit_points = event.target.value;
+    }).then(
+        (response) => {
+            if (Math.floor(prop.character.hit_points / 2) > Number(event.target.value)) {
+                openHitPointsModal();
+            }
+            prop.character.hit_points = event.target.value;
+        }
+    );
 }, 600)
 
 let adjustLuck = debounce(() => {
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'luck',
         value: prop.character.luck
-    }));
+    });
 }, 600);
 
 let adjustMagicPoints = debounce(() => {
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'magic_points',
         value: prop.character.magic_points
-    }));
+    });
 }, 600);
 
 let adjustSanity = debounce((event) => {
@@ -45,31 +53,34 @@ let adjustSanity = debounce((event) => {
     }
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'sanity',
         value: event.target.value
-    }));
-    prop.character.sanity = event.target.value;
+    }).then(() => {prop.character.sanity = event.target.value});
 }, 600)
 
 let unconscious = (setValue) => {
     prop.character.unconscious = setValue;
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'unconscious',
         value: prop.character.unconscious
-    }));
-    closeModal()
+    }).then(() => {closeModal()});
+
 }
 
 let temporaryInsanity = (setValue) => {
-    prop.character.temporary_insanity = setValue;
     axios.put(route('attribute.update', {
         character: prop.character.slug,
+    }), {
         attribute: 'temporary_insanity',
         value: setValue
-    }));
-    console.log('temporary_insanity');
-    closeModal();
+    }).then(() => {
+        prop.character.temporary_insanity = setValue;
+        closeModal();
+    });
+
 }
 
 const openHitPointsModal = () => {

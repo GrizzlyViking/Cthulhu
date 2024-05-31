@@ -13,15 +13,11 @@ class SkillController extends Controller
 {
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'display_name' => 'required|string|max:255',
+        Validator::make($request->all(), [
+            'display_name' => 'required|string|max:255|unique:skills',
             'starting_value' => 'required|integer',
             'character_id' => 'integer|exists:characters,id',
         ]);
-
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
 
         $skill = new Skill();
         $skill->display_name = $request->display_name;
@@ -37,12 +33,20 @@ class SkillController extends Controller
 
         $character = Character::find($request->character_id);
         $character->skills()->attach($skill->id);
+        $character->refresh();
 
-        return response('ok', 200);
+        return to_route('character.show', $character);
     }
 
     public function aptitude(Character $character, Skill $skill)
     {
         return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();
+    }
+
+    public function appendAllMissingSkills(Character $character)
+    {
+        $character->appendSkills();
+
+        return to_route('character.show', $character);
     }
 }
