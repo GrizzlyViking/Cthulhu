@@ -2,18 +2,13 @@
 
 namespace App\Models;
 
-use App\Enums\Characteristic as CharEnum;
 use App\Misc\CharacterCreation;
-use App\Misc\Roll;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $strength
@@ -100,7 +95,7 @@ class Character extends Model
 
     public function weapons(): MorphToMany
     {
-        return $this->morphedByMany(Weapon::class, 'equipable');
+        return $this->morphedByMany(Weapon::class, 'equipable')->withPivot('id', 'ammo');
     }
 
     public function getDamageBonus(): string

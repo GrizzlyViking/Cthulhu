@@ -106,7 +106,7 @@ const handleFileUpload = async (event) => {
 </script>
 
 <template>
-    <div class="justify-between">
+    <div class="jsm:flex-none ustify-between">
         <div class="flex justify-between">
             <span class="text-cthulhu-green-800">Name:</span>
             <span class="w-full">

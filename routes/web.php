@@ -51,6 +51,8 @@ Route::get('/create', function () {
 })->middleware(['auth', 'verified'])->name('create');
 
 Route::post('/create/step/first', [CharacterController::class, 'firstStep'])->middleware(['auth', 'verified'])->name('create.step.first');
+Route::post('/weapon/reload', [CharacterController::class, 'reloadWeapon'])->name('reload.weapon');
+Route::post('/weapon/fire', [CharacterController::class, 'fireWeapon'])->name('fire.weapon');
 
 Route::prefix('skills')->name('skill.')->middleware(['auth', 'verified'])->group(function () {
     Route::post('/', [SkillController::class, 'store'])->name('store');

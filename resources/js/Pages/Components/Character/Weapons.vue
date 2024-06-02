@@ -4,7 +4,8 @@ import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 import {computed, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
-import Character from "@/Pages/Character.vue";
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import { EllipsisVerticalIcon } from '@heroicons/vue/20/solid'
 
 const prop = defineProps({character: Object, editable: Boolean});
 
@@ -24,17 +25,34 @@ let addWeapon = (weapon_id) => {
         weapon_id: weapon_id,
     })).then((response) => {
         console.log(response.data)
-        reloadWeapons()
+        refreshWeapons()
     });
     closeModal()
 }
 
-let reloadWeapons = () => {
+let refreshWeapons = () => {
     axios.get(route('character.raw', {
         character: prop.character.slug,
     })).then((response) => {
         prop.character.weapons = response.data.weapons;
     });
+}
+
+const reload = (weapon) => {
+    axios.post(route('reload.weapon'), {
+        pivot_id: weapon.pivot.id,
+        ammo: weapon.bullets_in_mag,
+    }).then (() => {
+        weapon.pivot.ammo = weapon.bullets_in_mag
+    })
+}
+
+const fireTheWeapon = (weapon) => {
+    axios.post(route('fire.weapon'), {
+        pivot_id: weapon.pivot.id,
+    }).then (() => {
+        weapon.pivot.ammo = weapon.pivot.ammo-1
+    })
 }
 
 let weaponSkill = computed(() => {
@@ -50,86 +68,60 @@ let weaponSkill = computed(() => {
 </script>
 
 <template>
-    <div class="px-4 sm:px-6 lg:px-8">
-        <div class="mt-8 flow-root">
-            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead>
-                        <tr>
-                            <th scope="col"
-                                class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                                Weapon
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Skill
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Regular
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Damage
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Range
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Attacks
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Bullets in mag
-                            </th>
-                            <th scope="col"
-                                class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Malfunction
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                        <tr v-for="weapon in prop.character.weapons" :key="weapon.id">
-                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                                {{ weapon.name }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <span v-if="weapon.skills">{{ weapon.skills.display_name }}</span>
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <regular-half-fifth v-model="weaponSkill(weapon.skill).value"></regular-half-fifth>
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.damage }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.base_range }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.uses_per_round }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.bullets_in_mag }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {{ weapon.malfunction }}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+    <ul role="list" class="ml-2 divide-y divide-gray-100">
+        <li v-for="weapon in prop.character.weapons" :key="weapon.slug" class="flex justify-between gap-x-6 py-5">
+            <div class="flex min-w-0 gap-x-4">
+                <div class="min-w-0 flex-auto">
+                    <p class="text-sm font-semibold leading-6 text-gray-900 gap-2">
+                        <span class="hover:underline">{{ weapon.name }}</span>
+                        <span v-if="!isNaN(weapon.bullets_in_mag)"
+                              @click="fireTheWeapon(weapon)"
+                              class="pl-4 hover:underline"
+                        >Ammo: {{ weapon.pivot.ammo }}</span>
+                    </p>
+                    <p class="gap-3 mt-1 flex text-xs leading-5 text-gray-500">
+                        <span>{{ weaponSkill(weapon.skill).value }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 2) }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 5) }}</span>
+                        <span class="truncate hover:underline">{{ weapon.damage }}</span>
+                        <span class="truncate hover:underline">{{ weapon.base_range }}</span>
+                    </p>
                 </div>
             </div>
-        </div>
-        <div class="flex justify-end p-6 w-full">
-            <button type="button"
-                    @click="openModal"
-                    class="block rounded-md bg-cthulhu-green-400 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Add Weapon
-            </button>
-        </div>
+            <div class="flex shrink-0 items-center gap-x-6">
+                <div class="hidden sm:flex sm:flex-col sm:items-end">
+                    <p class="text-sm leading-6 text-gray-900">{{ weapon.base_range }}</p>
+                    <div class="mt-1 flex items-center gap-x-1.5">
+                        <p class="text-xs leading-5 text-gray-500">{{ weapon.uses_per_round }}</p>
+                    </div>
+                </div>
+                <Menu as="div" class="relative flex-none">
+                    <MenuButton class="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
+                        <span class="sr-only">Open options</span>
+                        <EllipsisVerticalIcon class="h-5 w-5" aria-hidden="true" />
+                    </MenuButton>
+                    <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems class="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                            <MenuItem v-slot="{ active }" v-if="!isNaN(weapon.bullets_in_mag)">
+                                <a @click="reload(weapon)" :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']"
+                                >Reload<span class="sr-only"></span></a
+                                >
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a href="#" :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']"
+                                >Message<span class="sr-only">, {{ weapon.name }}</span></a
+                                >
+                            </MenuItem>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+            </div>
+        </li>
+    </ul>
+    <div class="flex justify-end p-6 w-full">
+        <button type="button"
+                @click="openModal"
+                class="block rounded-md bg-cthulhu-green-400 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            Add Weapon
+        </button>
     </div>
 
     <modal-popup :is-open="isWeaponModalOpen"

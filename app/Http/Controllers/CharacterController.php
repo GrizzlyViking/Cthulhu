@@ -60,7 +60,6 @@ class CharacterController extends Controller
 
         $validated = $validator->safe()->only(['character_id', 'attribute', 'value']);
 
-        // $character = Character::find($request['character_id']);
         $character->setAttribute($validated['attribute'], $validated['value']);
 
         if (strtolower($validated['attribute']) === 'name') {
@@ -162,6 +161,29 @@ class CharacterController extends Controller
 
         $weapon = Weapon::find($request->get('weapon_id'));
         $character->weapons()->attach($weapon);
+
+        return \response('OK', 200);
+    }
+
+    public function reloadWeapon(Request $request)
+    {
+        Validator::make($request->all(), [
+           'pivot_id' => 'required|integer',
+           'ammo' => 'required|integer',
+        ]);
+
+        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
+
+        return \response('OK', 200);
+    }
+
+    public function fireWeapon(Request $request)
+    {
+        Validator::make($request->all(), [
+           'pivot_id' => 'required|integer',
+        ]);
+
+        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => DB::raw('ammo - 1')]);
 
         return \response('OK', 200);
     }
