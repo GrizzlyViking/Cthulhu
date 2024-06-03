@@ -2,7 +2,6 @@
 import {debounce} from "lodash";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 import {ref} from "vue";
-import {router} from "@inertiajs/vue3";
 import axios from "axios";
 
 const prop = defineProps({
@@ -20,7 +19,7 @@ let adjustHitPoints = debounce((event) => {
         attribute: 'hit_points',
         value: event.target.value
     }).then(
-        (response) => {
+        () => {
             if (Math.floor(prop.character.hit_points / 2) > Number(event.target.value)) {
                 openHitPointsModal();
             }
@@ -51,12 +50,13 @@ let adjustSanity = debounce((event) => {
     if ((Number(prop.character.sanity) - 5) > Number(event.target.value)) {
         openSanityModal();
     }
+    prop.character.sanity = event.target.value;
     axios.put(route('attribute.update', {
         character: prop.character.slug,
     }), {
         attribute: 'sanity',
         value: event.target.value
-    }).then(() => {prop.character.sanity = event.target.value});
+    });
 }, 600)
 
 let unconscious = (setValue) => {
@@ -97,66 +97,55 @@ const closeModal = () => {
 </script>
 
 <template>
-    <dl class="text-cthulhu-green-800 grid grid-cols-1 gap-x-8 gap-y-8 text-center lg:grid-cols-4">
-        <div class="mx-auto flex max-w-xs flex-col gap-y-4">
-            <dt class="text-base leading-7 text-gray-600">
-                Hit Points
-                <div class="text-cthulhu-green-800 text-xs">Max hit points:
-                    {{ Math.floor((Number(character.constitution) + Number(character.size)) / 5) }}
+
+            <dl class="grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
+                <div class="relative flex flex-col bg-gray-400/5 p-8">
+
+                    <dd class="text-3xl font-semibold tracking-tight text-gray-900">
+                        <input :value="prop.character.hit_points"
+                               @input="adjustHitPoints($event)"
+                               type="text"
+                               class="text-cthulhu-green-800 transition border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight bg-transparent"
+                        >
+                    </dd>
+                    <dt class="text-sm font-semibold leading-6 text-gray-600">Hit points</dt>
+                    <dd class="text-cthulhu-green-800 text-xs">Max hit points:
+                        {{ Math.floor((Number(character.constitution) + Number(character.size)) / 5) }}
+                    </dd>
+                    <div @click="unconscious(!prop.character.unconscious)" v-if="prop.character.unconscious" class="absolute inset-x-0 top-20 flex justify-center items-center">
+                        <h2 class="border w-36 rounded-md border-red-600 text-2xl text-red-400 rotate-45 font-semibold tracking-tight">Uncuncious</h2>
+                    </div>
                 </div>
-            </dt>
-            <input :value="prop.character.hit_points" @input="adjustHitPoints($event)" type="text"
-                   class="text-cthulhu-green-800 transition border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight bg-cthulhu-green-200"
-            >
-            <div
-                @click="unconscious(!prop.character.unconscious)"
-                class="h-8 order-last border border-gray-200 rounded-lg px-2 p-1"
-                :class="{
-                                    'bg-red-300': prop.character.unconscious
-                                }"
-            >
-                Unconscious
-            </div>
-        </div>
-        <div class="mx-auto flex max-w-xs flex-col gap-y-4">
-            <dt class="text-base leading-7 text-gray-600">
-                Sanity
-                <div class="text-cthulhu-green-800 text-xs">Starting sanity: {{ prop.character.power }}</div>
-            </dt>
-            <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-                <input :value="prop.character.sanity"
-                       @input="adjustSanity($event)"
-                       class="text-cthulhu-green-800 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight bg-cthulhu-green-200"
-                       type="text">
-            </dd>
-            <div
-                @click="temporaryInsanity(!prop.character.temporary_insanity)"
-                class="h-8 order-last border border-cthulhu-green-400 rounded-lg px-2 p-1"
-                :class="{'bg-red-300': prop.character.temporary_insanity }"
-            >
-                Temporary Insanity
-            </div>
-        </div>
-        <div class="mx-auto flex max-w-xs flex-col gap-y-4">
-            <dt class="text-base leading-7 text-gray-600">Luck</dt>
-            <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-                <input v-model="prop.character.luck" type="text" @input="adjustLuck"
-                       class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
-            </dd>
-        </div>
-        <div class="mx-auto flex max-w-xs flex-col gap-y-4">
-            <dt class="text-base leading-7 text-gray-600">
-                Magic points
-                <div class="text-xs">Max magic points:
-                    {{ Math.floor(Number(prop.character.power) / 5) }}
+                <div class="relative flex flex-col bg-gray-400/5 p-8">
+                    <dd class="text-3xl font-semibold tracking-tight text-gray-900">
+                        <input :value="prop.character.sanity"
+                               @input="adjustSanity"
+                               class="text-cthulhu-green-800 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight bg-transparent"
+                               type="text">
+                    </dd>
+                    <dt class="text-sm font-semibold leading-6 text-gray-600">Sanity</dt>
+                    <dd class="text-cthulhu-green-800 text-xs">Starting sanity: {{ prop.character.power }}</dd>
+                    <div @click="temporaryInsanity(!prop.character.temporary_insanity)" v-if="prop.character.temporary_insanity" class="absolute inset-x-0 top-10 flex justify-center items-center">
+                        <h2 class="border w-36 rounded-md border-red-600 text-2xl text-red-400 rotate-45 font-semibold tracking-tight">Temporary Insanity</h2>
+                    </div>
                 </div>
-            </dt>
-            <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-                <input v-model="prop.character.magic_points" type="text" @input="adjustMagicPoints"
-                       class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
-            </dd>
-        </div>
-    </dl>
+                <div class="flex flex-col bg-gray-400/5 p-8">
+                    <dt class="text-sm font-semibold leading-6 text-gray-600">Luck</dt>
+                    <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900">
+                        <input v-model="prop.character.luck" type="text" @input="adjustLuck"
+                               class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
+                    </dd>
+                </div>
+                <div class="flex flex-col bg-gray-400/5 p-8">
+                    <dd class="text-3xl font-semibold tracking-tight text-gray-900">
+                        <input v-model="prop.character.magic_points" type="text" @input="adjustMagicPoints"
+                               class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
+                    </dd>
+                    <dt class="text-sm font-semibold leading-6 text-gray-600">Magic points</dt>
+                </div>
+            </dl>
+
+
     <modal-popup :is-open="isHitPointsModalOpen"
                  @modal-close="closeModal"
                  @response1="closeModal"

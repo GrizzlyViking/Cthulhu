@@ -6,6 +6,7 @@ import {computed, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { EllipsisVerticalIcon } from '@heroicons/vue/20/solid'
+import Badge from "@/Pages/Components/Badge.vue";
 
 const prop = defineProps({character: Object, editable: Boolean});
 
@@ -47,6 +48,14 @@ const reload = (weapon) => {
     })
 }
 
+const remove = (weapon) => {
+    axios.post(route('remove.weapon'), {
+        pivot_id: weapon.pivot.id,
+    }).then (() => {
+        refreshWeapons();
+    })
+}
+
 const fireTheWeapon = (weapon) => {
     axios.post(route('fire.weapon'), {
         pivot_id: weapon.pivot.id,
@@ -65,10 +74,66 @@ let weaponSkill = computed(() => {
        return {}
    }
 });
+
+const damageBonus = computed(() => {
+    let strAndSiz = Number(prop.character.strength) + Number(prop.character.size);
+
+    if (strAndSiz < 65) {
+        return '-2';
+    }
+    if (strAndSiz > 64 && strAndSiz < 85) {
+        return '-1';
+    }
+    if (strAndSiz > 84 && strAndSiz < 125) {
+        return 'none';
+    }
+    if (strAndSiz > 124 && strAndSiz < 164) {
+        return '+1D4';
+    }
+    if (strAndSiz > 163 && strAndSiz < 204) {
+        return '+1D6';
+    }
+})
+
+const weaponDamage = computed(() => {
+    return (wDmg, DB) => {
+        switch (DB) {
+            default:
+                return wDmg.replace(/\+?DB$/, DB)
+            case 'none':
+                return wDmg.replace(/\+?DB$/, '')
+        }
+    }
+})
+
+const build = computed(() => {
+    let strAndSiz = Number(prop.character.strength) + Number(prop.character.size);
+
+    if (strAndSiz < 65) {
+        return '-2';
+    }
+    if (strAndSiz > 64 && strAndSiz < 85) {
+        return '-1';
+    }
+    if (strAndSiz > 84 && strAndSiz < 125) {
+        return 'none';
+    }
+    if (strAndSiz > 124 && strAndSiz < 164) {
+        return '+1';
+    }
+    if (strAndSiz > 163 && strAndSiz < 204) {
+        return '+2';
+    }
+})
+
 </script>
 
 <template>
     <ul role="list" class="ml-2 divide-y divide-gray-100">
+        <li class="flex justify-center gap-x-6 py-5">
+            <badge :badge-class="{'text-md': true}">Damage bonus: {{ damageBonus }}</badge>
+            <badge :badge-class="{'text-md': true}">Build: {{ build }}</badge>
+        </li>
         <li v-for="weapon in prop.character.weapons" :key="weapon.slug" class="flex justify-between gap-x-6 py-5">
             <div class="flex min-w-0 gap-x-4">
                 <div class="min-w-0 flex-auto">
@@ -80,19 +145,14 @@ let weaponSkill = computed(() => {
                         >Ammo: {{ weapon.pivot.ammo }}</span>
                     </p>
                     <p class="gap-3 mt-1 flex text-xs leading-5 text-gray-500">
-                        <span>{{ weaponSkill(weapon.skill).value }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 2) }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 5) }}</span>
-                        <span class="truncate hover:underline">{{ weapon.damage }}</span>
-                        <span class="truncate hover:underline">{{ weapon.base_range }}</span>
+                        <badge :badge-class="{ 'text-xs': true}">{{ weaponSkill(weapon.skill).value }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 2) }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 5) }}</badge>
+                        <badge :badge-class="{ 'text-xs': true}">{{ weaponDamage(weapon.damage, damageBonus) }}</badge>
+                        <badge :badge-class="{ 'text-xs': true}">{{ weapon.base_range }}</badge>
+                        <badge :badge-class="{ 'text-xs': true}">Uses/round {{ weapon.uses_per_round }}</badge>
                     </p>
                 </div>
             </div>
             <div class="flex shrink-0 items-center gap-x-6">
-                <div class="hidden sm:flex sm:flex-col sm:items-end">
-                    <p class="text-sm leading-6 text-gray-900">{{ weapon.base_range }}</p>
-                    <div class="mt-1 flex items-center gap-x-1.5">
-                        <p class="text-xs leading-5 text-gray-500">{{ weapon.uses_per_round }}</p>
-                    </div>
-                </div>
                 <Menu as="div" class="relative flex-none">
                     <MenuButton class="-m-2.5 block p-2.5 text-gray-500 hover:text-gray-900">
                         <span class="sr-only">Open options</span>
@@ -106,9 +166,9 @@ let weaponSkill = computed(() => {
                                 >
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a href="#" :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']"
-                                >Message<span class="sr-only">, {{ weapon.name }}</span></a
-                                >
+                                <a @click="remove(weapon)" :class="[active ? 'bg-gray-50' : '', 'block px-3 py-1 text-sm leading-6 text-gray-900']">
+                                    Remove
+                                </a>
                             </MenuItem>
                         </MenuItems>
                     </transition>
@@ -116,6 +176,9 @@ let weaponSkill = computed(() => {
             </div>
         </li>
     </ul>
+
+
+
     <div class="flex justify-end p-6 w-full">
         <button type="button"
                 @click="openModal"

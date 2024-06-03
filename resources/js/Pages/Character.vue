@@ -8,6 +8,7 @@ import Profile from "@/Pages/Components/Character/Profile.vue";
 import Vitals from "@/Pages/Components/Character/Vitals.vue";
 import {ref} from "vue";
 import {Switch} from "@headlessui/vue";
+import { UserCircleIcon } from '@heroicons/vue/24/solid'
 
 const prop = defineProps({character: Object});
 const editable = ref(false);
@@ -22,6 +23,22 @@ const deleteCharacter = () => {
 
 const appendAllMissingSkills = () => {
     router.get(route('skill.missing.append', {character: prop.character.slug}))
+}
+
+const handleFileUpload = async (event) => {
+    const formData = new FormData();
+    formData.append('avatar', event.target.files[0]);
+    axios.post(route('character.upload.avatar', {
+        character: prop.character.slug
+    }), formData, {
+        headers: {
+            'content-type': 'multipart/form-data',
+        }
+    }).then((response) => {
+        console.log(response)
+    }).catch((error) => {
+        console.error(error)
+    })
 }
 </script>
 
@@ -43,7 +60,7 @@ const appendAllMissingSkills = () => {
         <div class="m-3">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg">
-                    <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div class="p-6">
                         <Profile :character="prop.character" :editable="editable"></Profile>
                     </div>
                 </div>
@@ -86,7 +103,7 @@ const appendAllMissingSkills = () => {
         <div class="m-3" v-if="editable">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
-                    <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6">
                     <button type="button" @click="deleteCharacter"
                             class="rounded-md bg-cthulhu-green-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50">
                         Delete {{ prop.character.name }}
@@ -95,17 +112,17 @@ const appendAllMissingSkills = () => {
                             class="rounded-md bg-cthulhu-green-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50">
                         Append missing skills
                     </button>
+                        <div>
+                            <label for="photo" class="block text-sm font-medium leading-6 text-gray-900">Photo</label>
+                            <div class="mt-2 flex items-center gap-x-3">
+                                <UserCircleIcon class="h-12 w-12 text-gray-300" aria-hidden="true" />
+                                <label for="avatar_upload" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Change Avatar</label>
+                                <input id="avatar_upload" type="file" v-on:change="handleFileUpload" class="hidden">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-.limelight-regular {
-    font-family: "Limelight", sans-serif;
-    font-weight: 400;
-    font-style: normal;
-}
-</style>

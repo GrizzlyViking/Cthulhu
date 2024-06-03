@@ -22,21 +22,15 @@ class CharacterController extends Controller
 
     public function firstStep(Request $request): RedirectResponse|Response
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:characters',
             'user_id' => 'required|exists:users,id',
             'occupation' => 'required|string',
-            'age' => 'required|integer',
+            'age' => 'required|integer|min:16',
             'gender' => 'required|in:Male,Female,Other',
             'residence' => 'required|string',
             'birthplace' => 'required|string',
         ]);
-
-        if ($validator->fails()) {
-            return response($validator->errors(), 400);
-        }
-
-        $validated = $validator->safe()->only(['name', 'user_id', 'occupation', 'age', 'gender', 'residence', 'birthplace']);
 
         $character = Character::make($validated);
         $character->slug = Str::slug($validated['name']);
@@ -173,6 +167,17 @@ class CharacterController extends Controller
         ]);
 
         DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
+
+        return \response('OK', 200);
+    }
+
+    public function removeWeapon(Request $request)
+    {
+        Validator::make($request->all(), [
+           'pivot_id' => 'required|integer',
+        ]);
+
+        DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();
 
         return \response('OK', 200);
     }
