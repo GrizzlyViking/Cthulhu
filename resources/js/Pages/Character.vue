@@ -4,18 +4,18 @@ import {Head, router} from '@inertiajs/vue3';
 import Skills from "@/Pages/Components/Character/Skills.vue";
 import Weapons from "@/Pages/Components/Character/Weapons.vue";
 import Characteristics from "@/Pages/Components/Character/Characteristics.vue";
-import Profile from "@/Pages/Components/Character/Profile.vue";
 import Vitals from "@/Pages/Components/Character/Vitals.vue";
 import {ref} from "vue";
 import {Switch} from "@headlessui/vue";
 import { UserCircleIcon } from '@heroicons/vue/24/solid'
+import Backstory from "@/Pages/Components/Character/Backstory.vue";
 
 const prop = defineProps({character: Object});
 const editable = ref(false);
 
 const deleteCharacter = () => {
     if (confirm("Are you sure you want to delete?")) {
-        router.delete(route('character.delete', {
+        router.delete(route('character.destroy', {
             character: prop.character.slug,
         }))
     }
@@ -23,22 +23,6 @@ const deleteCharacter = () => {
 
 const appendAllMissingSkills = () => {
     router.get(route('skill.missing.append', {character: prop.character.slug}))
-}
-
-const handleFileUpload = async (event) => {
-    const formData = new FormData();
-    formData.append('avatar', event.target.files[0]);
-    axios.post(route('character.upload.avatar', {
-        character: prop.character.slug
-    }), formData, {
-        headers: {
-            'content-type': 'multipart/form-data',
-        }
-    }).then((response) => {
-        console.log(response)
-    }).catch((error) => {
-        console.error(error)
-    })
 }
 </script>
 
@@ -61,7 +45,7 @@ const handleFileUpload = async (event) => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg">
                     <div class="p-6">
-                        <Profile :character="prop.character" :editable="editable"></Profile>
+                        <Backstory :character="prop.character" :editable="editable"></Backstory>
                     </div>
                 </div>
             </div>

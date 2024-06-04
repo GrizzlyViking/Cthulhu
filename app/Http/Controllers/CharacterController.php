@@ -15,6 +15,11 @@ use Inertia\Inertia;
 
 class CharacterController extends Controller
 {
+    public function show(Character $character)
+    {
+        return Inertia::render('Character', compact('character'));
+    }
+
     public function create()
     {
         return Inertia::render('Character/Create');
@@ -208,5 +213,11 @@ class CharacterController extends Controller
         $character->update(['avatar' => $path]);
 
         return \response('updated', 200);
+    }
+
+    public function destroy(Character $character)
+    {
+        $character->delete();
+        return to_route('dashboard')->with('success', 'Character deleted.');
     }
 }
