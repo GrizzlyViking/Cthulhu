@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SkillController;
 use App\Models\Character;
 use App\Models\Skill;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/users', function () {
+    return User::all();
+})->middleware(['auth', 'verified'])->name('users.index');
 
 Route::prefix('character')->name('character.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/{character}', function (Character $character) {
