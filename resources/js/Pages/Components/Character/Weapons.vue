@@ -3,7 +3,7 @@
 import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 import {computed, ref} from "vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { EllipsisVerticalIcon } from '@heroicons/vue/20/solid'
 import Badge from "@/Pages/Components/Badge.vue";
@@ -21,21 +21,13 @@ const openModal = () => {
 };
 
 let addWeapon = (weapon_id) => {
-    axios.post(route('character.weapon.add', {
+    router.post(route('equip.weapon', {
         character: prop.character.slug,
+    }), {
         weapon_id: weapon_id,
-    })).then((response) => {
-        console.log(response.data)
-        refreshWeapons()
-    });
-    closeModal()
-}
-
-let refreshWeapons = () => {
-    axios.get(route('character.raw', {
-        character: prop.character.slug,
-    })).then((response) => {
-        prop.character.weapons = response.data.weapons;
+    }, {
+        preserveScroll: true,
+        onSuccess: () => closeModal()
     });
 }
 
@@ -49,10 +41,11 @@ const reload = (weapon) => {
 }
 
 const remove = (weapon) => {
-    axios.post(route('remove.weapon'), {
+    router.post(route('remove.weapon'), {
+        character_slug: prop.character.slug,
         pivot_id: weapon.pivot.id,
-    }).then (() => {
-        refreshWeapons();
+    }, {
+        preserveScroll: true,
     })
 }
 

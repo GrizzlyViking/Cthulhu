@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\Weapon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -11,21 +12,21 @@ use Illuminate\Support\Facades\Validator;
 class WeaponController extends Controller
 {
 
-    public function addWeapon(Character $character, Request $request): \Illuminate\Http\Response
+    public function addWeapon(Character $character, Request $request): RedirectResponse
     {
-        $request->validate($request->all(), [
+        $request->validate([
             'weapon_id' => 'required|integer',
         ]);
 
         $weapon = Weapon::find($request->get('weapon_id'));
         $character->weapons()->attach($weapon);
 
-        return \response('OK', 200);
+        return to_route('character.show', $character->slug);
     }
 
     public function reloadWeapon(Request $request)
     {
-        $request->validate($request->all(), [
+        $request->validate([
             'pivot_id' => 'required|integer',
             'ammo' => 'required|integer',
         ]);
@@ -38,12 +39,13 @@ class WeaponController extends Controller
     public function removeWeapon(Request $request)
     {
         Validator::make($request->all(), [
+            'character_slug' => 'required|string',
             'pivot_id' => 'required|integer',
         ]);
 
         DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();
 
-        return \response('OK', 200);
+        return to_route('character.show', $request->get('character_slug'));
     }
 
     public function fireWeapon(Request $request)
