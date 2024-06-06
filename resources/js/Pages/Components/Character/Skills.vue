@@ -25,20 +25,13 @@ const addSkill = () => {
     newSkill.post(route('skill.store'), {
         preserveScroll: true,
         onSuccess: () => {
-            reloadSkills()
             closeModal()
         },
     })
 }
 
-let reloadSkills = () => {
-    axios.get(route('character.raw', {
-        character: prop.character.slug,
-    })).then((response) => prop.character.skills = response.data.skills)
-}
-
 let adjustSkill = debounce((skill, event) => {
-    axios.put(route('character.skill.update', {
+    axios.put(route('skill.update', {
         character: prop.character.slug,
         skill: skill.slug
     }), {

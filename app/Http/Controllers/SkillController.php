@@ -35,7 +35,7 @@ class SkillController extends Controller
         $character->skills()->attach($skill->id);
         $character->refresh();
 
-        return to_route('character.show', $character);
+        return to_route('character.show', $character->slug);
     }
 
     function update(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
