@@ -34,7 +34,7 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('create')" :active="route().current('create')">
+                                <NavLink :href="route('character.create')" :active="route().current('character.create')">
                                     Create new Character
                                 </NavLink>
                             </div>
@@ -167,7 +167,7 @@ const showingNavigationDropdown = ref(false);
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('create')"> Create Character </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                                 Log Out

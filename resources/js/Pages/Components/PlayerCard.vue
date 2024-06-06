@@ -1,7 +1,15 @@
 <script setup>
-import {EnvelopeIcon, CubeIcon} from "@heroicons/vue/20/solid/index.js";
+import {ChatBubbleLeftRightIcon, CubeIcon} from "@heroicons/vue/20/solid/index.js";
 import Badge from "@/Pages/Components/Badge.vue";
-defineProps({player: Object})
+import {ref} from "vue";
+let prop = defineProps({player: Object, selectedForMessage: Object})
+
+const addPlayerToMessagesList = (player) => {
+    prop.selectedForMessage.push(player);
+    messageSelected.value = true;
+};
+
+let messageSelected = ref(false)
 </script>
 
 <template>
@@ -17,17 +25,19 @@ defineProps({player: Object})
     <div>
         <div class="-mt-px flex divide-x divide-gray-200">
             <div class="flex w-0 flex-1">
-                <a :href="`mailto:${player.email}`"
-                   class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
-                    <EnvelopeIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                    Email
+                <a @click="addPlayerToMessagesList(player)"
+                   class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                   :class="{'bg-cthulhu-green-200': messageSelected}"
+                >
+                    <ChatBubbleLeftRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                    Message
                 </a>
             </div>
             <div class="-ml-px flex w-0 flex-1">
-                <a
+                <a @click="emit('roll', player)"
                    class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
                     <CubeIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                    Call
+                    Roll
                 </a>
             </div>
         </div>

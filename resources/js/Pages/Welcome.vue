@@ -4,13 +4,6 @@ import { ref } from 'vue'
 import { Dialog, DialogPanel } from '@headlessui/vue'
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 
-const navigation = [
-    { name: 'Product', href: '#' },
-    { name: 'Features', href: '#' },
-    { name: 'Marketplace', href: '#' },
-    { name: 'Company', href: '#' },
-]
-
 const mobileMenuOpen = ref(false)
 
 defineProps({
@@ -44,7 +37,7 @@ defineProps({
                     </button>
                 </div>
                 <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-                    <a href="#" class="text-sm font-semibold leading-6 text-white">Log in <span aria-hidden="true">&rarr;</span></a>
+                    <a href="/login" class="text-sm font-semibold leading-6 text-white">Log in <span aria-hidden="true">&rarr;</span></a>
                 </div>
             </nav>
         </header>
@@ -60,7 +53,7 @@ defineProps({
                     <p class="mt-6 text-lg leading-8 text-gray-300">Online version for our character sheets.</p>
                     <div class="mt-10 flex items-center justify-center gap-x-6">
                         <a v-if="$page.props.auth.user" :href="route('dashboard')" class="rounded-md border-2 border-gray-200 bg-cthulhu-green px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">Enter</a>
-                        <a v-else href="#" class="rounded-md bg-cthulhu-green px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">Get started 123</a>
+                        <a v-else href="/register" class="rounded-md bg-cthulhu-green px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">Register</a>
                     </div>
                 </div>
             </div>

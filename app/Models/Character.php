@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 
 /**
+ * @property int $id
  * @property int $strength
  * @property int $dexterity
  * @property int intelligence

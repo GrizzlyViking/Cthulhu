@@ -16,11 +16,12 @@ export function useAdjustAttribute(characterProp) {
     }, 600);
 
     const updateSkill =  debounce((skill, event) => {
-        axios.put(route('attribute.update', {
-            character: character().slug,
+        axios.put(route('skill.update', {
             skill: skill,
+        }), {
+            character_id: character().id,
             value: event.target.value
-        })).then(() => {
+        }).then(() => {
                 return 'ok';
             }
         );

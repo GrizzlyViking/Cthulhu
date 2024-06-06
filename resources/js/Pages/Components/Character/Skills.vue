@@ -22,7 +22,7 @@ let newSkill = useForm({
 })
 
 const addSkill = () => {
-    newSkill.post('/skills', {
+    newSkill.post(route('skill.store'), {
         preserveScroll: true,
         onSuccess: () => {
             reloadSkills()

@@ -38,6 +38,20 @@ class SkillController extends Controller
         return to_route('character.show', $character);
     }
 
+    function update(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
+    {
+        $request->validate($request->all(), [
+            'value' => 'required',
+        ]);
+
+        DB::table('character_skill')
+            ->where('character_id', $character->id)
+            ->where('skill_id', $skill->id)
+            ->update(['value' => $request->get('value')]);
+
+        return \response('OK', 200);
+    }
+
     public function aptitude(Character $character, Skill $skill)
     {
         return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();

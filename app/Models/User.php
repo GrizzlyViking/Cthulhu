@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
+
+    protected $appends = ['isOnline'];
 
     /**
      * The attributes that are mass assignable.
@@ -50,5 +53,10 @@ class User extends Authenticatable
     public function characters(): HasMany
     {
         return $this->hasMany(Character::class);
+    }
+
+    public function getIsOnlineAttribute(): bool
+    {
+        return DB::table('sessions')->where('user_id', $this->id)->exists();
     }
 }

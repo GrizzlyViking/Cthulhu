@@ -5,10 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $slug
+ * @property string $display_name
+ * @property string $description
+ * @property int $starting_value
+ */
 class Skill extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'slug',
         'display_name',

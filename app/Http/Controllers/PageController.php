@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-class KeeperOfSecretsController extends Controller
+class PageController extends Controller
 {
     public function dashboard()
     {

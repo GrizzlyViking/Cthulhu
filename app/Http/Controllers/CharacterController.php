@@ -25,7 +25,7 @@ class CharacterController extends Controller
         return Inertia::render('Character/Create');
     }
 
-    public function firstStep(Request $request): RedirectResponse|Response
+    public function store(Request $request): RedirectResponse|Response
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:characters',
@@ -43,11 +43,7 @@ class CharacterController extends Controller
         $character->refresh();
         $character->addAllSkills();
 
-        if ($character->skills->isNotEmpty()) {
-            return to_route('character.show', [$character->slug]);
-        } else {
-            return response($character->toJson(), 400);
-        }
+        return to_route('character.show', [$character->slug]);
     }
 
     function updateAttribute(Character $character, Request $request): \Inertia\Response
@@ -71,25 +67,6 @@ class CharacterController extends Controller
 
         return Inertia::render('Character', ['character' => $character]);
     }
-
-    function updateSkill(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
-    {
-        $validator = Validator::make($request->all(), [
-            'value' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
-
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->update(['value' => $request->get('value')]);
-
-        return \response('OK', 200);
-    }
-
 
     function updatePivot(Character $character, Skill $skill, string $pivot, Request $request): \Illuminate\Http\Response
     {
@@ -128,91 +105,17 @@ class CharacterController extends Controller
         return to_route('character.show', [$character->slug]);
     }
 
-    public function incrementExperience(Character $character, Skill $skill)
+    public function avatar(Character $character, Request $request)
     {
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->increment('experience');
-
-        return \response('OK', 200);
-    }
-
-    public function resetExperience(Character $character, Skill $skill)
-    {
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->update(['experience' => 0]);
-
-        return \response('OK', 200);
-    }
-
-    public function addWeapon(Character $character, Request $request): \Illuminate\Http\Response
-    {
-        $validator = Validator::make($request->all(), [
-            'weapon_id' => 'required|integer',
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg'
         ]);
 
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
-
-        $weapon = Weapon::find($request->get('weapon_id'));
-        $character->weapons()->attach($weapon);
-
-        return \response('OK', 200);
-    }
-
-    public function reloadWeapon(Request $request)
-    {
-        Validator::make($request->all(), [
-           'pivot_id' => 'required|integer',
-           'ammo' => 'required|integer',
-        ]);
-
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
-
-        return \response('OK', 200);
-    }
-
-    public function removeWeapon(Request $request)
-    {
-        Validator::make($request->all(), [
-           'pivot_id' => 'required|integer',
-        ]);
-
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();
-
-        return \response('OK', 200);
-    }
-
-    public function fireWeapon(Request $request)
-    {
-        Validator::make($request->all(), [
-           'pivot_id' => 'required|integer',
-        ]);
-
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => DB::raw('ammo - 1')]);
-
-        return \response('OK', 200);
-    }
-
-    public function avatar(Character $character, Request $request): \Illuminate\Http\Response
-    {
-        $validator = Validator::make($request->all(), [
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
-
-        $path = $request->avatar->store('avatars/'.$character->slug, 'public');
+        $path = $request->avatar->store('avatars/' . $character->slug, 'public');
 
         $character->update(['avatar' => $path]);
 
-        return \response('updated', 200);
+        return to_route('character.show', [$character->slug]);
     }
 
     public function destroy(Character $character)

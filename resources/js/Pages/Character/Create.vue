@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {Head, useForm, usePage} from "@inertiajs/vue3";
-import {ref} from "vue";
 
 const page = usePage()
 
@@ -29,7 +28,7 @@ const genders = [
 ]
 
 const submitProfile = () => {
-    character.post(route('create.step.first'))
+    character.post(route('character.store'))
 }
 </script>
 

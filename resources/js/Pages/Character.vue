@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, router} from '@inertiajs/vue3';
+import {Head, router, useForm} from '@inertiajs/vue3';
 import Skills from "@/Pages/Components/Character/Skills.vue";
 import Weapons from "@/Pages/Components/Character/Weapons.vue";
 import Characteristics from "@/Pages/Components/Character/Characteristics.vue";
@@ -23,6 +23,14 @@ const deleteCharacter = () => {
 
 const appendAllMissingSkills = () => {
     router.get(route('skill.missing.append', {character: prop.character.slug}))
+}
+
+const form = useForm({
+    avatar: null,
+})
+
+const handleFileUpload = () => {
+    form.post(route('upload.avatar', { character: prop.character.slug }), { preserveScroll: true })
 }
 </script>
 
@@ -101,7 +109,7 @@ const appendAllMissingSkills = () => {
                             <div class="mt-2 flex items-center gap-x-3">
                                 <UserCircleIcon class="h-12 w-12 text-gray-300" aria-hidden="true" />
                                 <label for="avatar_upload" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Change Avatar</label>
-                                <input id="avatar_upload" type="file" v-on:change="handleFileUpload" class="hidden">
+                                <input id="avatar_upload" type="file" @input="form.avatar = $event.target.files[0]" v-on:change="handleFileUpload" class="hidden">
                             </div>
                         </div>
                     </div>
