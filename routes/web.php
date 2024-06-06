@@ -27,7 +27,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::post('/weapon/reload', [WeaponController::class, 'reloadWeapon'])->name('reload.weapon');
     Route::post('/weapon/remove', [WeaponController::class, 'removeWeapon'])->name('remove.weapon');
     Route::post('/weapon/fire', [WeaponController::class, 'fireWeapon'])->name('fire.weapon');
-    Route::post('/weapon/equip', [WeaponController::class, 'addWeapon'])->name('equip.weapon');
+    Route::post('/weapon/equip/{character}', [WeaponController::class, 'addWeapon'])->name('equip.weapon');
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
