@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\ExperienceController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SkillController;
@@ -39,6 +40,8 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/message/send', [MessageController::class, 'send'])->name('message.send');
 });
 
 require __DIR__ . '/auth.php';

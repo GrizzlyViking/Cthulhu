@@ -33,7 +33,9 @@ return [
             'port' => env('REVERB_SERVER_PORT', 8080),
             'hostname' => env('REVERB_HOST'),
             'options' => [
-                'tls' => [],
+                'tls' => [
+                    'verify_peer' => false,
+                ],
             ],
             'max_request_size' => env('REVERB_MAX_REQUEST_SIZE', 10_000),
             'scaling' => [
@@ -74,6 +76,7 @@ return [
                 'key' => env('REVERB_APP_KEY'),
                 'secret' => env('REVERB_APP_SECRET'),
                 'app_id' => env('REVERB_APP_ID'),
+                'id' => env('REVERB_APP_ID'),
                 'options' => [
                     'host' => env('REVERB_HOST'),
                     'port' => env('REVERB_PORT', 443),

@@ -1,9 +1,9 @@
 <template>
-    <form action="#" class="relative">
+    <form @submit.prevent="sendMessage" class="relative">
         <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
             <textarea
                 rows="2"
-                v-model="message.content"
+                v-model="messagePayload.content"
                 class="p-3 block w-full resize-none border-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm leading-6" placeholder="Write a description..." />
 
             <!-- Spacer element to match the height of the toolbar -->
@@ -45,14 +45,24 @@
 <script setup>
 import { ref } from 'vue'
 import { PaperClipIcon } from '@heroicons/vue/20/solid'
-import {useForm} from "@inertiajs/vue3";
+import {useForm, usePage} from "@inertiajs/vue3";
 
 let prop = defineProps({selectedForMessage: Object})
 
-const message = useForm({
-    recipients: prop.selectedForMessage,
+const messagePayload = useForm({
+    recipients: prop.selectedForMessage.map(item => item.id),
     content: ''
 });
+
+const sendMessage = () => {
+    messagePayload.post(route('message.send'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            messagePayload.reset('content')
+        },
+    });
+}
+
 
 const assignees = [
     { name: 'Unassigned', value: null },
@@ -65,6 +75,12 @@ const assignees = [
     // More items...
 ]
 
+const page = usePage();
+
+Echo.private(`App.Models.User.${page.props.auth.user.id}`)
+    .listen('MessageSent', (event) => {
+        console.log('MessageSent', event);
+    })
 
 const assigned = ref(assignees[0])
 </script>
