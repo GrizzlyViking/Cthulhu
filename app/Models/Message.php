@@ -20,6 +20,8 @@ class Message extends Model
 {
     use HasFactory;
 
+    protected $with = ['sender', 'receiver'];
+
     protected $fillable = [
         'sender_id',
         'receiver_id',

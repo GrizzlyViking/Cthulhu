@@ -66,7 +66,7 @@ class SkillSeeder extends Seeder
             ['slug' => 'ride', 'display_name' => 'Ride', 'starting_value' => 5],
             ['slug' => 'science_skill', 'display_name' => 'Science Skill', 'starting_value' => 1],
             ['slug' => 'sleight_of_hand', 'display_name' => 'Sleight of Hand', 'starting_value' => 10],
-            ['slug' => 'spot_hidden', 'display_name' => 'Spot Hidden', 'starting_value' => 25],
+            ['slug' => 'spot-hidden', 'display_name' => 'Spot Hidden', 'starting_value' => 25],
             ['slug' => 'stealth', 'display_name' => 'Stealth', 'starting_value' => 20],
             ['slug' => 'survival', 'display_name' => 'Survival', 'starting_value' => 10],
             ['slug' => 'swim', 'display_name' => 'Swim', 'starting_value' => 10],

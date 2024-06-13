@@ -34,14 +34,16 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
 
     Route::resource('skill', SkillController::class)->only(['store']);
-    Route::get('/append/skills/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
-    Route::get('/character/{skill}/update', [SkillController::class, 'update'])->name('skill.update');
+    Route::get('/skill/append/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
+    Route::post('/skill/roll', [SkillController::class, 'roll'])->name('skill.roll');
+    Route::put('/skill/{character}/{skill}/update', [SkillController::class, 'update'])->name('skill.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/message/send', [MessageController::class, 'send'])->name('message.send');
+    Route::put('/message/read', [MessageController::class, 'read'])->name('message.read');
 });
 
 require __DIR__ . '/auth.php';

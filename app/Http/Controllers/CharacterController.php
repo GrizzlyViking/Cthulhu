@@ -46,6 +46,17 @@ class CharacterController extends Controller
         return to_route('character.show', [$character->slug]);
     }
 
+    public function update(Character $character, Request $request): RedirectResponse
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $character->update(['user_id' => $request->get('user_id')]);
+
+        return to_route('character.show', $character->slug);
+    }
+
     function updateAttribute(Character $character, Request $request): \Inertia\Response
     {
         $validator = Validator::make($request->all(), [

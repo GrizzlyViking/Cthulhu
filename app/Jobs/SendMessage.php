@@ -19,18 +19,13 @@ class SendMessage implements ShouldQueue
      */
     public function __construct(
         public Message $message
-    ) { }
+    ) {}
 
     /**
      * Execute the job.
      */
     public function handle(): void
     {
-        $this->message->sender->characters->each(function ($character) {
-            if ($character->user->is_online) {
-                // send message to online user
-                $this->message->user->notify(new MessageSent($this->message));
-            }
-        });
+        MessageSent::dispatch($this->message);
     }
 }

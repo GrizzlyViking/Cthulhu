@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, router, useForm} from '@inertiajs/vue3';
+import {Head, router, useForm, usePage} from '@inertiajs/vue3';
 import Skills from "@/Pages/Components/Character/Skills.vue";
 import Weapons from "@/Pages/Components/Character/Weapons.vue";
 import Characteristics from "@/Pages/Components/Character/Characteristics.vue";
@@ -9,9 +9,12 @@ import {ref} from "vue";
 import {Switch} from "@headlessui/vue";
 import { UserCircleIcon } from '@heroicons/vue/24/solid'
 import Backstory from "@/Pages/Components/Character/Backstory.vue";
+import Dropdown from "@/Pages/Components/Dropdown.vue";
 
 const prop = defineProps({character: Object});
 const editable = ref(false);
+
+const page = usePage();
 
 const deleteCharacter = () => {
     if (confirm("Are you sure you want to delete?")) {
@@ -31,6 +34,12 @@ const form = useForm({
 
 const handleFileUpload = () => {
     form.post(route('upload.avatar', { character: prop.character.slug }), { preserveScroll: true })
+}
+
+const updateUser = (event) => {
+    router.put(route('character.update', {character: prop.character.slug}), {
+        user_id: event.id,
+    }, { preserveScroll: true })
 }
 </script>
 
@@ -95,7 +104,7 @@ const handleFileUpload = () => {
         <div class="m-3" v-if="editable">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
-                    <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6">
+                    <div class="p-6 grid xs:grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-6">
                     <button type="button" @click="deleteCharacter"
                             class="rounded-md bg-cthulhu-green-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50">
                         Delete {{ prop.character.name }}
@@ -111,6 +120,9 @@ const handleFileUpload = () => {
                                 <label for="avatar_upload" class="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Change Avatar</label>
                                 <input id="avatar_upload" type="file" @input="form.avatar = $event.target.files[0]" v-on:change="handleFileUpload" class="hidden">
                             </div>
+                        </div>
+                        <div>
+                            <Dropdown :value="prop.character.user_id" @update:model-value="updateUser" :list="page.props.auth.users" :open="editable" :initially-selected="prop.character.user_id"></Dropdown>
                         </div>
                     </div>
                 </div>

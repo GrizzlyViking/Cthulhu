@@ -39,6 +39,8 @@ class HandleInertiaRequests extends Middleware
                 'characters' => Character::all(),
                 'equipment' => Weapon::all(),
                 'users' => User::all(),
+                'listOfMessageUsers' => [],
+                'listOfRollUsers' => [],
             ],
         ];
     }

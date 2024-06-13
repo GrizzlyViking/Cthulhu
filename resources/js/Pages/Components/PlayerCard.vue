@@ -1,15 +1,42 @@
 <script setup>
 import {ChatBubbleLeftRightIcon, CubeIcon} from "@heroicons/vue/20/solid/index.js";
 import Badge from "@/Pages/Components/Badge.vue";
-import {ref} from "vue";
-let prop = defineProps({player: Object, selectedForMessage: Object})
+import {computed, ref} from "vue";
+import {usePage} from "@inertiajs/vue3";
+let prop = defineProps({player: Object})
+
+let page = usePage();
 
 const addPlayerToMessagesList = (player) => {
-    prop.selectedForMessage.push(player);
-    messageSelected.value = true;
+    if (page.props.auth.listOfMessageUsers.indexOf(player) === -1) {
+        page.props.auth.listOfMessageUsers.push(player);
+
+    } else {
+        let index = page.props.auth.listOfMessageUsers.indexOf(player);
+        page.props.auth.listOfMessageUsers.splice(index, 1);
+    }
 };
 
-let messageSelected = ref(false)
+const playerSelectedForMessage = computed(() => {
+    return (player) => {
+        return page.props.auth.listOfMessageUsers.indexOf(player) !== -1
+    }
+});
+const playerSelectedForRoll = computed(() => {
+    return (player) => {
+        return page.props.auth.listOfRollUsers.indexOf(player) !== -1
+    }
+});
+
+const addPlayerToRollList = (player) => {
+    if (page.props.auth.listOfRollUsers.indexOf(player) === -1) {
+        page.props.auth.listOfRollUsers.push(player);
+    } else {
+        let index = page.props.auth.listOfRollUsers.indexOf(player);
+        page.props.auth.listOfRollUsers.splice(index, 1);
+    }
+}
+
 </script>
 
 <template>
@@ -27,15 +54,17 @@ let messageSelected = ref(false)
             <div class="flex w-0 flex-1">
                 <a @click="addPlayerToMessagesList(player)"
                    class="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
-                   :class="{'bg-cthulhu-green-200': messageSelected}"
+                   :class="{'bg-cthulhu-green-200': playerSelectedForMessage(player)}"
                 >
                     <ChatBubbleLeftRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                     Message
                 </a>
             </div>
             <div class="-ml-px flex w-0 flex-1">
-                <a @click="emit('roll', player)"
-                   class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900">
+                <a @click="addPlayerToRollList(player)"
+                   class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                   :class="{'bg-cthulhu-green-200': playerSelectedForRoll(player)}"
+                >
                     <CubeIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                     Roll
                 </a>

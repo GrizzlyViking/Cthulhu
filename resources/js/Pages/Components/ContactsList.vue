@@ -1,11 +1,6 @@
 <script setup>
 import PlayerCard from "@/Pages/Components/PlayerCard.vue";
-const props = defineProps(['users', 'selectedForMessage'])
-
-const emit = defineEmits([
-    "message",
-    "roll"
-]);
+const props = defineProps(['users'])
 </script>
 
 <template>
@@ -16,7 +11,6 @@ const emit = defineEmits([
         >
             <player-card
                 :player="player"
-                :selected-for-message="props.selectedForMessage"
             ></player-card>
         </li>
     </ul>

@@ -29,4 +29,16 @@ class MessageController extends Controller
 
         return Redirect::back()->with(['success' => 'Message sent!']);
     }
+
+    public function read(Request $request)
+    {
+        $request->validate([
+            'message_id' => 'required|integer|exists:messages,id'
+        ]);
+
+        $message = Message::find($request->get('message_id'));
+        $response = $message->update(['read' => true]);
+
+        return response()->json(['success' => 'Message read!' . $response ]);
+    }
 }

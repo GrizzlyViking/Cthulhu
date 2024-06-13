@@ -5,13 +5,31 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
+import Alert from "@/Pages/Components/Alert.vue";
 
 const showingNavigationDropdown = ref(false);
+
+const page = usePage();
+
+let player_message = {};
+let open_alert = ref(false);
+
+Echo.private(`App.Models.User.${page.props.auth.user.id}`)
+    .listen('MessageSent', (message) => {
+        console.log(message);
+        player_message = message.message;
+        open_alert.value = true;
+    })
+
+let markRead = () => {
+    open_alert.value = false;
+}
 </script>
 
 <template>
     <div>
+        <Alert v-if="open_alert" :open="open_alert" :message="player_message" @mark_read="markRead" />;
         <div class="min-h-screen bg-cthulhu-green-400">
             <nav class="bg-cthulhu-green-200 border-b border-cthulhu-green-400">
                 <!-- Primary Navigation Menu -->
