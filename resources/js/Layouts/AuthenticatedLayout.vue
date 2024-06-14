@@ -29,7 +29,7 @@ let markRead = () => {
 
 <template>
     <div>
-        <Alert v-if="open_alert" :open="open_alert" :message="player_message" @mark_read="markRead" />;
+        <Alert v-if="open_alert" :open="open_alert" :message="player_message" @mark_read="markRead" />
         <div class="min-h-screen bg-cthulhu-green-400">
             <nav class="bg-cthulhu-green-200 border-b border-cthulhu-green-400">
                 <!-- Primary Navigation Menu -->

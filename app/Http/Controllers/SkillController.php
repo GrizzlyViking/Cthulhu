@@ -84,33 +84,35 @@ class SkillController extends Controller
 
         collect($request->get('users'))->each(function ($user_id) use ($request) {
             $user = User::find($user_id);
-            $user->characters->first()->skills
-                ->filter(fn (Skill $skill) => $skill->slug === $request->get('skill_slug'))
-                ->each(function (Skill $skill) use ($user) {
-                $roll = rand(1, 100);
-                $result = '';
-                if ($roll >= 99) {
-                        $result = 'Critical Failure';
-                    } elseif ($roll > $skill->pivot->value) {
-                        $result = 'Failure';
-                    } elseif ($roll === 1) {
-                        $result = 'Critical Success';
-                    } elseif ($roll <= ceil($skill->pivot->value/5)) {
-                        $result = 'Extreme Success';
-                    } elseif ($roll <= ceil($skill->pivot->value/2)) {
-                        $result = 'Hard Success';
-                    } elseif ($roll <= $skill->pivot->value) {
-                        $result = 'Success';
-                    }
+            if ($user instanceof User) {
+                $user->characters->first()->skills
+                    ->filter(fn(Skill $skill) => $skill->slug === $request->get('skill_slug'))
+                    ->each(function (Skill $skill) use ($user) {
+                        $roll = rand(1, 100);
+                        $result = '';
+                        if ($roll >= 99) {
+                            $result = 'Critical Failure';
+                        } elseif ($roll > $skill->pivot->value) {
+                            $result = 'Failure';
+                        } elseif ($roll === 1) {
+                            $result = 'Critical Success';
+                        } elseif ($roll <= ceil($skill->pivot->value / 5)) {
+                            $result = 'Extreme Success';
+                        } elseif ($roll <= ceil($skill->pivot->value / 2)) {
+                            $result = 'Hard Success';
+                        } elseif ($roll <= $skill->pivot->value) {
+                            $result = 'Success';
+                        }
 
-                $this->rolls[] = sprintf("%s using: %s rolled: %s against %s, outcome was %s",
-                    $user->name,
-                    $skill->display_name,
-                    intval($roll),
-                    $skill->pivot->value,
-                    $result
-                );
-            });
+                        $this->rolls[] = sprintf("%s using: %s rolled: %s against %s, outcome was %s",
+                            $user->name,
+                            $skill->display_name,
+                            intval($roll),
+                            $skill->pivot->value,
+                            $result
+                        );
+                    });
+            }
         });
 
         return response()->json($this->rolls);

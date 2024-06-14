@@ -10,13 +10,15 @@ defineProps(['users', 'skills'])
 const page = usePage();
 
 let resultOfRoll = ref([]);
+let showResultOfRoll = ref(false);
 
 const rollFor = (skill) => {
     axios.post(route('skill.roll'), {
         skill_slug: skill,
         users: page.props.auth.listOfRollUsers.map((user) => user.id),
     }).then((response) => {
-        resultOfRoll = response.data
+        resultOfRoll = response.data;
+        showResultOfRoll.value = true;
     });
 }
 </script>
@@ -66,7 +68,7 @@ const rollFor = (skill) => {
             </div>
         </div>
 
-        <div class="py-4" v-if="resultOfRoll.length > 0">
+        <div class="py-4" v-if="showResultOfRoll">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 shadow-sm sm:rounded-lg p-3">
 
