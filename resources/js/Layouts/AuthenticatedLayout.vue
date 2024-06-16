@@ -39,9 +39,7 @@ let markRead = () => {
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
+                                    <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
                             </div>
 
@@ -54,6 +52,11 @@ let markRead = () => {
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('character.create')" :active="route().current('character.create')">
                                     Create new Character
+                                </NavLink>
+                            </div>
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('calendar')" :active="route().current('calendar')">
+                                    Calendar
                                 </NavLink>
                             </div>
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
@@ -186,6 +189,8 @@ let markRead = () => {
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('calendar')"> Calendar</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('faq')"> FAQ </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                                 Log Out

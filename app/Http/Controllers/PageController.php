@@ -23,4 +23,14 @@ class PageController extends Controller
             'canRegister' => Route::has('register'),
         ]);
     }
+
+    public function faq()
+    {
+        return Inertia::render('FAQ');
+    }
+
+    public function calendar()
+    {
+        return Inertia::render('Scheduling');
+    }
 }

@@ -15,6 +15,8 @@ Route::get('/', [PageController::class, 'welcome'])->name('welcome');
 Route::middleware('auth', 'verified')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+    Route::get('/calendar', [PageController::class, 'calendar'])->name('calendar');
 
     //Using Resource Controller for Character with excepting some methods
     Route::resource('/character', CharacterController::class);
