@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(SkillSeeder::class);
         $this->call(WeaponSeeder::class);
+        $this->call(CalendarSeeder::class);
 
         User::factory()->create([
             'name' => 'Sebastian Edelmann',

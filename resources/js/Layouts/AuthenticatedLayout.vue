@@ -55,7 +55,7 @@ let markRead = () => {
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('calendar')" :active="route().current('calendar')">
+                                <NavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">
                                     Calendar
                                 </NavLink>
                             </div>
@@ -141,18 +141,14 @@ let markRead = () => {
                             >
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex': !showingNavigationDropdown,
-                                        }"
+                                        :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown, }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
                                         d="M4 6h16M4 12h16M4 18h16"
                                     />
                                     <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
+                                        :class="{ hidden: !showingNavigationDropdown,
                                             'inline-flex': showingNavigationDropdown,
                                         }"
                                         stroke-linecap="round"
@@ -189,7 +185,7 @@ let markRead = () => {
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('calendar')"> Calendar</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })"> Calendar </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('faq')"> FAQ </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">

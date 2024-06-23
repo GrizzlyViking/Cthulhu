@@ -3,6 +3,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {Head} from "@inertiajs/vue3";
 import Calendar from "@/Pages/Components/Calendar.vue";
+
+const props = defineProps({calendar: Object})
 </script>
 
 <template>
@@ -17,7 +19,7 @@ import Calendar from "@/Pages/Components/Calendar.vue";
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-cthulhu-green-200 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                    <calendar/>
+                    <calendar :calendar="props.calendar" />
                 </div>
             </div>
             </div>

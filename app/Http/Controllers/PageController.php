@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Calendar;
 use App\Models\Skill;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -27,10 +29,5 @@ class PageController extends Controller
     public function faq()
     {
         return Inertia::render('FAQ');
-    }
-
-    public function calendar()
-    {
-        return Inertia::render('Scheduling');
     }
 }

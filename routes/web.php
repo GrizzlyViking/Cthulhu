@@ -5,6 +5,7 @@ use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SchedulingController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WeaponController;
@@ -16,7 +17,10 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/faq', [PageController::class, 'faq'])->name('faq');
-    Route::get('/calendar', [PageController::class, 'calendar'])->name('calendar');
+
+    Route::get('/calendar/{calendar}', [SchedulingController::class, 'calendar'])->name('calendar');
+    Route::get('/calendar/{calendar}/get_month', [SchedulingController::class, 'getMonth'])->name('calendar.month');
+    Route::post('/calendar/{calendar}/events/create', [SchedulingController::class, 'createEvents'])->name('events.create');
 
     //Using Resource Controller for Character with excepting some methods
     Route::resource('/character', CharacterController::class);
