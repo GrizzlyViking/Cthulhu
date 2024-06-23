@@ -141,7 +141,7 @@ let markRead = () => {
                             >
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path
-                                        :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown, }"
+                                        :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
@@ -149,7 +149,7 @@ let markRead = () => {
                                     />
                                     <path
                                         :class="{ hidden: !showingNavigationDropdown,
-                                            'inline-flex': showingNavigationDropdown,
+                                            'inline-flex': showingNavigationDropdown
                                         }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
