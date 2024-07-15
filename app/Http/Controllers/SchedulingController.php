@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EventType;
 use App\Models\Calendar;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class SchedulingController extends Controller
@@ -32,6 +34,7 @@ class SchedulingController extends Controller
             'days' => 'required|array',
             'user_id' => 'required|exists:users,id',
             'summary' => 'required|string',
+            'type' => [Rule::enum(EventType::class)],
             'description' => 'nullable|string',
         ]);
 
@@ -39,6 +42,7 @@ class SchedulingController extends Controller
             $event = new Event();
             $event->user_id = $validated['user_id'];
             $event->summary = $validated['summary'];
+            $event->type = $validated['type'];
             $event->calendar_id = $calendar->id;
             $event->description = $validated['description'];
             $event->start_at = Carbon::parse($day['date'])->setTime(17, 00);
@@ -46,6 +50,13 @@ class SchedulingController extends Controller
             $event->save();
         });
 
-        to_route('calendar');
+        to_route('calendar', ['calendar' => $calendar->slug]);
+    }
+
+    public function removePlanning(Calendar $calendar)
+    {
+        $calendar->events()->whereIn('type', ['suggestion', 'vote'])->delete();
+
+        return to_route('calendar', $calendar->slug);
     }
 }

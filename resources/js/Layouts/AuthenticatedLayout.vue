@@ -50,6 +50,11 @@ let markRead = () => {
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                <NavLink :href="route('message.index')" :active="route().current('message.index')">
+                                    Messages
+                                </NavLink>
+                            </div>
+                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('character.create')" :active="route().current('character.create')">
                                     Create new Character
                                 </NavLink>
@@ -186,6 +191,7 @@ let markRead = () => {
                             <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })"> Calendar </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('message.index')"> Messages </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('faq')"> FAQ </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">

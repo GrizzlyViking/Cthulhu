@@ -21,6 +21,7 @@ class Message extends Model
     use HasFactory;
 
     protected $with = ['sender', 'receiver'];
+    protected $appends = ['sentRelative'];
 
     protected $fillable = [
         'sender_id',
@@ -37,5 +38,10 @@ class Message extends Model
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'receiver_id');
+    }
+
+    public function getSentRelativeAttribute(): string
+    {
+        return $this->created_at->diffForHumans();
     }
 }

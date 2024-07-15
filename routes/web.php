@@ -15,12 +15,12 @@ Route::get('/', [PageController::class, 'welcome'])->name('welcome');
 
 Route::middleware('auth', 'verified')->group(function () {
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 
     Route::get('/calendar/{calendar}', [SchedulingController::class, 'calendar'])->name('calendar');
     Route::get('/calendar/{calendar}/get_month', [SchedulingController::class, 'getMonth'])->name('calendar.month');
     Route::post('/calendar/{calendar}/events/create', [SchedulingController::class, 'createEvents'])->name('events.create');
+    Route::delete('/calendar/{calendar}/events', [SchedulingController::class, 'removePlanning'])->name('planning.events.delete');
 
     //Using Resource Controller for Character with excepting some methods
     Route::resource('/character', CharacterController::class);
@@ -37,7 +37,9 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::post('/weapon/equip/{character}', [WeaponController::class, 'addWeapon'])->name('equip.weapon');
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
+    Route::put('/users/role/{user}', [UserController::class, 'role'])->name('users.role');
 
     Route::resource('skill', SkillController::class)->only(['store']);
     Route::get('/skill/append/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
@@ -50,6 +52,7 @@ Route::middleware('auth', 'verified')->group(function () {
 
     Route::post('/message/send', [MessageController::class, 'send'])->name('message.send');
     Route::put('/message/read', [MessageController::class, 'read'])->name('message.read');
+    Route::get('/message', [MessageController::class, 'index'])->name('message.index');
 });
 
 require __DIR__ . '/auth.php';

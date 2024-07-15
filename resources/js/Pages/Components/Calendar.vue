@@ -5,9 +5,8 @@ import {
     EllipsisHorizontalIcon,
     CheckIcon,
 } from '@heroicons/vue/20/solid'
-import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
 import {onMounted, ref} from "vue";
-import {useForm, usePage} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ModalPopup from "@/Pages/Components/ModalPopup.vue";
 
 const page = usePage();
@@ -19,6 +18,7 @@ const selectedDays = useForm({
     days: [],
     user_id: '',
     summary: '',
+    type: 'default',
     description: '',
 });
 
@@ -26,6 +26,19 @@ let selected = {
     month: today.toLocaleString('default', { month: 'long' }),
     year: today.getFullYear(),
     day: '2024-06-01'
+}
+
+const makeSuggestion = () => {
+    selectedDays.summary = 'Suggestion';
+    selectedDays.type = 'suggestion';
+    selectedDays.description = 'This is a date, suggested by ' + page.props.auth.user.name;
+    openModal();
+}
+
+const placeAvailability = () => {
+    selectedDays.summary = page.props.auth.user.name;
+    selectedDays.type = 'vote';
+    openModal();
 }
 
 let days = ref();
@@ -58,7 +71,6 @@ const plusOneMonth = () => {
 }
 
 const refresh_calendar = () => {
-    console.log(prop.calendar);
     axios.get(route('calendar.month', {
         calendar: prop.calendar.slug,
         month: selected.month,
@@ -73,7 +85,6 @@ onMounted(() => {
 });
 
 const selectDay = (day) => {
-    console.log(selectedDays.days.length)
     if (selectedDays.days.indexOf(day) > -1) {
         day.isSelected = false;
         selectedDays.days.splice(selectedDays.days.indexOf(day), 1)
@@ -83,14 +94,22 @@ const selectDay = (day) => {
     }
 }
 
+const removeAllPlanning = () => {
+    router.delete(route('planning.events.delete', prop.calendar.slug))
+}
+
 const createEvent = () => {
     selectedDays.user_id = page.props.auth.user.id;
     selectedDays.post(route('events.create', {
-        calendar: 'ages-of-madness'
+        calendar: prop.calendar.slug,
     }), {
         onSuccess: () => {
             refresh_calendar();
-            closeModal()
+            closeModal();
+            selectedDays.reset();
+        },
+        onError: (response) => {
+            console.log(response.calendar_id);
         }
     });
 }
@@ -123,52 +142,29 @@ const createEvent = () => {
                 <div class="hidden md:ml-4 md:flex md:items-center">
                     <div class="ml-6 h-6 w-px bg-gray-300"/>
                     <button type="button"
+                            @click="makeSuggestion"
+                            :disabled="selectedDays.days.length === 0"
+                            class="ml-6 rounded-md bg-cthulhu-green-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:bg-cthulhu-green-200 disabled:cursor-not-allowed disabled:border-cthulhu-green-50 disabled:border">
+                        Propose days
+                    </button>
+                    <button type="button"
+                            @click="placeAvailability"
+                            :disabled="selectedDays.days.length === 0"
+                            class="ml-6 rounded-md bg-cthulhu-green-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:bg-cthulhu-green-200 disabled:cursor-not-allowed disabled:border-cthulhu-green-50 disabled:border">
+                        Add you're availability
+                    </button>
+                    <button type="button"
                             @click="openModal"
                             :disabled="selectedDays.days.length === 0"
                             class="ml-6 rounded-md bg-cthulhu-green-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:bg-cthulhu-green-200 disabled:cursor-not-allowed disabled:border-cthulhu-green-50 disabled:border">
                         Add event
                     </button>
+                    <button type="button"
+                            @click="removeAllPlanning"
+                            class="ml-6 rounded-md bg-cthulhu-blood-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:bg-cthulhu-green-200 disabled:cursor-not-allowed disabled:border-cthulhu-green-50 disabled:border">
+                        Delete <span class="font-bold capitalize">all</span> planning
+                    </button>
                 </div>
-                <Menu as="div" class="relative ml-6 md:hidden">
-                    <MenuButton class="-mx-2 flex items-center rounded-full border border-transparent p-2 text-gray-400 hover:text-gray-500">
-                        <span class="sr-only">Open menu</span>
-                        <EllipsisHorizontalIcon class="h-5 w-5" aria-hidden="true"/>
-                    </MenuButton>
-
-                    <transition enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                        <MenuItems class="absolute right-0 z-10 mt-3 w-36 origin-top-right divide-y divide-gray-100 overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Create event</a>
-                                </MenuItem>
-                            </div>
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Go to today</a>
-                                </MenuItem>
-                            </div>
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Day view</a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Week view</a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Month view</a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Year view</a>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
             </div>
         </header>
         <div class="shadow ring-1 ring-black ring-opacity-5 lg:flex lg:flex-auto lg:flex-col">
@@ -187,7 +183,9 @@ const createEvent = () => {
                     <div
                         v-for="day in days"
                         :key="day.date"
-                        :class="[day.isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-500', 'relative px-3 py-2']"
+                        :class="[day.isCurrentMonth ?
+                        (day.events.some((day_event) => day_event.type === 'suggestion' ) ? 'bg-cthulhu-yellow-400' : 'bg-white')
+                        : 'bg-gray-50 text-gray-500', 'relative px-3 py-2']"
                         @click="selectDay(day)"
                     >
                         <time :datetime="day.start_at"
@@ -197,8 +195,8 @@ const createEvent = () => {
 
                         <CheckIcon v-if="day.isSelected" class="float-right -mr-1 h-5 w-5 text-gray-400" aria-hidden="true"/>
 
-                        <ol v-if="day.events.length > 0" class="mt-2">
-                            <li v-for="event in day.events.slice(0, 2)" :key="event.id">
+                        <ol v-if="day.events.filter((event) => event.type !== 'suggestion').length > 0" class="mt-2">
+                            <li v-for="event in day.events.filter((event_date) => event_date.type !== 'suggestion').slice(0, 2)" :key="event.id" :class="[event.type === 'vote' && 'bg-cthulhu-green-200 border-1 mb-1 border-cthulhu-green-400 rounded-lg px-2']">
                                 <a href="#" class="group flex">
                                     <p class="flex-auto truncate font-medium text-gray-900 group-hover:text-indigo-600">
                                         {{ event.summary }}
@@ -209,7 +207,7 @@ const createEvent = () => {
                                     </time>
                                 </a>
                             </li>
-                            <li v-if="day.events.length > 2" class="text-gray-500">+ {{ day.events.length - 2 }} more
+                            <li v-if="day.events.filter((event) => event.type !== 'suggestion').length > 2" class="text-gray-500">+ {{ day.events.length - 2 }} more
                             </li>
                         </ol>
                     </div>
@@ -259,6 +257,11 @@ const createEvent = () => {
                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
                         <div v-if="page.props.errors.description" v-text="page.props.errors.description" class="text-red-500 text-xs mt-1"></div>
                     </div>
+                </div>
+                <div v-if="page.props.errors" class="text-red-900">
+                    <ul>
+                        <li class="flex items-center justify-between">Error: </li>
+                    </ul>
                 </div>
             </form>
         </template>

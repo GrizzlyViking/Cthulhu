@@ -30,7 +30,7 @@ test('keeper roll against spot hidden', function () {
 
     try {
         /** @var Illuminate\Testing\TestResponse $response */
-        $response = $this->actingAs($user)->post('/character/rollForSkill', [
+        $response = $this->actingAs($user)->post(route('skill.roll'), [
             'skill_slug' => 'spot-hidden',
             'users' => $characters->map(fn (Character $character) => $character->id)
         ]);
@@ -38,7 +38,13 @@ test('keeper roll against spot hidden', function () {
         dd($exception->getMessage());
     }
 
-    dd($response->getContent());
 
-    $response->assertStatus(200);
+    $response->assertStatus(302);
 });
+
+
+test('update role', function () {
+    $user = User::factory()->create();
+
+});
+

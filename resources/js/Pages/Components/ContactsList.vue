@@ -5,7 +5,7 @@ const props = defineProps(['users'])
 
 <template>
     <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <li v-for="player in props.users" :key="player.id"
+        <li v-for="player in props.users.sort()" :key="player.id"
             class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow"
             :class="{inactive: !player.isOnline}"
         >

@@ -1,8 +1,8 @@
 <script setup>
-import {ChatBubbleLeftRightIcon, CubeIcon} from "@heroicons/vue/20/solid/index.js";
+import {ChatBubbleLeftRightIcon, CubeIcon, TrashIcon} from "@heroicons/vue/20/solid/index.js";
 import Badge from "@/Pages/Components/Badge.vue";
 import {computed, ref} from "vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 let prop = defineProps({player: Object})
 
 let page = usePage();
@@ -37,6 +37,18 @@ const addPlayerToRollList = (player) => {
     }
 }
 
+const deleteUser = (user_id) => {
+    if (confirm("Are you sure you want to delete this user?")) {
+        router.delete(route('users.destroy', {user: user_id}));
+    }
+}
+
+const updateUserRole = (user_id, new_role) => {
+    router.put(
+        route('users.role', {user: user_id}),
+        { role: new_role }
+    )
+}
 </script>
 
 <template>
@@ -47,7 +59,6 @@ const addPlayerToRollList = (player) => {
                 <badge :badge-class="{ 'text-xs': true }">{{ player.role }}</badge>
             </div>
         </div>
-        <img v-if="player.imageUrl" class="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300" :src="player.imageUrl" alt=""/>
     </div>
     <div>
         <div class="-mt-px flex divide-x divide-gray-200">
@@ -67,6 +78,32 @@ const addPlayerToRollList = (player) => {
                 >
                     <CubeIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                     Roll
+                </a>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="-mt-px flex divide-x divide-gray-200">
+            <div v-if="player.role === 'player'" class="flex w-0 flex-1">
+                <a @click="updateUserRole(player.id, 'Keeper of Arcane Lore')"
+                   class="relative inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 px-2 text-sm font-semibold text-gray-900"
+                >
+                    Make {{ player.name.replace(/^(\w+).*/, "$1") }} Keeper
+                </a>
+            </div>
+            <div v-else class="flex w-0 flex-1">
+                <a @click="updateUserRole(player.id, 'player')"
+                   class="relative inline-flex w-0 flex-1 items-center justify-center rounded-bl-lg border border-transparent py-4 px-2 text-sm font-semibold text-gray-900"
+                >
+                    Make {{ player.name.replace(/^(\w+).*/, "$1") }} a Player
+                </a>
+            </div>
+            <div class="-ml-px flex w-0 flex-1">
+                <a @click="deleteUser(player.id)"
+                   class="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                >
+                    <TrashIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                    Delete User
                 </a>
             </div>
         </div>

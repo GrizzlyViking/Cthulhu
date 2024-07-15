@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Enums\EventType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property string $summary
  * @property string $description
+ * @property EventType $type
  * @property int $calendar_id
  * @property Carbon $start_at
  * @property Carbon $end_at
@@ -25,6 +25,21 @@ use Illuminate\Support\Carbon;
 class Event extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'type' => EventType::class,
+    ];
+
+    protected $fillable = [
+        'uuid',
+        'user_id',
+        'summary',
+        'description',
+        'type',
+        'calendar_id',
+        'start_at',
+        'end_at',
+    ];
 
     public function user(): BelongsTo
     {

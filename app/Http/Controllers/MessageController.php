@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Jobs\SendMessage;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 
 class MessageController extends Controller
 {
@@ -40,5 +42,11 @@ class MessageController extends Controller
         $response = $message->update(['read' => true]);
 
         return response()->json(['success' => 'Message read!' . $response ]);
+    }
+
+    public function index()
+    {
+        $messages = Auth::user()->messages()->get();
+        return Inertia::render('Messages', compact('messages'));
     }
 }

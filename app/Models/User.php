@@ -2,16 +2,26 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string role
+ * @property Collection<Message> $messages
+ * @property Collection<Character> $characters
+ */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $appends = ['isOnline'];
 
@@ -58,5 +68,10 @@ class User extends Authenticatable
     public function getIsOnlineAttribute(): bool
     {
         return DB::table('sessions')->where('user_id', $this->id)->exists();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
     }
 }
