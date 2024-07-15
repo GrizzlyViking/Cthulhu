@@ -2,7 +2,6 @@
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
-    EllipsisHorizontalIcon,
     CheckIcon,
 } from '@heroicons/vue/20/solid'
 import {onMounted, ref} from "vue";

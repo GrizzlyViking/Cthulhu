@@ -1,7 +1,7 @@
 <script setup>
 import {ChatBubbleLeftRightIcon, CubeIcon, TrashIcon} from "@heroicons/vue/20/solid/index.js";
 import Badge from "@/Pages/Components/Badge.vue";
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 let prop = defineProps({player: Object})
 

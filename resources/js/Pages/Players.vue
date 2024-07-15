@@ -1,6 +1,6 @@
 <script setup>
 import {Head, router} from "@inertiajs/vue3";
-import {CheckCircleIcon, XCircleIcon} from "@heroicons/vue/20/solid/index.js";
+import {XCircleIcon} from "@heroicons/vue/20/solid/index.js";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 
 const props = defineProps({ users: Object })
