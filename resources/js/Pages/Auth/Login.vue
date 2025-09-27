@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ChevronDownIcon } from '@heroicons/vue/16/solid'
 
 defineProps({
     canResetPassword: {
@@ -52,6 +53,17 @@ const submit = () => {
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div>
+                <label for="group" class="block text-sm/6 font-medium text-white">Group</label>
+                <div class="mt-2 grid grid-cols-1">
+                    <select id="group" name="group" class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                        <option>United States</option>
+                        <option selected="">Canada</option>
+                        <option>Mexico</option>
+                    </select>
+                </div>
             </div>
 
             <div class="mt-4">

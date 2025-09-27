@@ -56,27 +56,23 @@ let resetExperience = (skill) => {
 
 <template>
     <div class="shadow-sm rounded-lg">
-        <div class="p-6 m-3 grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-3">
-            <div v-for="skill in prop.character.skills" :key="skill.id"
-                 class="grid grid-cols-2 justify-between overflow-clip">
-
-                <div
-                    class="font-bold p-2 align-middle text-right"
-                ><span @click="incrementExperience(skill)">{{
-                        skill.display_name
-                    }}</span>
-                    <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block"
-                         @click="resetExperience(skill)">
+        <div class="p-6 m-3 columns-1 md:columns-2 lg:columns-3 gap-x-3">
+            <div
+                v-for="skill in prop.character.skills"
+                :key="skill.id"
+                class="mb-3 break-inside-avoid grid grid-cols-2 justify-between overflow-clip"
+                style="break-inside: avoid"
+            >
+            <div class="font-bold p-2 align-middle text-right">
+                <span @click="incrementExperience(skill)">{{ skill.display_name }}</span>
+                    <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block" @click="resetExperience(skill)">
                         <div
                             class="align-middle text-center rounded-full border w-6 h-6"
                             :class="{
-                                            'border-gray-200': (Math.floor(skill.pivot.value/10) > skill.pivot.experience),
-                                            'border-red-800 bg-red-800 colour text-color-white': (Math.floor(skill.pivot.value/10) <= skill.pivot.experience)
-                                        }"
-                        >
-                            {{ skill.pivot.experience }}
-
-                        </div>
+                                'border-gray-200': (Math.floor(skill.pivot.value/10) > skill.pivot.experience),
+                                'border-red-800 bg-red-800 colour text-color-white': (Math.floor(skill.pivot.value/10) <= skill.pivot.experience)
+                              }"
+                        > {{ skill.pivot.experience }}</div>
                     </div>
                 </div>
 
@@ -126,6 +122,3 @@ let resetExperience = (skill) => {
     </modal-popup>
 </template>
 
-<style scoped>
-
-</style>

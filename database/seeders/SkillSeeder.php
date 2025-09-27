@@ -58,7 +58,7 @@ class SkillSeeder extends Seeder
             ['slug' => 'natural_world', 'display_name' => 'Natural_world', 'starting_value' => 1],
             ['slug' => 'navigate', 'display_name' => 'Navigate', 'starting_value' => 10],
             ['slug' => 'occult', 'display_name' => 'Occult', 'starting_value' => 10],
-            ['slug' => 'Op_hv_machine', 'display_name' => 'Op_hv_machine', 'starting_value' => 1],
+            ['slug' => 'op_hv_machine', 'display_name' => 'Operate heavy machine', 'starting_value' => 1],
             ['slug' => 'persuade', 'display_name' => 'Persuade', 'starting_value' => 10],
             ['slug' => 'pilot', 'display_name' => 'Pilot', 'starting_value' => 1],
             ['slug' => 'psychology', 'display_name' => 'Psychology', 'starting_value' => 10],
