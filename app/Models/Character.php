@@ -87,7 +87,7 @@ class Character extends Model
 
     public function skills(): BelongsToMany
     {
-        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('slug');
+        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('display_name');
     }
 
     public function player(): BelongsTo
