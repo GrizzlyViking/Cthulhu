@@ -78,11 +78,11 @@ class Character extends Model
                 return $this->skills->contains($skill);
             })
             ->each(function (Skill $skill) {
-            $this->skills()->attach($skill, [
-                'order' => $skill->order_by,
-                'value' => $skill->starting_value
-            ]);
-        });
+                $this->skills()->attach($skill, [
+                    'order' => $skill->order_by,
+                    'value' => $skill->starting_value
+                ]);
+            });
     }
 
     public function skills(): BelongsToMany
@@ -103,5 +103,10 @@ class Character extends Model
     public function getDamageBonus(): string
     {
         return CharacterCreation::damageBonus($this);
+    }
+
+    public function group()
+    {
+
     }
 }

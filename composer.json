@@ -5,7 +5,8 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
+        "althinect/filament-spatie-roles-permissions": "^2.3",
         "filament/filament": "^3.0-stable",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/breeze": "^2.0",
@@ -15,6 +16,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "pusher/pusher-php-server": "^7.2",
+        "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
