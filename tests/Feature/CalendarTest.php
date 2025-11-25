@@ -34,7 +34,7 @@ test('events are found in the correct date', function () {
     $event = App\Models\Event::factory()->create([
         'summary' => 'test event',
         'start_at' => '2024-06-01T02:42:52.000000Z',
-        'end_at' => '2024-06-01T22:42:52.000000Z'
+        'end_at' => '2024-06-01T22:42:52.000000Z',
     ]);
     $calendar->events()->save($event);
     $calendar->refresh();
@@ -55,7 +55,7 @@ test('events have been attached to the days from controller', function () {
     $event = App\Models\Event::factory()->create([
         'summary' => 'test event',
         'start_at' => '2024-06-01 2:00:00',
-        'end_at' => '2024-06-01 22:00:00'
+        'end_at' => '2024-06-01 22:00:00',
     ]);
     $calendar->events()->save($event);
     $calendar->refresh();

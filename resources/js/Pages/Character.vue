@@ -50,11 +50,9 @@ const updateUser = (event) => {
         <template #header>
             <h2 class="font-semibold text-xl text-cthulhu-green-800 leading-tight"><span class="limelight-regular">{{ prop.character.name }}</span> - ({{ prop.character.player.name }})</h2>
 
-            <Switch v-if="false" v-model="editable"
-                    :class="[editable ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+            <Switch v-if="true" v-model="editable" :class="[editable ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span class="sr-only">Use setting</span>
-                <span aria-hidden="true"
-                      :class="[editable ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-cthulhu-green-200 shadow ring-0 transition duration-200 ease-in-out']"/>
+                <span aria-hidden="true" :class="[editable ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-cthulhu-green-200 shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
         </template>
 

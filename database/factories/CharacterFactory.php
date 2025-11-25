@@ -15,7 +15,6 @@ use Illuminate\Support\Str;
  */
 class CharacterFactory extends Factory
 {
-
     public function configure(): CharacterFactory
     {
         $callback = function (Character $character) {
@@ -30,6 +29,7 @@ class CharacterFactory extends Factory
             $character->save();
             $character->addAllSkills();
         };
+
         return $this->afterCreating($callback);
     }
 
@@ -57,7 +57,7 @@ class CharacterFactory extends Factory
             'appearance' => Roll::dice('(3d6)*5'),
             'power' => Roll::dice('(3d6)*5'),
             'size' => Roll::dice('(2d6+6)*5'),
-            'education' => Roll::dice('(2d6+6)*5')
+            'education' => Roll::dice('(2d6+6)*5'),
         ];
     }
 }

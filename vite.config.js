@@ -24,4 +24,9 @@ export default defineConfig({
         },
         host: 'cthulhu.test',
     },
+    test: {
+        environment: 'jsdom', // or 'happy-dom'
+        setupFiles: ['tests/vitest.setup.js'],
+        globals: true,
+    },
 });

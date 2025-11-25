@@ -18,7 +18,6 @@ use Illuminate\Support\Carbon;
  * @property int $calendar_id
  * @property Carbon $start_at
  * @property Carbon $end_at
- *
  * @property Calendar $calendar
  * @property User $user
  */

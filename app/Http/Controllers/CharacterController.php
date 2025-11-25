@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\Skill;
-use App\Models\Weapon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -46,6 +45,11 @@ class CharacterController extends Controller
         return to_route('character.show', [$character->slug]);
     }
 
+    public function aptitude(Character $character, Skill $skill)
+    {
+        return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();
+    }
+
     public function update(Character $character, Request $request): RedirectResponse
     {
         $request->validate([
@@ -57,7 +61,7 @@ class CharacterController extends Controller
         return to_route('character.show', $character->slug);
     }
 
-    function updateAttribute(Character $character, Request $request): \Inertia\Response
+    public function updateAttribute(Character $character, Request $request): \Inertia\Response
     {
         $validator = Validator::make($request->all(), [
             'attribute' => 'required',
@@ -79,7 +83,7 @@ class CharacterController extends Controller
         return Inertia::render('Character', ['character' => $character]);
     }
 
-    function updatePivot(Character $character, Skill $skill, string $pivot, Request $request): \Illuminate\Http\Response
+    public function updatePivot(Character $character, Skill $skill, string $pivot, Request $request): \Illuminate\Http\Response
     {
         $validator = Validator::make($request->all(), [
             'value' => 'required',
@@ -119,10 +123,10 @@ class CharacterController extends Controller
     public function avatar(Character $character, Request $request)
     {
         $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg'
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
-        $path = $request->avatar->store('avatars/' . $character->slug, 'public');
+        $path = $request->avatar->store('avatars/'.$character->slug, 'public');
 
         $character->update(['avatar' => $path]);
 
@@ -132,6 +136,7 @@ class CharacterController extends Controller
     public function destroy(Character $character)
     {
         $character->delete();
+
         return to_route('dashboard')->with('success', 'Character deleted.');
     }
 }

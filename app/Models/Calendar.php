@@ -43,15 +43,12 @@ class Calendar extends Model
         $endOfCalendar = $pointOfReference->endOfMonth()->endOfWeek();
 
         $datesOfCalendar = $this->generateDatesOfCalendar($startOfCalendar, $endOfCalendar);
+
         return $this->getEventsPerDates($datesOfCalendar, $pointOfReference);
     }
 
     /**
      * The generateDatesOfCalendar method generates the list of dates between the start and end of the calendar range.
-     *
-     * @param CarbonImmutable $startOfCalendar
-     * @param CarbonImmutable $endOfCalendar
-     * @return array
      */
     private function generateDatesOfCalendar(CarbonImmutable $startOfCalendar, CarbonImmutable $endOfCalendar): array
     {
@@ -69,10 +66,6 @@ class Calendar extends Model
 
     /**
      * The getEventsPerDates function maps over these dates and gets the events for each day.
-     *
-     * @param array $dates
-     * @param CarbonImmutable $pointOfReference
-     * @return \Illuminate\Support\Collection
      */
     private function getEventsPerDates(array $dates, CarbonImmutable $pointOfReference): \Illuminate\Support\Collection
     {
@@ -87,9 +80,6 @@ class Calendar extends Model
 
     /**
      * the getEventsOfDay method retrieves the events for a specific day
-     *
-     * @param string $date
-     * @return Collection
      */
     private function getEventsOfDay(string $date): Collection
     {

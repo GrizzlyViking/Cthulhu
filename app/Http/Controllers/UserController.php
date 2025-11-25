@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleEnum;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -14,6 +12,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('characters')->get();
+
         return Inertia::render('Players', compact('users'));
     }
 
@@ -27,7 +26,7 @@ class UserController extends Controller
 
     public function online(): array
     {
-        return DB::table('sessions')->whereNotNull('user_id', )->get('user_id')->toArray();
+        return DB::table('sessions')->whereNotNull('user_id')->get('user_id')->toArray();
     }
 
     public function playerManagement()
@@ -39,9 +38,10 @@ class UserController extends Controller
                 'role' => $user->role,
                 'sentRelative' => $user->role,
                 'online' => $user->is_online,
-                'content' => ''
+                'content' => '',
             ];
         });
+
         return Inertia::render('Players', compact('users'));
     }
 
@@ -50,7 +50,7 @@ class UserController extends Controller
         $request->validate([
             'role' => [
                 'required',
-            ]
+            ],
         ]);
 
         $user->update(['role' => $request->input('role')]);

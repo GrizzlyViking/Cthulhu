@@ -37,6 +37,7 @@
                                     </slot>
                                 </p>
                             </div>
+                            <slot name="buttons">
                             <div class="mt-4 flex justify-between gap-2">
                                     <button
                                         v-if="$slots.response1().length"
@@ -55,6 +56,7 @@
                                         <slot name="response2"></slot>
                                     </button>
                             </div>
+                            </slot>
                         </DialogPanel>
                     </TransitionChild>
                 </div>

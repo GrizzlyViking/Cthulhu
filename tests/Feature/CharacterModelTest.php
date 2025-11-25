@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Character;
-use App\Models\Characteristic;
 use App\Models\Skill;
 use App\Models\Weapon;
 
@@ -26,7 +25,7 @@ test('attach skills to a character', function () {
     $skills = Skill::all();
     expect($character->skills->first())->toBeInstanceOf(Skill::class)
         ->and($character->skills->count())->toEqual($skills->count())
-        ->and($skills->reject(fn(Skill $skill) => $character->whereRelation('skills', 'slug', '=', $skill->slug)->exists()))->isEmpty();
+        ->and($skills->reject(fn (Skill $skill) => $character->whereRelation('skills', 'slug', '=', $skill->slug)->exists()))->isEmpty();
 });
 
 test('attach weapon to a character', function () {
@@ -46,7 +45,7 @@ test('append skills to a character', function () {
         'slug' => 'test',
         'display_name' => 'test',
         'description' => 'test',
-        'starting_value' => 2
+        'starting_value' => 2,
     ]);
 
     $character->appendSkills();

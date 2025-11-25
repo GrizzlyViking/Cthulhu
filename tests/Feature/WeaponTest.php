@@ -2,6 +2,7 @@
 
 use App\Models\Character;
 use App\Models\Weapon;
+
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
@@ -32,7 +33,7 @@ test('reload weapon', function () {
 
     actingAs($user)->post(route('reload.weapon', ['character' => $character->slug]), [
         'pivot_id' => $character->weapons()->first()->pivot->id,
-        'ammo' => $weapon->bullet_in_mag
+        'ammo' => $weapon->bullet_in_mag,
     ]);
 
     expect($character->weapons()->get())->toHaveCount(1);

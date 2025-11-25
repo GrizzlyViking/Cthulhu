@@ -13,9 +13,9 @@ enum RoleEnum: string implements EnumInterface
     public function label(): string
     {
         return match ($this) {
-            static::PLAYER => 'Player',
-            static::KEEPER => 'Keeper of Arcane Lore',
-            static::ADMIN => 'Admin',
+            self::PLAYER => 'Player',
+            self::KEEPER => 'Keeper of Arcane Lore',
+            self::ADMIN => 'Admin',
         };
     }
 
@@ -28,5 +28,4 @@ enum RoleEnum: string implements EnumInterface
     {
         return Arr::map(self::cases(), fn (self $role) => $role->label());
     }
-
 }

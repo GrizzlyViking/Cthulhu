@@ -12,6 +12,7 @@ class Weapon extends Model
     use HasFactory;
 
     protected $with = ['skills'];
+
     protected $fillable = [];
 
     public function characters(): MorphToMany

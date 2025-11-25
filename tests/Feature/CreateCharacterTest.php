@@ -20,7 +20,6 @@ test('create character using /create', function () {
         'birthplace' => fake()->word,
     ]);
 
-
     $response->assertStatus(302);
 
     $character = \App\Models\Character::where('name', $name)->firstOrFail();

@@ -8,6 +8,8 @@ import {useForm, router} from "@inertiajs/vue3";
 const prop = defineProps({character: Object, editable: Boolean});
 
 const isAddSkillModalOpen = ref(false);
+const isEditSkillModalOpen = ref(false);
+
 const closeModal = () => {
     isAddSkillModalOpen.value = false;
 };
@@ -39,11 +41,41 @@ let adjustSkill = debounce((skill, event) => {
     });
 }, 600);
 
-let incrementExperience = (skill) => {
-    axios.get(route('experience.increment', {
+let updateSkill = (skill) => {
+    axios.put(route('skill.update', {
         character: prop.character.slug,
         skill: skill.slug
-    })).then(() => skill.pivot.experience = skill.pivot.experience + 1);
+    }), {
+        display_name: skill.display_name,
+        starting_value: skill.starting_value
+    }).then (() => {
+        isEditSkillModalOpen.value = false;
+    })
+}
+
+let deleteSkill = (skill) => {
+    axios.delete(route('skill.destroy', {
+        character: prop.character.slug,
+        skill: skill.slug
+    }), {
+        preserveScroll: true,
+    }).then (() => {
+        isEditSkillModalOpen.value = false;
+        prop.character.skills = prop.character.skills.filter(s => s.slug !== skill.slug);
+    })
+}
+
+let editSkill = (skill) => {
+    newSkill.reset();
+    newSkill.character_id = prop.character.id;
+    newSkill.display_name = skill.display_name;
+    newSkill.starting_value = skill.pivot.value;
+    isEditSkillModalOpen.value = true;
+}
+
+let cancelEditSkill = () => {
+    isEditSkillModalOpen.value = false;
+    newSkill.reset();
 }
 
 let resetExperience = (skill) => {
@@ -64,7 +96,7 @@ let resetExperience = (skill) => {
                 style="break-inside: avoid"
             >
             <div class="font-bold p-2 align-middle text-right">
-                <span @click="incrementExperience(skill)">{{ skill.display_name }}</span>
+                <span @click="editSkill(skill)">{{ skill.display_name }}</span>
                     <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block" @click="resetExperience(skill)">
                         <div
                             class="align-middle text-center rounded-full border w-6 h-6"
@@ -90,6 +122,58 @@ let resetExperience = (skill) => {
             </button>
         </div>
     </div>
+
+    <modal-popup :is-open="isEditSkillModalOpen"
+                 @modal-close="closeModal"
+                 @response1="closeModal"
+                 @response2="addSkill"
+    >
+        <template #title>Edit skill</template>
+        <template #default>
+            <form>
+                <div>
+                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display
+                        name</label>
+                    <div class="mt-2">
+                        <input type="text" v-model="newSkill.display_name"
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                    </div>
+                </div>
+                <div>
+                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting
+                        value</label>
+                    <div class="mt-2">
+                        <input type="number" v-model="newSkill.starting_value"
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                    </div>
+                </div>
+            </form>
+        </template>
+        <template #buttons>
+            <div class="mt-4 flex justify-between gap-2">
+                <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    @click="cancelEditSkill"
+                >Cancel
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    @click="updateSkill(newSkill)"
+                >
+                    Update
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    @click="deleteSkill(newSkill)"
+                >
+                    Delete
+                </button>
+            </div>
+        </template>
+    </modal-popup>
 
     <modal-popup :is-open="isAddSkillModalOpen"
                  @modal-close="closeModal"

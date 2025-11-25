@@ -5,15 +5,18 @@ namespace App\Misc;
 class Roll
 {
     protected static int $rolls = 1;
+
     protected static int $eyes = 6;
+
     protected static int $added = 0;
+
     protected static int $multiplier;
 
     public static function dice($dice): int
     {
         preg_match('/(\d+)[dD](\d+)/', $dice, $match);
 
-        list($discard, self::$rolls, self::$eyes) = $match;
+        [$discard, self::$rolls, self::$eyes] = $match;
 
         if (preg_match('/\+(\d+)/', $dice, $addition)) {
             self::$added = $addition[1];

@@ -27,7 +27,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // create roles and assign created permissions
 
         // Player
-        $player = Role::create(['name' => RoleEnum::PLAYER->value]);;
+        $player = Role::create(['name' => RoleEnum::PLAYER->value]);
         $player->givePermissionTo(PermissionsEnum::EDIT_OWN_CHARACTER);
         $player->givePermissionTo(PermissionsEnum::VIEW_OWN_CHARACTER);
         $player->givePermissionTo(PermissionsEnum::DELETE_OWN_CHARACTER);

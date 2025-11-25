@@ -22,7 +22,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::post('/calendar/{calendar}/events/create', [SchedulingController::class, 'createEvents'])->name('events.create');
     Route::delete('/calendar/{calendar}/events', [SchedulingController::class, 'removePlanning'])->name('planning.events.delete');
 
-    //Using Resource Controller for Character with excepting some methods
+    // Using Resource Controller for Character with excepting some methods
     Route::resource('/character', CharacterController::class);
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
     Route::get('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('rename.character');
@@ -41,7 +41,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
     Route::put('/users/role/{user}', [UserController::class, 'role'])->name('users.role');
 
-    Route::resource('skill', SkillController::class)->only(['store']);
+    Route::resource('skill', SkillController::class)->only(['store', 'destroy']);
     Route::get('/skill/append/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
     Route::post('/skill/roll', [SkillController::class, 'roll'])->name('skill.roll');
     Route::put('/skill/{character}/{skill}/update', [SkillController::class, 'update'])->name('skill.update');
@@ -55,4 +55,4 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/message', [MessageController::class, 'index'])->name('message.index');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

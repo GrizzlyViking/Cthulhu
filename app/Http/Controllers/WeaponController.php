@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Validator;
 
 class WeaponController extends Controller
 {
-
     public function addWeapon(Character $character, Request $request): RedirectResponse
     {
         $request->validate([

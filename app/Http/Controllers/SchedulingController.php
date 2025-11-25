@@ -12,7 +12,6 @@ use Inertia\Inertia;
 
 class SchedulingController extends Controller
 {
-
     public function calendar(Calendar $calendar)
     {
         return Inertia::render('Scheduling', compact('calendar'));
@@ -39,7 +38,7 @@ class SchedulingController extends Controller
         ]);
 
         collect($validated['days'])->each(function ($day) use ($calendar, $validated) {
-            $event = new Event();
+            $event = new Event;
             $event->user_id = $validated['user_id'];
             $event->summary = $validated['summary'];
             $event->type = $validated['type'];

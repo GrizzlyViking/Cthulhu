@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum Characteristic : string
+enum Characteristic: string
 {
     case STR = 'strength';
     case DEX = 'dexterity';

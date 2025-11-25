@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $receiver_id
  * @property bool $read
  * @property string $content
- *
  * @property User $sender
  * @property User $receiver
  */
@@ -21,6 +20,7 @@ class Message extends Model
     use HasFactory;
 
     protected $with = ['sender', 'receiver'];
+
     protected $appends = ['sentRelative'];
 
     protected $fillable = [

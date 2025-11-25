@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Character;
 use App\Models\Group;
 use App\Models\User;
-use App\Models\Character;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 

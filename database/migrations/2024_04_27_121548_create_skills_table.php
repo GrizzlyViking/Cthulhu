@@ -39,5 +39,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('character_skill');
         Schema::dropIfExists('skills');
-}
+    }
 };

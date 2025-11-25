@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use function Pest\Laravel\json;
 
 class SkillController extends Controller
 {
@@ -23,7 +22,7 @@ class SkillController extends Controller
             'character_id' => 'integer|exists:characters,id',
         ]);
 
-        $skill = new Skill();
+        $skill = new Skill;
         $skill->display_name = $request->display_name;
         $skill->starting_value = $request->starting_value;
         $skill->slug = Str::slug($request->display_name);
@@ -31,7 +30,7 @@ class SkillController extends Controller
 
         $skill->refresh();
 
-        if (!$skill->id) {
+        if (! $skill->id) {
             return response('Error, skill not created', 400);
         }
 
@@ -42,7 +41,7 @@ class SkillController extends Controller
         return to_route('character.show', $character->slug);
     }
 
-    function update(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
+    public function update(Character $character, Skill $skill, Request $request): \Illuminate\Http\Response
     {
         $request->validate([
             'value' => 'required',
@@ -56,6 +55,7 @@ class SkillController extends Controller
         return \response('OK', 200);
     }
 
+    // TODO: Moving this function to Character controller
     public function aptitude(Character $character, Skill $skill)
     {
         return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();
@@ -78,7 +78,7 @@ class SkillController extends Controller
 
         $skill = Skill::where('slug', $request->get('skill_slug'))->first();
 
-        if (!$skill) {
+        if (! $skill) {
             return response('Error, skill not found', 400);
         }
 
@@ -86,7 +86,7 @@ class SkillController extends Controller
             $user = User::find($user_id);
             if ($user instanceof User) {
                 $user->characters->first()->skills
-                    ->filter(fn(Skill $skill) => $skill->slug === $request->get('skill_slug'))
+                    ->filter(fn (Skill $skill) => $skill->slug === $request->get('skill_slug'))
                     ->each(function (Skill $skill) use ($user) {
                         $roll = rand(1, 100);
                         $result = '';
@@ -104,7 +104,7 @@ class SkillController extends Controller
                             $result = 'Success';
                         }
 
-                        $this->rolls[] = sprintf("%s using: %s rolled: %s against %s, outcome was %s",
+                        $this->rolls[] = sprintf('%s using: %s rolled: %s against %s, outcome was %s',
                             $user->name,
                             $skill->display_name,
                             intval($roll),

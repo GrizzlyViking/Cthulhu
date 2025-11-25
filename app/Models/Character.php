@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
  * @property int $id
  * @property int $strength
  * @property int $dexterity
- * @property int intelligence
+ * @property int $intelligence
  * @property int $constitution
  * @property int $appearance
  * @property int $power
@@ -30,25 +30,39 @@ use Illuminate\Support\Collection;
  * @property int $build
  * @property string $damage_bonus
  * @property string $avatar
- * @property boolean $temporary_insanity
- * @property boolean $indefinite_insanity
- * @property boolean $major_wound
- * @property boolean $unconscious
- * @property boolean $dying
+ * @property bool $temporary_insanity
+ * @property bool $indefinite_insanity
+ * @property bool $major_wound
+ * @property bool $unconscious
+ * @property bool $dying
  */
 class Character extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'user_id',
-        'occupation',
-        'age',
-        'gender',
-        'residence',
-        'birthplace',
+        'strength',
+        'dexterity',
+        'intelligence',
+        'constitution',
+        'appearance',
+        'power',
+        'size',
+        'education',
+        'move_rate',
+        'hit_points',
+        'sanity',
+        'luck',
+        'magic_points',
+        'dodge',
+        'build',
+        'damage_bonus',
         'avatar',
+        'temporary_insanity',
+        'indefinite_insanity',
+        'major_wound',
+        'unconscious',
+        'dying',
     ];
 
     protected $with = ['skills', 'player', 'weapons'];
@@ -64,7 +78,7 @@ class Character extends Model
             ->each(function (Skill $skill) {
                 $this->skills()->attach($skill, [
                     'order' => $skill->order_by,
-                    'value' => $skill->starting_value
+                    'value' => $skill->starting_value,
                 ]);
             });
 
@@ -80,7 +94,7 @@ class Character extends Model
             ->each(function (Skill $skill) {
                 $this->skills()->attach($skill, [
                     'order' => $skill->order_by,
-                    'value' => $skill->starting_value
+                    'value' => $skill->starting_value,
                 ]);
             });
     }
@@ -107,6 +121,5 @@ class Character extends Model
 
     public function group()
     {
-
     }
 }
