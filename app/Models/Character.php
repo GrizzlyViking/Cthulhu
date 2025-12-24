@@ -12,29 +12,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
- * @property int $id
- * @property int $strength
- * @property int $dexterity
- * @property int $intelligence
- * @property int $constitution
- * @property int $appearance
- * @property int $power
- * @property int $size
- * @property int $education
- * @property int $move_rate
- * @property int $hit_points
- * @property int $sanity
- * @property int $luck
- * @property int $magic_points
- * @property int $dodge
- * @property int $build
+ * @property int    $id
+ * @property int    $strength
+ * @property int    $dexterity
+ * @property int    $intelligence
+ * @property int    $constitution
+ * @property int    $appearance
+ * @property int    $power
+ * @property int    $size
+ * @property int    $education
+ * @property int    $move_rate
+ * @property int    $hit_points
+ * @property int    $sanity
+ * @property int    $luck
+ * @property int    $magic_points
+ * @property int    $dodge
+ * @property int    $build
  * @property string $damage_bonus
  * @property string $avatar
- * @property bool $temporary_insanity
- * @property bool $indefinite_insanity
- * @property bool $major_wound
- * @property bool $unconscious
- * @property bool $dying
+ * @property bool   $temporary_insanity
+ * @property bool   $indefinite_insanity
+ * @property bool   $major_wound
+ * @property bool   $unconscious
+ * @property bool   $dying
  */
 class Character extends Model
 {
@@ -119,7 +119,5 @@ class Character extends Model
         return CharacterCreation::damageBonus($this);
     }
 
-    public function group()
-    {
-    }
+    public function group() {}
 }

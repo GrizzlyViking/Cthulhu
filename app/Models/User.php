@@ -13,12 +13,12 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
- * @property int $id
+ * @property int    $id
  * @property string $name
  * @property string $email
  * @property string $password
  * @property string role
- * @property Collection<Message> $messages
+ * @property Collection<Message>   $messages
  * @property Collection<Character> $characters
  */
 class User extends Authenticatable
@@ -58,7 +58,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 

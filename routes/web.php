@@ -25,8 +25,12 @@ Route::middleware('auth', 'verified')->group(function () {
     // Using Resource Controller for Character with excepting some methods
     Route::resource('/character', CharacterController::class);
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
-    Route::get('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('rename.character');
+    Route::get('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
     Route::post('/character/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
+    Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
+    Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');
+    Route::put('/character/{character}/{skill}/remove', [CharacterController::class, 'removeSkill'])->name('character.skill.remove');
+    Route::get('/character/{character}/append_skills/', [SkillController::class, 'appendAllMissingSkills'])->name('character.append.missing.skills');
 
     Route::get('/experience/{character}/{skill}/increment', [ExperienceController::class, 'increment'])->name('experience.increment');
     Route::get('/experience/{character}/{skill}/reset', [ExperienceController::class, 'reset'])->name('experience.reset');
@@ -42,9 +46,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/users/role/{user}', [UserController::class, 'role'])->name('users.role');
 
     Route::resource('skill', SkillController::class)->only(['store', 'destroy']);
-    Route::get('/skill/append/{character}', [SkillController::class, 'appendAllMissingSkills'])->name('skill.missing.append');
     Route::post('/skill/roll', [SkillController::class, 'roll'])->name('skill.roll');
-    Route::put('/skill/{character}/{skill}/update', [SkillController::class, 'update'])->name('skill.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

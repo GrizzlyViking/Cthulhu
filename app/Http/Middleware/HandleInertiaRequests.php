@@ -35,12 +35,12 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
-                'characters' => Character::all(),
-                'equipment' => Weapon::all(),
-                'users' => User::all(),
+                'user'               => $request->user(),
+                'characters'         => Character::all(),
+                'equipment'          => Weapon::all(),
+                'users'              => User::all(),
                 'listOfMessageUsers' => [],
-                'listOfRollUsers' => [],
+                'listOfRollUsers'    => [],
             ],
         ];
     }

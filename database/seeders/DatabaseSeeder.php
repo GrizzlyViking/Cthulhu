@@ -17,8 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call(CalendarSeeder::class);
 
         User::factory()->create([
-            'name' => 'Sebastian Edelmann',
-            'email' => 'sebastian@schlossberg-edelmann.com',
+            'name'     => 'Sebastian Edelmann',
+            'email'    => 'sebastian@schlossberg-edelmann.com',
             'password' => bcrypt('6sun3jD6Mc9Nn2g'),
         ]);
     }

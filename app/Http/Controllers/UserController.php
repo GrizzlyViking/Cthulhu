@@ -33,12 +33,12 @@ class UserController extends Controller
     {
         $users = User::with('characters')->get()->map(function (User $user) {
             return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
+                'id'           => $user->id,
+                'name'         => $user->name,
+                'role'         => $user->role,
                 'sentRelative' => $user->role,
-                'online' => $user->is_online,
-                'content' => '',
+                'online'       => $user->is_online,
+                'content'      => '',
             ];
         });
 

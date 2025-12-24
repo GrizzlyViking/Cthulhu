@@ -64,9 +64,9 @@ class GroupResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListGroups::route('/'),
+            'index'  => Pages\ListGroups::route('/'),
             'create' => Pages\CreateGroup::route('/create'),
-            'edit' => Pages\EditGroup::route('/{record}/edit'),
+            'edit'   => Pages\EditGroup::route('/{record}/edit'),
         ];
     }
 }

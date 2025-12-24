@@ -11,12 +11,12 @@ test('create character using /create', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->post('/create/step/first', [
-        'name' => ($name = fake()->name),
-        'user_id' => $user->id,
+        'name'       => ($name = fake()->name),
+        'user_id'    => $user->id,
         'occupation' => fake()->word,
-        'age' => 100,
-        'gender' => 'Male',
-        'residence' => fake()->word,
+        'age'        => 100,
+        'gender'     => 'Male',
+        'residence'  => fake()->word,
         'birthplace' => fake()->word,
     ]);
 

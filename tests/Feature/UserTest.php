@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 test('keeper roll against spot hidden', function () {
-    $user = User::factory()->create();
+    $user       = User::factory()->create();
     $characters = Character::factory(8)->create();
     $characters->each(function ($character) {
         $character->skills->filter(function (Skill $skill) {
@@ -31,7 +31,7 @@ test('keeper roll against spot hidden', function () {
         /** @var Illuminate\Testing\TestResponse $response */
         $response = $this->actingAs($user)->post(route('skill.roll'), [
             'skill_slug' => 'spot-hidden',
-            'users' => $characters->map(fn (Character $character) => $character->id),
+            'users'      => $characters->map(fn (Character $character) => $character->id),
         ]);
     } catch (Exception $exception) {
         dd($exception->getMessage());

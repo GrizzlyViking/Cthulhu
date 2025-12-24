@@ -11,7 +11,7 @@ beforeEach(function () {
 
 test('attach a weapon to a character', function () {
     $character = Character::factory()->create();
-    $weapon = Weapon::find(27);
+    $weapon    = Weapon::find(27);
 
     $character->weapons()->attach($weapon);
 
@@ -25,15 +25,15 @@ test('attach a weapon to a character', function () {
 });
 
 test('reload weapon', function () {
-    $user = \App\Models\User::factory()->create();
+    $user      = \App\Models\User::factory()->create();
     $character = Character::factory()->create(['user_id' => $user->id]);
-    $weapon = Weapon::find(27);
+    $weapon    = Weapon::find(27);
 
     $character->weapons()->attach($weapon);
 
     actingAs($user)->post(route('reload.weapon', ['character' => $character->slug]), [
         'pivot_id' => $character->weapons()->first()->pivot->id,
-        'ammo' => $weapon->bullet_in_mag,
+        'ammo'     => $weapon->bullet_in_mag,
     ]);
 
     expect($character->weapons()->get())->toHaveCount(1);

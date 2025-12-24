@@ -27,7 +27,7 @@ class WeaponController extends Controller
     {
         $request->validate([
             'pivot_id' => 'required|integer',
-            'ammo' => 'required|integer',
+            'ammo'     => 'required|integer',
         ]);
 
         DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
@@ -39,7 +39,7 @@ class WeaponController extends Controller
     {
         Validator::make($request->all(), [
             'character_slug' => 'required|string',
-            'pivot_id' => 'required|integer',
+            'pivot_id'       => 'required|integer',
         ]);
 
         DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();

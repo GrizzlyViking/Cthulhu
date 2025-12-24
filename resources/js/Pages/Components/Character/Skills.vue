@@ -7,56 +7,36 @@ import {useForm, router} from "@inertiajs/vue3";
 
 const prop = defineProps({character: Object, editable: Boolean});
 
-const isAddSkillModalOpen = ref(false);
-const isEditSkillModalOpen = ref(false);
+let isEditSkillModalOpen = ref(false);
 
-const closeModal = () => {
-    isAddSkillModalOpen.value = false;
-};
-const openModal = () => {
-    isAddSkillModalOpen.value = true;
+const closeEditModal = () => {
+    isEditSkillModalOpen.false = false;
 };
 
 let newSkill = useForm({
     character_id: prop.character.id,
     display_name: '',
-    starting_value: 0
+    starting_value: 0,
+    new_value: 0,
+    slug: ''
 })
 
-const addSkill = () => {
-    newSkill.post(route('skill.store'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            closeModal()
-        },
-    })
-}
-
-let adjustSkill = debounce((skill, event) => {
-    axios.put(route('skill.update', {
+const updateSkill = debounce((skill) => {
+    router.put(route('character.skill.update', {
         character: prop.character.slug,
-        skill: skill.slug
+        skill: skill.slug,
     }), {
-        value: Number(event.target.value)
+        value: Number(skill.new_value)
+    }, {
+        preserveScroll: true,
+        onSuccess: () => isEditSkillModalOpen.false = false
     });
 }, 600);
 
-let updateSkill = (skill) => {
-    axios.put(route('skill.update', {
-        character: prop.character.slug,
-        skill: skill.slug
-    }), {
-        display_name: skill.display_name,
-        starting_value: skill.starting_value
-    }).then (() => {
-        isEditSkillModalOpen.value = false;
-    })
-}
-
 let deleteSkill = (skill) => {
-    axios.delete(route('skill.destroy', {
+    axios.put(route('character.skill.remove', {
         character: prop.character.slug,
-        skill: skill.slug
+        skill: skill.slug,
     }), {
         preserveScroll: true,
     }).then (() => {
@@ -65,11 +45,11 @@ let deleteSkill = (skill) => {
     })
 }
 
-let editSkill = (skill) => {
-    newSkill.reset();
+let openEditModal = (skill) => {
     newSkill.character_id = prop.character.id;
     newSkill.display_name = skill.display_name;
-    newSkill.starting_value = skill.pivot.value;
+    newSkill.new_value = skill.pivot.value;
+    newSkill.slug = skill.slug;
     isEditSkillModalOpen.value = true;
 }
 
@@ -96,7 +76,7 @@ let resetExperience = (skill) => {
                 style="break-inside: avoid"
             >
             <div class="font-bold p-2 align-middle text-right">
-                <span @click="editSkill(skill)">{{ skill.display_name }}</span>
+                <span>{{ skill.display_name }}</span>
                     <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block" @click="resetExperience(skill)">
                         <div
                             class="align-middle text-center rounded-full border w-6 h-6"
@@ -108,25 +88,15 @@ let resetExperience = (skill) => {
                     </div>
                 </div>
 
-                <regular-half-fifth v-model="skill.pivot.value"
-                                    @input="adjustSkill(skill, $event)"
-                                    :editable="editable"
-                ></regular-half-fifth>
+                <regular-half-fifth @click="openEditModal(skill)" :skill-value="skill.pivot.value"></regular-half-fifth>
             </div>
-        </div>
-        <div v-if="editable" class="flex justify-end p-6 w-full">
-            <button type="button"
-                    @click="openModal"
-                    class="block rounded-md bg-cthulhu-green-400 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Add Skill
-            </button>
         </div>
     </div>
 
     <modal-popup :is-open="isEditSkillModalOpen"
-                 @modal-close="closeModal"
-                 @response1="closeModal"
-                 @response2="addSkill"
+                 @modal-close="closeEditModal"
+                 @response1="closeEditModal"
+                 @response2="() => updateSkill(newSkill)"
     >
         <template #title>Edit skill</template>
         <template #default>
@@ -143,7 +113,7 @@ let resetExperience = (skill) => {
                     <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting
                         value</label>
                     <div class="mt-2">
-                        <input type="number" v-model="newSkill.starting_value"
+                        <input type="number" v-model="newSkill.new_value"
                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
                     </div>
                 </div>
@@ -175,34 +145,4 @@ let resetExperience = (skill) => {
         </template>
     </modal-popup>
 
-    <modal-popup :is-open="isAddSkillModalOpen"
-                 @modal-close="closeModal"
-                 @response1="closeModal"
-                 @response2="addSkill"
-    >
-        <template #title>Add skill</template>
-        <template #default>
-            <form>
-                <div>
-                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display
-                        name</label>
-                    <div class="mt-2">
-                        <input type="text" v-model="newSkill.display_name"
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
-                    </div>
-                </div>
-                <div>
-                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting
-                        value</label>
-                    <div class="mt-2">
-                        <input type="number" v-model="newSkill.starting_value"
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
-                    </div>
-                </div>
-            </form>
-        </template>
-        <template #response1>Cancel</template>
-        <template #response2>Save</template>
-    </modal-popup>
 </template>
-

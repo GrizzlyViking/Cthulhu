@@ -14,16 +14,16 @@ class MessageController extends Controller
     public function send(Request $request)
     {
         $request->validate([
-            'recipients' => 'required|array',
+            'recipients'   => 'required|array',
             'recipients.*' => 'integer|exists:users,id',
-            'content' => 'required|string',
+            'content'      => 'required|string',
         ]);
 
         collect($request->recipients)->each(function (int $recipient) use ($request) {
-            $message = new Message;
+            $message              = new Message();
             $message->receiver_id = $recipient;
-            $message->sender_id = auth()->user()->id;
-            $message->content = $request->get('content');
+            $message->sender_id   = auth()->user()->id;
+            $message->content     = $request->get('content');
             $message->save();
 
             SendMessage::dispatch($message);
@@ -38,7 +38,7 @@ class MessageController extends Controller
             'message_id' => 'required|integer|exists:messages,id',
         ]);
 
-        $message = Message::find($request->get('message_id'));
+        $message  = Message::find($request->get('message_id'));
         $response = $message->update(['read' => true]);
 
         return response()->json(['success' => 'Message read!'.$response]);

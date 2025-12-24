@@ -8,14 +8,14 @@ enum RoleEnum: string implements EnumInterface
 {
     case PLAYER = 'player';
     case KEEPER = 'keeper';
-    case ADMIN = 'admin';
+    case ADMIN  = 'admin';
 
     public function label(): string
     {
         return match ($this) {
             self::PLAYER => 'Player',
             self::KEEPER => 'Keeper of Arcane Lore',
-            self::ADMIN => 'Admin',
+            self::ADMIN  => 'Admin',
         };
     }
 

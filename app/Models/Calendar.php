@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property int $id
- * @property string $name
- * @property string $slug
+ * @property int               $id
+ * @property string            $name
+ * @property string            $slug
  * @property Collection<Event> $events
  */
 class Calendar extends Model
@@ -39,8 +39,8 @@ class Calendar extends Model
     public function getDaysOfMonthPadded($month, $year): \Illuminate\Support\Collection
     {
         $pointOfReference = CarbonImmutable::parse("{$year}-{$month}-01");
-        $startOfCalendar = $pointOfReference->startOfMonth()->startOfWeek();
-        $endOfCalendar = $pointOfReference->endOfMonth()->endOfWeek();
+        $startOfCalendar  = $pointOfReference->startOfMonth()->startOfWeek();
+        $endOfCalendar    = $pointOfReference->endOfMonth()->endOfWeek();
 
         $datesOfCalendar = $this->generateDatesOfCalendar($startOfCalendar, $endOfCalendar);
 
@@ -71,9 +71,9 @@ class Calendar extends Model
     {
         return collect($dates)->map(function ($date) use ($pointOfReference) {
             return [
-                'date' => $date,
+                'date'           => $date,
                 'isCurrentMonth' => $pointOfReference->isSameMonth($date),
-                'events' => $this->getEventsOfDay($date),
+                'events'         => $this->getEventsOfDay($date),
             ];
         });
     }

@@ -77,9 +77,9 @@ class SkillResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSkills::route('/'),
+            'index'  => Pages\ListSkills::route('/'),
             'create' => Pages\CreateSkill::route('/create'),
-            'edit' => Pages\EditSkill::route('/{record}/edit'),
+            'edit'   => Pages\EditSkill::route('/{record}/edit'),
         ];
     }
 }

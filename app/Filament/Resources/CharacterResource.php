@@ -240,9 +240,9 @@ class CharacterResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCharacters::route('/'),
+            'index'  => Pages\ListCharacters::route('/'),
             'create' => Pages\CreateCharacter::route('/create'),
-            'edit' => Pages\EditCharacter::route('/{record}/edit'),
+            'edit'   => Pages\EditCharacter::route('/{record}/edit'),
         ];
     }
 }

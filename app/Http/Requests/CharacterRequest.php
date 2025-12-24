@@ -36,28 +36,28 @@ class CharacterRequest extends FormRequest
                 Rule::unique('characters', 'slug')->ignore($this->route('character')),
             ],
             'occupation' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'residence' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'residence'  => ['sometimes', 'nullable', 'string', 'max:255'],
             'birthplace' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'age' => ['sometimes', 'nullable', 'integer', 'between:15,90'],
-            'gender' => ['sometimes', 'nullable', Rule::enum(Gender::class)],
+            'age'        => ['sometimes', 'nullable', 'integer', 'between:15,90'],
+            'gender'     => ['sometimes', 'nullable', Rule::enum(Gender::class)],
 
             // Characteristics (7e creation typically multiples of 5; SIZ/EDU tend to be higher bases)
-            'strength' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'dexterity' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
+            'strength'     => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
+            'dexterity'    => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
             'intelligence' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
             'constitution' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'appearance' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'power' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'size' => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
-            'education' => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
+            'appearance'   => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
+            'power'        => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
+            'size'         => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
+            'education'    => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
 
             // Derived values / states
-            'move_rate' => ['sometimes', 'nullable', 'integer', 'between:1,12'],
-            'temporary_insanity' => ['sometimes', 'boolean'],
+            'move_rate'           => ['sometimes', 'nullable', 'integer', 'between:1,12'],
+            'temporary_insanity'  => ['sometimes', 'boolean'],
             'indefinite_insanity' => ['sometimes', 'boolean'],
-            'major_wound' => ['sometimes', 'boolean'],
-            'unconscious' => ['sometimes', 'boolean'],
-            'dying' => ['sometimes', 'boolean'],
+            'major_wound'         => ['sometimes', 'boolean'],
+            'unconscious'         => ['sometimes', 'boolean'],
+            'dying'               => ['sometimes', 'boolean'],
 
             // Pools and combat-related
             // HP for human investigators typically up to ~18; allow a little headroom

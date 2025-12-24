@@ -98,9 +98,9 @@ class WeaponResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWeapons::route('/'),
+            'index'  => Pages\ListWeapons::route('/'),
             'create' => Pages\CreateWeapon::route('/create'),
-            'edit' => Pages\EditWeapon::route('/{record}/edit'),
+            'edit'   => Pages\EditWeapon::route('/{record}/edit'),
         ];
     }
 }
