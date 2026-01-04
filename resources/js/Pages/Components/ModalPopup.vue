@@ -1,6 +1,6 @@
 <template>
     <TransitionRoot appear :show="props.isOpen" as="template">
-        <Dialog as="div" @close="emit('modal-close')" class="relative z-10">
+        <Dialog as="div" @close="emit('modal-close')" class="relative z-10" :initialFocus="props.initialFocus">
             <TransitionChild
                 as="template"
                 enter="duration-300 ease-out"
@@ -37,11 +37,10 @@
                                     </slot>
                                 </p>
                             </div>
-                            <slot v-if="slots.buttons" name="buttons" />
-
-                            <div v-else class="mt-4 flex justify-between gap-2">
+                            <slot  name="buttons">
                                     <button
                                         v-if="slots.response1 && $slots.response1().length"
+                                        ref="closeBtnRef"
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="emit('response1')"
@@ -56,7 +55,7 @@
                                     >
                                         <slot name="response2"></slot>
                                     </button>
-                            </div>
+                            </slot>
                         </DialogPanel>
                     </TransitionChild>
                 </div>
@@ -74,12 +73,17 @@ import {
     DialogTitle,
 } from '@headlessui/vue'
 import {computed, onMounted, ref, useSlots} from "vue";
+const closeBtnRef = ref(null);
 
 const props = defineProps({
     isOpen: {
         type: Boolean,
         default: false
     },
+    initialFocus: {
+        type: Object,
+        default: null
+    }
 })
 
 const emit = defineEmits([
@@ -87,8 +91,6 @@ const emit = defineEmits([
     'response1',
     'response2'
 ]);
-
-let modalOpens = computed(() => props.isOpen.value === undefined ? false : props.isOpen.value);
 
 onMounted(() => {
     console.log(props.isOpen);

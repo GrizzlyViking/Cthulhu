@@ -6,11 +6,12 @@ import {ref} from "vue";
 import {useForm, router} from "@inertiajs/vue3";
 
 const prop = defineProps({character: Object, editable: Boolean});
+const cancelBtnRef = ref(null);
 
 let isEditSkillModalOpen = ref(false);
 
 const closeEditModal = () => {
-    isEditSkillModalOpen.false = false;
+    isEditSkillModalOpen.value = false;
 };
 
 let newSkill = useForm({
@@ -29,7 +30,9 @@ const updateSkill = debounce((skill) => {
         value: Number(skill.new_value)
     }, {
         preserveScroll: true,
-        onSuccess: () => isEditSkillModalOpen.false = false
+        onSuccess: () => {
+            isEditSkillModalOpen.value = false
+        }
     });
 }, 600);
 
@@ -93,7 +96,7 @@ let resetExperience = (skill) => {
         </div>
     </div>
 
-    <modal-popup :is-open="isEditSkillModalOpen"
+    <modal-popup :is-open="isEditSkillModalOpen" :initial-focus="cancelBtnRef"
                  @modal-close="closeEditModal"
                  @response1="closeEditModal"
                  @response2="() => updateSkill(newSkill)"
@@ -102,18 +105,27 @@ let resetExperience = (skill) => {
         <template #default>
             <form>
                 <div>
-                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display
-                        name</label>
+                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display name</label>
                     <div class="mt-2">
-                        <input type="text" v-model="newSkill.display_name"
+                        <input type="text"
+                               v-model="newSkill.display_name"
+                               autocomplete="off"
+                               data-1p-ignore
+                               data-lpignore="true"
+                               data-bwignore
                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
                     </div>
                 </div>
                 <div>
-                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Starting
-                        value</label>
+                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Value</label>
                     <div class="mt-2">
-                        <input type="number" v-model="newSkill.new_value"
+                        <input type="number"
+                               v-model="newSkill.new_value"
+                               inputmode="numeric"
+                               autocomplete="off"
+                               data-1p-ignore
+                               data-lpignore="true"
+                               data-bwignore
                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
                     </div>
                 </div>
@@ -123,6 +135,7 @@ let resetExperience = (skill) => {
             <div class="mt-4 flex justify-between gap-2">
                 <button
                     type="button"
+                    ref="cancelBtnRef"
                     class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                     @click="cancelEditSkill"
                 >Cancel

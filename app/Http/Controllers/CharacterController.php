@@ -98,7 +98,7 @@ class CharacterController extends Controller
         return response('OK', SymfonyResponse::HTTP_OK);
     }
 
-    public function updateAttribute(Character $character, Request $request): \Inertia\Response
+    public function updateAttribute(Character $character, Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'attribute' => 'required',
@@ -117,7 +117,7 @@ class CharacterController extends Controller
         $character->save();
         $character->refresh();
 
-        return Inertia::render('Character', ['character' => $character]);
+        return to_route('character.show', $character->slug);
     }
 
     public function renameCharacter(Character $character, Request $request)
