@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Misc\CharacterCreation;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,14 @@ class Character extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'name',
+        'slug',
+        'user_id',
+        'occupation',
+        'age',
+        'gender',
+        'residence',
+        'birthplace',
         'strength',
         'dexterity',
         'intelligence',
@@ -66,6 +75,59 @@ class Character extends Model
     ];
 
     protected $with = ['skills', 'player', 'weapons'];
+
+    protected function casts(): array
+    {
+        return [
+            'temporary_insanity'  => 'boolean',
+            'indefinite_insanity' => 'boolean',
+            'major_wound'         => 'boolean',
+            'unconscious'         => 'boolean',
+            'dying'               => 'boolean',
+            'strength'            => 'integer',
+            'dexterity'           => 'integer',
+            'intelligence'        => 'integer',
+            'constitution'        => 'integer',
+            'appearance'          => 'integer',
+            'power'               => 'integer',
+            'size'                => 'integer',
+            'education'           => 'integer',
+            'move_rate'           => 'integer',
+            'hit_points'          => 'integer',
+            'sanity'              => 'integer',
+            'luck'                => 'integer',
+            'magic_points'        => 'integer',
+            'dodge'               => 'integer',
+            'build'               => 'integer',
+        ];
+    }
+
+    public function moveRate(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $move = CharacterCreation::moveRate($this);
+
+                if ($this->age > 40 && $this->age < 51) {
+                    return $move - 1;
+                }
+                if ($this->age > 50 && $this->age < 61) {
+                    return $move - 2;
+                }
+                if ($this->age > 60 && $this->age < 71) {
+                    return $move - 3;
+                }
+                if ($this->age > 70 && $this->age < 81) {
+                    return $move - 4;
+                }
+                if ($this->age > 80 && $this->age < 91) {
+                    return $move - 5;
+                }
+
+                return $move;
+            }
+        );
+    }
 
     public function getRouteKeyName(): string
     {

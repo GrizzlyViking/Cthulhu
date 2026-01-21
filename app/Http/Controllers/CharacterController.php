@@ -61,14 +61,13 @@ class CharacterController extends Controller
 
     public function updateSkill(Character $character, Skill $skill, Request $request): RedirectResponse
     {
-        $request->validate([
-            'value' => 'required',
+        $validated = $request->validate([
+            'value' => ['required', 'integer', 'between:0,100'],
         ]);
 
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->update(['value' => $request->get('value')]);
+        $character->skills()->updateExistingPivot($skill->id, [
+            'value' => $validated['value'],
+        ]);
 
         return to_route('character.show', $character->slug);
     }
@@ -100,22 +99,18 @@ class CharacterController extends Controller
 
     public function updateAttribute(Character $character, Request $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'attribute' => 'required',
-            'value'     => 'required',
+        $validated = $request->validate([
+            'attribute' => ['required', 'string'],
+            'value'     => ['required'],
         ]);
 
-        $validated = $validator->safe()->only(['character_id', 'attribute', 'value']);
-
-        $character->setAttribute($validated['attribute'], $validated['value']);
+        $character->update([
+            $validated['attribute'] => $validated['value'],
+        ]);
 
         if (strtolower($validated['attribute']) === 'name') {
-            $slug            = Str::slug($validated['value']);
-            $character->slug = $slug;
+            $character->update(['slug' => Str::slug($validated['value'])]);
         }
-
-        $character->save();
-        $character->refresh();
 
         return to_route('character.show', $character->slug);
     }

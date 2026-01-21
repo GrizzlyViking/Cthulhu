@@ -77,7 +77,7 @@ it('cascades group_user pivot rows when a user is deleted', function () {
     $group->users()->attach($user->id);
     $userId = $user->id;
 
-    $user->delete();
+    $user->forceDelete();
 
     expect(DB::table('group_user')->where('user_id', $userId)->count())->toBe(0);
 });
@@ -89,7 +89,7 @@ it('cascades group_character pivot rows when a character is deleted', function (
     $group->characters()->attach($character->id);
     $characterId = $character->id;
 
-    $character->delete();
+    $character->forceDelete();
 
     expect(DB::table('group_character')->where('character_id', $characterId)->count())->toBe(0);
 });

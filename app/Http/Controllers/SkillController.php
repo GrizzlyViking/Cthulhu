@@ -93,6 +93,6 @@ class SkillController extends Controller
             }
         });
 
-        return response('ok', 200)->json($this->rolls);
+        return response()->json($this->rolls ?? []);
     }
 }

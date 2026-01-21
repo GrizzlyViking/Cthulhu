@@ -47,13 +47,15 @@ class UserController extends Controller
 
     public function role(User $user, Request $request)
     {
-        $request->validate([
-            'role' => [
-                'required',
-            ],
+        $validated = $request->validate([
+            'role' => ['required', 'string'],
         ]);
 
-        $user->update(['role' => $request->input('role')]);
+        if (DB::table('roles')->where('name', $validated['role'])->exists()) {
+            $user->syncRoles([$validated['role']]);
+        }
+
+        $user->update(['role' => $validated['role']]);
 
         return redirect()->back();
     }

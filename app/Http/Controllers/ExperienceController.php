@@ -10,21 +10,19 @@ class ExperienceController extends Controller
 {
     public function increment(Character $character, Skill $skill)
     {
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->increment('experience');
+        $character->skills()->updateExistingPivot($skill->id, [
+            'experience' => DB::raw('experience + 1'),
+        ]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 
     public function reset(Character $character, Skill $skill)
     {
-        DB::table('character_skill')
-            ->where('character_id', $character->id)
-            ->where('skill_id', $skill->id)
-            ->update(['experience' => 0]);
+        $character->skills()->updateExistingPivot($skill->id, [
+            'experience' => 0,
+        ]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 }

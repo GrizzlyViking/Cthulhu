@@ -25,6 +25,13 @@ return new class() extends Migration
             $table->unique(['user_id', 'group_id']);
         });
 
+        Schema::create('group_character', function (Blueprint $table) {
+            $table->foreignId('character_id')->constrained('characters')->cascadeOnDelete();
+            $table->foreignId('group_id')->constrained('groups')->cascadeOnDelete();
+
+            $table->unique(['character_id', 'group_id']);
+        });
+
         // Argument for this: a character can belong to a user in two teams, ie only visible while user is in a correct
         // team.
         Schema::table('characters', function (Blueprint $table) {

@@ -38,33 +38,7 @@ const updateAttribute =  debounce((skill, value) => {
     });
 }, 600);
 
-const moveRate = computed(() => {
-    let move = '8';
-    if (prop.character.dexterity < prop.character.size && prop.character.strength < prop.character.size) {
-        move = '7'
-    }
-    if (prop.character.dexterity > prop.character.size && prop.character.strength > prop.character.size) {
-        move = '9'
-    }
-
-    if (prop.character.age > 40 && prop.character.age < 51) {
-        return move - 1
-    }
-    if (prop.character.age > 50 && prop.character.age < 61) {
-        return move - 2
-    }
-    if (prop.character.age > 60 && prop.character.age < 71) {
-        return move - 3
-    }
-    if (prop.character.age > 70 && prop.character.age < 81) {
-        return move - 4
-    }
-    if (prop.character.age > 80 && prop.character.age < 91) {
-        return move - 5
-    }
-
-    return move
-})
+const moveRate = computed(() => prop.character.move_rate)
 const cancelBtnRef = ref(null);
 
 const attributes = ['strength', 'dexterity', 'intelligence', 'constitution', 'appearance', 'power', 'size', 'education'];

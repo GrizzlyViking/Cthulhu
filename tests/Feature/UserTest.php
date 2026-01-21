@@ -31,16 +31,22 @@ test('keeper roll against spot hidden', function () {
         /** @var Illuminate\Testing\TestResponse $response */
         $response = $this->actingAs($user)->post(route('skill.roll'), [
             'skill_slug' => 'spot-hidden',
-            'users'      => $characters->map(fn (Character $character) => $character->id),
+            'users'      => $characters->map(fn (Character $character) => $character->user_id)->toArray(),
         ]);
     } catch (Exception $exception) {
         dd($exception->getMessage());
     }
 
-    $response->assertStatus(302);
+    $response->assertStatus(200);
 });
 
 test('update role', function () {
     $user = User::factory()->create();
 
+    $response = $this->actingAs($user)->put(route('users.role', $user), [
+        'role' => 'Keeper of Arcane Lore',
+    ]);
+
+    $response->assertRedirect();
+    expect($user->fresh()->role)->toBe('Keeper of Arcane Lore');
 });

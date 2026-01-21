@@ -7,10 +7,10 @@ beforeEach(function () {
     $this->seed();
 });
 
-test('create character using /create', function () {
+test('create character', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->post('/create/step/first', [
+    $response = $this->actingAs($user)->post(route('character.store'), [
         'name'       => ($name = fake()->name),
         'user_id'    => $user->id,
         'occupation' => fake()->word,

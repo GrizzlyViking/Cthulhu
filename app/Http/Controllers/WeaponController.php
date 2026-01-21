@@ -7,7 +7,6 @@ use App\Models\Weapon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class WeaponController extends Controller
 {
@@ -25,36 +24,36 @@ class WeaponController extends Controller
 
     public function reloadWeapon(Request $request)
     {
-        $request->validate([
-            'pivot_id' => 'required|integer',
-            'ammo'     => 'required|integer',
+        $validated = $request->validate([
+            'pivot_id' => 'required|integer|exists:equipables,id',
+            'ammo'     => 'required|integer|min:0',
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
+        DB::table('equipables')->where('id', $validated['pivot_id'])->update(['ammo' => $validated['ammo']]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 
     public function removeWeapon(Request $request)
     {
-        Validator::make($request->all(), [
-            'character_slug' => 'required|string',
-            'pivot_id'       => 'required|integer',
+        $validated = $request->validate([
+            'character_slug' => 'required|string|exists:characters,slug',
+            'pivot_id'       => 'required|integer|exists:equipables,id',
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();
+        DB::table('equipables')->where('id', $validated['pivot_id'])->delete();
 
-        return to_route('character.show', $request->get('character_slug'));
+        return to_route('character.show', $validated['character_slug']);
     }
 
     public function fireWeapon(Request $request)
     {
-        Validator::make($request->all(), [
-            'pivot_id' => 'required|integer',
+        $validated = $request->validate([
+            'pivot_id' => 'required|integer|exists:equipables,id',
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => DB::raw('ammo - 1')]);
+        DB::table('equipables')->where('id', $validated['pivot_id'])->update(['ammo' => DB::raw('ammo - 1')]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 }

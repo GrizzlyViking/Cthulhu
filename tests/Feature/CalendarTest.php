@@ -60,7 +60,7 @@ test('events have been attached to the days from controller', function () {
     $calendar->events()->save($event);
     $calendar->refresh();
     $user     = User::factory()->create();
-    $response = $this->actingAs($user)->get('/calendar/ages-of-madness?month=June&year=2024');
+    $response = $this->actingAs($user)->get(route('calendar', ['calendar' => $calendar->slug, 'month' => 'June', 'year' => 2024]));
 
     $response->assertStatus(200);
 });

@@ -13,8 +13,7 @@ class CharacterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO: implement permissions
-        return true;
+        return $this->user()->can('edit characters');
     }
 
     /**
