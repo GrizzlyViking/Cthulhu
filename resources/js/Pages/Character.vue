@@ -10,10 +10,15 @@ import {Switch} from "@headlessui/vue";
 import { UserCircleIcon } from '@heroicons/vue/24/solid'
 import Backstory from "@/Pages/Components/Character/Backstory.vue";
 import Dropdown from "@/Pages/Components/Dropdown.vue";
+import Tabs from "@/Components/Tabs.vue";
+import {BuildingOfficeIcon, CreditCardIcon, UserIcon, UsersIcon} from "@heroicons/vue/20/solid";
 
 const prop = defineProps({character: Object});
 const editable = ref(false);
-
+const tabs = [
+    { name: 'Skills', icon: UserIcon },
+    { name: 'Notepad', icon: BuildingOfficeIcon },
+]
 const page = usePage();
 
 const deleteCharacter = () => {
@@ -84,12 +89,20 @@ const updateUser = (event) => {
 
         <div class="m-3">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 shadow-sm rounded-lg">
-                    <Skills :character="prop.character" :editable="editable"></Skills>
-                </div>
+                <Tabs :tabs="tabs">
+                    <template #Skills>
+                        <div class="bg-cthulhu-green-200 shadow-sm rounded-lg p-6">
+                            <Skills :character="prop.character" :editable="editable"></Skills>
+                        </div>
+                    </template>
+                    <template #Notepad>
+                        <div class="bg-cthulhu-green-200 shadow-sm rounded-lg p-6 text-cthulhu-green-800">
+                            Notepad component coming soon...
+                        </div>
+                    </template>
+                </Tabs>
             </div>
         </div>
-
 
         <div class="m-3">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
