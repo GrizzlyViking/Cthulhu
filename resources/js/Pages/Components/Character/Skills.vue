@@ -71,7 +71,7 @@ let resetExperience = (skill) => {
 
 <template>
     <div class="shadow-sm rounded-lg">
-        <div class="p-6 m-3 columns-1 md:columns-2 lg:columns-3 gap-x-3">
+        <div class="p-6 columns-1 md:columns-2 lg:columns-3 gap-x-3">
             <div
                 v-for="skill in prop.character.skills"
                 :key="skill.id"

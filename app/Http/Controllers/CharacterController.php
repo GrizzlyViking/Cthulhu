@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CharacterRequest;
+use App\Http\Requests\CharacterUpdateRequest;
 use App\Models\Character;
 use App\Models\Skill;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,18 +18,31 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class CharacterController extends Controller
 {
+    use AuthorizesRequests;
+
+    protected function user(): User
+    {
+        return auth()->user();
+    }
+
     public function show(Character $character)
     {
+        $this->authorize('view', $character);
+
         return Inertia::render('Character', compact('character'));
     }
 
     public function create()
     {
+        $this->authorize('create', Character::class);
+
         return Inertia::render('Character/Create');
     }
 
     public function store(Request $request): RedirectResponse|Response
     {
+        $this->authorize('create', Character::class);
+
         $validated = $request->validate([
             'name'       => 'required|string|max:255|unique:characters',
             'user_id'    => 'required|exists:users,id',
@@ -49,10 +64,12 @@ class CharacterController extends Controller
 
     public function aptitude(Character $character, Skill $skill)
     {
+        $this->authorize('view', $character);
+
         return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();
     }
 
-    public function update(Character $character, CharacterRequest $request): RedirectResponse
+    public function update(Character $character, CharacterUpdateRequest $request): RedirectResponse
     {
         $character->update($request->validated());
 
@@ -61,6 +78,8 @@ class CharacterController extends Controller
 
     public function updateSkill(Character $character, Skill $skill, Request $request): RedirectResponse
     {
+        $this->authorize('patch', $character);
+
         $validated = $request->validate([
             'value' => ['required', 'integer', 'between:0,100'],
         ]);
@@ -75,10 +94,13 @@ class CharacterController extends Controller
     public function attachSkill(Request $request): Response
     {
         $validated = $request->validate([
-            'character_id' => 'required|integer',
-            'skill_id'     => 'required|integer',
+            'character_id' => 'required|integer|exists:characters,id',
+            'skill_id'     => 'required|integer|exists:skills,id',
             'value'        => 'required|integer',
         ]);
+
+        $character = Character::findOrFail($validated['character_id']);
+        $this->authorize('patch', $character);
 
         DB::table('character_skill')->insert($validated);
 
@@ -88,9 +110,12 @@ class CharacterController extends Controller
     public function removeSkill(Request $request): Response
     {
         $validated = $request->validate([
-            'character_id' => 'required|integer',
-            'skill_id'     => 'required|integer',
+            'character_id' => 'required|integer|exists:characters,id',
+            'skill_id'     => 'required|integer|exists:skills,id',
         ]);
+
+        $character = Character::findOrFail($validated['character_id']);
+        $this->authorize('patch', $character);
 
         DB::table('character_skill')->where($validated)->delete();
 
@@ -99,6 +124,8 @@ class CharacterController extends Controller
 
     public function updateAttribute(Character $character, Request $request): RedirectResponse
     {
+        $this->authorize('patch', $character);
+
         $validated = $request->validate([
             'attribute' => ['required', 'string'],
             'value'     => ['required'],
@@ -117,6 +144,8 @@ class CharacterController extends Controller
 
     public function renameCharacter(Character $character, Request $request)
     {
+        $this->authorize('patch', $character);
+
         $validator = Validator::make($request->all(), [
             'value' => 'required|string',
         ]);
@@ -136,6 +165,8 @@ class CharacterController extends Controller
 
     public function avatar(Character $character, Request $request)
     {
+        $this->authorize('patch', $character);
+
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
@@ -149,6 +180,8 @@ class CharacterController extends Controller
 
     public function destroy(Character $character)
     {
+        $this->authorize('delete', $character);
+
         $character->delete();
 
         return to_route('dashboard')->with('success', 'Character deleted.');

@@ -11,13 +11,16 @@ import { UserCircleIcon } from '@heroicons/vue/24/solid'
 import Backstory from "@/Pages/Components/Character/Backstory.vue";
 import Dropdown from "@/Pages/Components/Dropdown.vue";
 import Tabs from "@/Components/Tabs.vue";
-import {BuildingOfficeIcon, CreditCardIcon, UserIcon, UsersIcon} from "@heroicons/vue/20/solid";
+import {BookOpenIcon, UserIcon} from "@heroicons/vue/20/solid";
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import '@vueup/vue-quill/dist/vue-quill.bubble.css';
 
 const prop = defineProps({character: Object});
 const editable = ref(false);
 const tabs = [
     { name: 'Skills', icon: UserIcon },
-    { name: 'Notepad', icon: BuildingOfficeIcon },
+    { name: 'Notepad', icon: BookOpenIcon },
 ]
 const page = usePage();
 
@@ -37,6 +40,10 @@ const form = useForm({
     avatar: null,
 })
 
+const notesForm = useForm({
+    notes: prop.character.notes,
+});
+
 const handleFileUpload = () => {
     form.post(route('upload.avatar', { character: prop.character.slug }), { preserveScroll: true })
 }
@@ -45,6 +52,12 @@ const updateUser = (event) => {
     router.put(route('character.update', {character: prop.character.slug}), {
         user_id: event.id,
     }, { preserveScroll: true })
+}
+
+const saveNotes = () => {
+    notesForm.put(route('character.update', {character: prop.character.slug}), {
+        preserveScroll: true,
+    })
 }
 </script>
 
@@ -87,30 +100,41 @@ const updateUser = (event) => {
             </div>
         </div>
 
-        <div class="m-3">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto p-3">
                 <Tabs :tabs="tabs">
                     <template #Skills>
-                        <div class="bg-cthulhu-green-200 shadow-sm rounded-lg p-6">
-                            <Skills :character="prop.character" :editable="editable"></Skills>
+                        <div class="mx-3 sm:mx-6 lg:mx-8">
+                            <div class="bg-cthulhu-green-200 shadow-sm rounded-b-lg px-6">
+                                <Skills :character="prop.character" :editable="editable"></Skills>
+                            </div>
+                        </div>
+                        <div class="m-3 sm:mx-6 lg:mx-8">
+                                <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
+                                    <Weapons :character="prop.character"></Weapons>
+                                </div>
                         </div>
                     </template>
                     <template #Notepad>
-                        <div class="bg-cthulhu-green-200 shadow-sm rounded-lg p-6 text-cthulhu-green-800">
-                            Notepad component coming soon...
+                        <div class="mx-3 sm:mx-6 lg:mx-8">
+                            <div
+                                class="bg-cthulhu-green-200 shadow-sm rounded-b-lg px-6 text-cthulhu-green-800 min-h-lvh flex flex-col gap-4">
+                                <quill-editor theme="snow" class="border-none" v-model:content="notesForm.notes" content-type="html">
+                                </quill-editor>
+                                <div class="flex justify-end pb-4">
+                                    <button
+                                        type="button"
+                                        @click="saveNotes"
+                                        :disabled="notesForm.processing"
+                                        class="rounded-md bg-cthulhu-green-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:opacity-50"
+                                    >
+                                        {{ notesForm.processing ? 'Saving...' : 'Save Notes' }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </Tabs>
             </div>
-        </div>
-
-        <div class="m-3">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
-                    <Weapons :character="prop.character"></Weapons>
-                </div>
-            </div>
-        </div>
 
         <div class="m-3" v-if="editable">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -141,3 +165,17 @@ const updateUser = (event) => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+:deep(.ql-toolbar.ql-snow),
+:deep(.ql-container.ql-snow) {
+    border: none;
+}
+:deep(.ql-container) {
+    @apply flex flex-col flex-1 min-h-0 bg-gray-50 rounded-lg mb-3;
+}
+
+:deep(.ql-editor) {
+    @apply flex-1 overflow-y-auto px-4 py-3 bg-cthulhu-green-50 min-h-fit rounded-lg;
+}
+</style>

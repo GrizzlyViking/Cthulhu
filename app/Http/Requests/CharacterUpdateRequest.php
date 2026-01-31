@@ -3,31 +3,40 @@
 namespace App\Http\Requests;
 
 use App\Enums\Gender;
-use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CharacterRequest extends FormRequest
+class CharacterUpdateRequest extends FormRequest
 {
+    use AuthorizesRequests;
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('update', $this->route('character'));
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             // Identity
-            'name' => ['required', 'string', 'max:255'],
-            // slug has been removed from here as it is the id of character, so changing it would break the url
+            'name' => ['sometimes', 'string', 'max:255'],
+            'slug' => [
+                'sometimes',
+                'string',
+                'lowercase',
+                'alpha_dash:ascii',
+                'max:255',
+                Rule::unique('characters', 'slug')->ignore($this->route('character')),
+            ],
             'occupation' => ['sometimes', 'nullable', 'string', 'max:255'],
             'residence'  => ['sometimes', 'nullable', 'string', 'max:255'],
             'birthplace' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -35,14 +44,14 @@ class CharacterRequest extends FormRequest
             'gender'     => ['sometimes', 'nullable', Rule::enum(Gender::class)],
 
             // Characteristics (7e creation typically multiples of 5; SIZ/EDU tend to be higher bases)
-            'strength'     => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'dexterity'    => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'intelligence' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'constitution' => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'appearance'   => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'power'        => ['required', 'integer', 'between:15,90', 'multiple_of:5'],
-            'size'         => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
-            'education'    => ['required', 'integer', 'between:40,90', 'multiple_of:5'],
+            'strength'     => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'dexterity'    => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'intelligence' => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'constitution' => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'appearance'   => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'power'        => ['sometimes', 'integer', 'between:15,90', 'multiple_of:5'],
+            'size'         => ['sometimes', 'integer', 'between:40,90', 'multiple_of:5'],
+            'education'    => ['sometimes', 'integer', 'between:40,90', 'multiple_of:5'],
 
             // Derived values / states
             'move_rate'           => ['sometimes', 'nullable', 'integer', 'between:1,12'],
@@ -75,8 +84,8 @@ class CharacterRequest extends FormRequest
 
             // Media
             'avatar' => ['sometimes', 'nullable', 'image', 'max:2048'],
-            'notes'  => ['sometimes', 'nullable', 'string'],
-        ];
 
+            'notes' => ['sometimes', 'nullable', 'string'],
+        ];
     }
 }

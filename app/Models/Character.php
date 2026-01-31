@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 
 /**
  * @property int    $id
+ * @property string $slug
  * @property int    $strength
  * @property int    $dexterity
  * @property int    $intelligence
@@ -72,6 +73,7 @@ class Character extends Model
         'major_wound',
         'unconscious',
         'dying',
+        'notes',
     ];
 
     protected $with = ['skills', 'player', 'weapons'];

@@ -8,5 +8,5 @@ interface EnumInterface
 
     public function labels(): array;
 
-    public function values(): array;
+    public static function values(): array;
 }

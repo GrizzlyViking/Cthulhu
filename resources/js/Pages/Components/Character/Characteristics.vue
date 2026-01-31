@@ -59,9 +59,7 @@ const attributes = ['strength', 'dexterity', 'intelligence', 'constitution', 'ap
                 {{ moveRate }}
             </div>
         </div>
-        <modal-popup :is-open="modalOpen" :initial-focus="cancelBtnRef"
-                     @modal-close="closeEditModal"
-        >
+        <modal-popup :is-open="modalOpen" :initial-focus="cancelBtnRef" @modal-close="closeEditModal">
             <template #title>Edit skill</template>
             <template #default>
                 <form>

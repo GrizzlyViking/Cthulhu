@@ -23,7 +23,7 @@ enum PermissionsEnum: string implements EnumInterface
         return Arr::map(self::cases(), fn (self $permission) => $permission->label());
     }
 
-    public function values(): array
+    public static function values(): array
     {
         return Arr::map(self::cases(), fn (self $permission) => $permission->value);
     }

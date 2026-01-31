@@ -19,7 +19,7 @@ enum RoleEnum: string implements EnumInterface
         };
     }
 
-    public function values(): array
+    public static function values(): array
     {
         return Arr::map(self::cases(), fn (self $role) => $role->value);
     }

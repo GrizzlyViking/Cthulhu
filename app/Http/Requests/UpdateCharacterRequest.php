@@ -3,31 +3,37 @@
 namespace App\Http\Requests;
 
 use App\Enums\Gender;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CharacterRequest extends FormRequest
+class UpdateCharacterRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->id === $this->route('character')->user_id;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             // Identity
             'name' => ['required', 'string', 'max:255'],
-            // slug has been removed from here as it is the id of character, so changing it would break the url
+            'slug' => [
+                'required',
+                'string',
+                'lowercase',
+                'alpha_dash:ascii',
+                'max:255',
+                Rule::unique('characters', 'slug')->ignore($this->route('character')),
+            ],
             'occupation' => ['sometimes', 'nullable', 'string', 'max:255'],
             'residence'  => ['sometimes', 'nullable', 'string', 'max:255'],
             'birthplace' => ['sometimes', 'nullable', 'string', 'max:255'],
