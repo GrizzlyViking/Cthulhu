@@ -57,7 +57,7 @@ const updateUser = (event) => {
 const saveNotes = () => {
     notesForm.put(route('character.update', {character: prop.character.slug}), {
         preserveScroll: true,
-    })
+    });
 }
 </script>
 
