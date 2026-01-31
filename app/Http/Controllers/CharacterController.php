@@ -124,7 +124,7 @@ class CharacterController extends Controller
 
     public function updateAttribute(Character $character, Request $request): RedirectResponse
     {
-        $this->authorize('patch', $character);
+        $this->authorize('update', $character);
 
         $validated = $request->validate([
             'attribute' => ['required', 'string'],

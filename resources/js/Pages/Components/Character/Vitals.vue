@@ -16,16 +16,17 @@ const isSanityModalOpen = ref(false);
 let modalAttributes = useForm({
     character_id: prop.character.id,
     title: '',
-    name: '',
+    attribute: '',
     value: 0,
 });
 
-const openEditModal = (attributes) => {
-    modalAttributes.title = attributes.title
-    modalAttributes.character_id = prop.character.id;
-    modalAttributes.name = attributes.name;
-    modalAttributes.value = attributes.value;
-    modalOpen.value = true;
+const saveVitals = () => {
+    modalAttributes.put(
+        route('attribute.update', {character: prop.character.slug}),
+        {
+            preserveScroll: true,
+            onSuccess: modalShow.value = false
+        })
 }
 
 let adjustLuck = debounce(() => {
@@ -86,13 +87,30 @@ let temporaryInsanity = (setValue) => {
 
 const openHitPointsModal = () => {
     modalAttributes.title = "Hit Points";
-    modalAttributes.name = 'hit_points';
+    modalAttributes.attribute = 'hit_points';
     modalAttributes.value = prop.character.hit_points;
     // isHitPointsModalOpen.value = true;
     modalShow.value = true;
 };
 const openSanityModal = () => {
-    isSanityModalOpen.value = true;
+    modalAttributes.title = "Sanity";
+    modalAttributes.attribute = 'sanity';
+    modalAttributes.value = prop.character.sanity;
+    modalShow.value = true;
+};
+
+const openLuckModal = () => {
+    modalAttributes.title = "Luck";
+    modalAttributes.attribute = 'luck';
+    modalAttributes.value = prop.character.luck;
+    modalShow.value = true;
+};
+
+const openMagicPointsModal = () => {
+    modalAttributes.title = "Magic Points";
+    modalAttributes.attribute = 'magic_points';
+    modalAttributes.value = prop.character.magic_points;
+    modalShow.value = true;
 };
 
 const resetModal = () => {
@@ -111,7 +129,7 @@ const closeModal = () => {
         <dl class="grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
             <div class="relative flex flex-col bg-gray-400/5 p-8">
 
-                <dd class="font-semibold tracking-tight text-gray-900 text-5xl" @click="openHitPointsModal">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openHitPointsModal">
                     {{ prop.character.hit_points }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Hit points</dt>
@@ -126,11 +144,8 @@ const closeModal = () => {
                 </div>
             </div>
             <div class="relative flex flex-col bg-gray-400/5 p-8">
-                <dd class="text-3xl font-semibold tracking-tight text-gray-900">
-                    <input :value="prop.character.sanity"
-                           @input="adjustSanity"
-                           class="text-cthulhu-green-800 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight bg-transparent"
-                           type="text">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openSanityModal">
+                    {{ prop.character.sanity }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Sanity</dt>
                 <dd class="text-cthulhu-green-800 text-xs">Starting sanity: {{ prop.character.power }}</dd>
@@ -142,46 +157,57 @@ const closeModal = () => {
                 </div>
             </div>
             <div class="flex flex-col bg-gray-400/5 p-8">
-                <dt class="text-sm font-semibold leading-6 text-gray-600">Luck</dt>
-                <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900">
-                    <input v-model="prop.character.luck" type="text" @input="adjustLuck"
-                           class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openLuckModal">
+                    {{ prop.character.luck }}
                 </dd>
+                <dt class="text-sm font-semibold leading-6 text-gray-600">Luck</dt>
             </div>
             <div class="flex flex-col bg-gray-400/5 p-8">
-                <dd class="text-3xl font-semibold tracking-tight text-gray-900">
-                    <input v-model="prop.character.magic_points" type="text" @input="adjustMagicPoints"
-                           class="text-cthulhu-green-800 bg-cthulhu-green-200 border-0 p-0 m-0 ml-2 w-20 text-center order-first text-5xl font-semibold tracking-tight">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openMagicPointsModal">
+                    {{ prop.character.magic_points }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Magic points</dt>
             </div>
         </dl>
 
-        <Modal :show="modalShow" @close="closeModal">
-            <div class="bg-cthulhu-green-400 p-6 border-cthulhu-green-100">
-                <label
-                    for="starting_value"
-                    class="block text-sm font-medium leading-6 text-gray-900"
-                >
-                    {{ modalAttributes.title }}
-                </label>
+        <Modal :show="modalShow" @close="closeModal" max-width="sm">
+            <div class="bg-cthulhu-green-200 p-6 border-cthulhu-green-100 align-bottom">
+                <div class="flex flex-col h-full gap-1">
+                    <label
+                        for="starting_value"
+                        class="block text-md font-medium leading-6 text-gray-900"
+                    >
+                        {{ modalAttributes.title }}
+                    </label>
 
-                <div class="mt-2">
-                    <input
-                        type="number"
-                        v-model="modalAttributes.value"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        data-1p-ignore
-                        data-lpignore="true"
-                        data-bwignore
-                        class="block w-full rounded-md border-0 py-1.5
+                    <div class="flex-grow"></div>
+
+                    <div class="flex items-end gap-2">
+                        <input
+                            type="number"
+                            v-model="modalAttributes.value"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
+                            data-bwignore
+                            class="block w-full rounded-md border-0 py-1.5
                        text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300
                        placeholder:text-gray-400 focus:ring-2 focus:ring-inset
                        focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
+                        />
+
+                        <button
+                            type="button"
+                            @click="saveVitals"
+                            :disabled="modalAttributes.processing"
+                            class="rounded-md bg-cthulhu-green-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:opacity-50"
+                        >
+                            {{ modalAttributes.processing ? 'Saving...' : 'Save' }}
+                        </button>
+                    </div>
+                    </div>
                 </div>
-            </div>
         </Modal>
     </div>
 </template>

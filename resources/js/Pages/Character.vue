@@ -118,8 +118,7 @@ const saveNotes = () => {
                         <div class="mx-3 sm:mx-6 lg:mx-8">
                             <div
                                 class="bg-cthulhu-green-200 shadow-sm rounded-b-lg px-6 text-cthulhu-green-800 min-h-lvh flex flex-col gap-4">
-                                <quill-editor theme="snow" class="border-none" v-model:content="notesForm.notes" content-type="html">
-                                </quill-editor>
+                                <quill-editor theme="snow" class="border-none" v-model:content="notesForm.notes" content-type="html"></quill-editor>
                                 <div class="flex justify-end pb-4">
                                     <button
                                         type="button"
