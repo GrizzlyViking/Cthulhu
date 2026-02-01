@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Misc\CharacterCreation;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,29 +13,30 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
- * @property int $id
- * @property int $strength
- * @property int $dexterity
- * @property int intelligence
- * @property int $constitution
- * @property int $appearance
- * @property int $power
- * @property int $size
- * @property int $education
- * @property int $move_rate
- * @property int $hit_points
- * @property int $sanity
- * @property int $luck
- * @property int $magic_points
- * @property int $dodge
- * @property int $build
+ * @property int    $id
+ * @property string $slug
+ * @property int    $strength
+ * @property int    $dexterity
+ * @property int    $intelligence
+ * @property int    $constitution
+ * @property int    $appearance
+ * @property int    $power
+ * @property int    $size
+ * @property int    $education
+ * @property int    $move_rate
+ * @property int    $hit_points
+ * @property int    $sanity
+ * @property int    $luck
+ * @property int    $magic_points
+ * @property int    $dodge
+ * @property int    $build
  * @property string $damage_bonus
  * @property string $avatar
- * @property boolean $temporary_insanity
- * @property boolean $indefinite_insanity
- * @property boolean $major_wound
- * @property boolean $unconscious
- * @property boolean $dying
+ * @property bool   $temporary_insanity
+ * @property bool   $indefinite_insanity
+ * @property bool   $major_wound
+ * @property bool   $unconscious
+ * @property bool   $dying
  */
 class Character extends Model
 {
@@ -42,16 +44,92 @@ class Character extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'user_id',
         'occupation',
         'age',
         'gender',
         'residence',
         'birthplace',
+        'strength',
+        'dexterity',
+        'intelligence',
+        'constitution',
+        'appearance',
+        'power',
+        'size',
+        'education',
+        'move_rate',
+        'hit_points',
+        'sanity',
+        'luck',
+        'magic_points',
+        'dodge',
+        'build',
+        'damage_bonus',
         'avatar',
+        'temporary_insanity',
+        'indefinite_insanity',
+        'major_wound',
+        'unconscious',
+        'dying',
+        'notes',
     ];
 
     protected $with = ['skills', 'player', 'weapons'];
+
+    protected function casts(): array
+    {
+        return [
+            'temporary_insanity'  => 'boolean',
+            'indefinite_insanity' => 'boolean',
+            'major_wound'         => 'boolean',
+            'unconscious'         => 'boolean',
+            'dying'               => 'boolean',
+            'strength'            => 'integer',
+            'dexterity'           => 'integer',
+            'intelligence'        => 'integer',
+            'constitution'        => 'integer',
+            'appearance'          => 'integer',
+            'power'               => 'integer',
+            'size'                => 'integer',
+            'education'           => 'integer',
+            'move_rate'           => 'integer',
+            'hit_points'          => 'integer',
+            'sanity'              => 'integer',
+            'luck'                => 'integer',
+            'magic_points'        => 'integer',
+            'dodge'               => 'integer',
+            'build'               => 'integer',
+        ];
+    }
+
+    public function moveRate(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $move = CharacterCreation::moveRate($this);
+
+                if ($this->age > 40 && $this->age < 51) {
+                    return $move - 1;
+                }
+                if ($this->age > 50 && $this->age < 61) {
+                    return $move - 2;
+                }
+                if ($this->age > 60 && $this->age < 71) {
+                    return $move - 3;
+                }
+                if ($this->age > 70 && $this->age < 81) {
+                    return $move - 4;
+                }
+                if ($this->age > 80 && $this->age < 91) {
+                    return $move - 5;
+                }
+
+                return $move;
+            }
+        );
+    }
 
     public function getRouteKeyName(): string
     {
@@ -64,7 +142,7 @@ class Character extends Model
             ->each(function (Skill $skill) {
                 $this->skills()->attach($skill, [
                     'order' => $skill->order_by,
-                    'value' => $skill->starting_value
+                    'value' => $skill->starting_value,
                 ]);
             });
 
@@ -78,11 +156,11 @@ class Character extends Model
                 return $this->skills->contains($skill);
             })
             ->each(function (Skill $skill) {
-            $this->skills()->attach($skill, [
-                'order' => $skill->order_by,
-                'value' => $skill->starting_value
-            ]);
-        });
+                $this->skills()->attach($skill, [
+                    'order' => $skill->order_by,
+                    'value' => $skill->starting_value,
+                ]);
+            });
     }
 
     public function skills(): BelongsToMany
@@ -104,4 +182,6 @@ class Character extends Model
     {
         return CharacterCreation::damageBonus($this);
     }
+
+    public function group() {}
 }

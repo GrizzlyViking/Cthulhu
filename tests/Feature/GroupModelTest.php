@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Character;
 use App\Models\Group;
 use App\Models\User;
-use App\Models\Character;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -39,7 +39,7 @@ it('relates to users via a many-to-many pivot (group_user)', function () {
 });
 
 it('relates to characters via a many-to-many pivot (group_character)', function () {
-    $group = Group::factory()->create();
+    $group      = Group::factory()->create();
     $characters = Character::factory()->count(2)->create();
 
     $group->characters()->attach($characters->pluck('id')->all());
@@ -55,8 +55,8 @@ it('relates to characters via a many-to-many pivot (group_character)', function 
 });
 
 it('cascades pivot rows when a group is deleted', function () {
-    $group = Group::factory()->create();
-    $user = User::factory()->create();
+    $group     = Group::factory()->create();
+    $user      = User::factory()->create();
     $character = Character::factory()->create();
 
     $group->users()->attach($user->id);
@@ -72,24 +72,24 @@ it('cascades pivot rows when a group is deleted', function () {
 
 it('cascades group_user pivot rows when a user is deleted', function () {
     $group = Group::factory()->create();
-    $user = User::factory()->create();
+    $user  = User::factory()->create();
 
     $group->users()->attach($user->id);
     $userId = $user->id;
 
-    $user->delete();
+    $user->forceDelete();
 
     expect(DB::table('group_user')->where('user_id', $userId)->count())->toBe(0);
 });
 
 it('cascades group_character pivot rows when a character is deleted', function () {
-    $group = Group::factory()->create();
+    $group     = Group::factory()->create();
     $character = Character::factory()->create();
 
     $group->characters()->attach($character->id);
     $characterId = $character->id;
 
-    $character->delete();
+    $character->forceDelete();
 
     expect(DB::table('group_character')->where('character_id', $characterId)->count())->toBe(0);
 });

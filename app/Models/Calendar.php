@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property int $id
- * @property string $name
- * @property string $slug
+ * @property int               $id
+ * @property string            $name
+ * @property string            $slug
  * @property Collection<Event> $events
  */
 class Calendar extends Model
@@ -39,19 +39,16 @@ class Calendar extends Model
     public function getDaysOfMonthPadded($month, $year): \Illuminate\Support\Collection
     {
         $pointOfReference = CarbonImmutable::parse("{$year}-{$month}-01");
-        $startOfCalendar = $pointOfReference->startOfMonth()->startOfWeek();
-        $endOfCalendar = $pointOfReference->endOfMonth()->endOfWeek();
+        $startOfCalendar  = $pointOfReference->startOfMonth()->startOfWeek();
+        $endOfCalendar    = $pointOfReference->endOfMonth()->endOfWeek();
 
         $datesOfCalendar = $this->generateDatesOfCalendar($startOfCalendar, $endOfCalendar);
+
         return $this->getEventsPerDates($datesOfCalendar, $pointOfReference);
     }
 
     /**
      * The generateDatesOfCalendar method generates the list of dates between the start and end of the calendar range.
-     *
-     * @param CarbonImmutable $startOfCalendar
-     * @param CarbonImmutable $endOfCalendar
-     * @return array
      */
     private function generateDatesOfCalendar(CarbonImmutable $startOfCalendar, CarbonImmutable $endOfCalendar): array
     {
@@ -69,27 +66,20 @@ class Calendar extends Model
 
     /**
      * The getEventsPerDates function maps over these dates and gets the events for each day.
-     *
-     * @param array $dates
-     * @param CarbonImmutable $pointOfReference
-     * @return \Illuminate\Support\Collection
      */
     private function getEventsPerDates(array $dates, CarbonImmutable $pointOfReference): \Illuminate\Support\Collection
     {
         return collect($dates)->map(function ($date) use ($pointOfReference) {
             return [
-                'date' => $date,
+                'date'           => $date,
                 'isCurrentMonth' => $pointOfReference->isSameMonth($date),
-                'events' => $this->getEventsOfDay($date),
+                'events'         => $this->getEventsOfDay($date),
             ];
         });
     }
 
     /**
      * the getEventsOfDay method retrieves the events for a specific day
-     *
-     * @param string $date
-     * @return Collection
      */
     private function getEventsOfDay(string $date): Collection
     {

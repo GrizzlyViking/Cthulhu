@@ -9,18 +9,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * @property int $id
- * @property string $uuid
- * @property int $user_id
- * @property string $summary
- * @property string $description
+ * @property int       $id
+ * @property string    $uuid
+ * @property int       $user_id
+ * @property string    $summary
+ * @property string    $description
  * @property EventType $type
- * @property int $calendar_id
- * @property Carbon $start_at
- * @property Carbon $end_at
- *
- * @property Calendar $calendar
- * @property User $user
+ * @property int       $calendar_id
+ * @property Carbon    $start_at
+ * @property Carbon    $end_at
+ * @property Calendar  $calendar
+ * @property User      $user
  */
 class Event extends Model
 {

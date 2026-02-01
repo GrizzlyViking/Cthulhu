@@ -1,6 +1,6 @@
 <template>
-    <TransitionRoot appear :show="isOpen" as="template">
-        <Dialog as="div" @close="emit('modal-close')" class="relative z-10">
+    <TransitionRoot appear :show="props.isOpen" as="template">
+        <Dialog as="div" @close="emit('modal-close')" class="relative z-10" :initialFocus="props.initialFocus">
             <TransitionChild
                 as="template"
                 enter="duration-300 ease-out"
@@ -37,9 +37,10 @@
                                     </slot>
                                 </p>
                             </div>
-                            <div class="mt-4 flex justify-between gap-2">
+                            <slot  name="buttons">
                                     <button
-                                        v-if="$slots.response1().length"
+                                        v-if="slots.response1 && $slots.response1().length"
+                                        ref="closeBtnRef"
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="emit('response1')"
@@ -47,14 +48,14 @@
                                         <slot name="response1"></slot>
                                     </button>
                                     <button
-                                        v-if="$slots.response2().length"
+                                        v-if="slots.response2 && $slots.response2().length"
                                         type="button"
                                         class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                         @click="emit('response2')"
                                     >
                                         <slot name="response2"></slot>
                                     </button>
-                            </div>
+                            </slot>
                         </DialogPanel>
                     </TransitionChild>
                 </div>
@@ -71,24 +72,29 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import {useSlots} from "vue";
+import {computed, onMounted, ref, useSlots} from "vue";
+const closeBtnRef = ref(null);
 
-
-function closeModal() {
-    prop.isOpen = false
-}
-
-function openModal() {
-    prop.isOpen = true
-}
-
-const prop = defineProps({isOpen: Boolean})
+const props = defineProps({
+    isOpen: {
+        type: Boolean,
+        default: false
+    },
+    initialFocus: {
+        type: Object,
+        default: null
+    }
+})
 
 const emit = defineEmits([
     "modal-close",
     'response1',
     'response2'
 ]);
+
+onMounted(() => {
+    console.log(props.isOpen);
+});
 
 const slots = useSlots()
 </script>

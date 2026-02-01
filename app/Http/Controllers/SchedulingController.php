@@ -12,7 +12,6 @@ use Inertia\Inertia;
 
 class SchedulingController extends Controller
 {
-
     public function calendar(Calendar $calendar)
     {
         return Inertia::render('Scheduling', compact('calendar'));
@@ -22,7 +21,7 @@ class SchedulingController extends Controller
     {
         $request->validate([
             'month' => 'required',
-            'year' => 'required',
+            'year'  => 'required',
         ]);
 
         return response()->json(['calendar' => $calendar->getDaysOfMonthPadded($request->get('month'), $request->get('year'))]);
@@ -31,22 +30,22 @@ class SchedulingController extends Controller
     public function createEvents(Calendar $calendar, Request $request)
     {
         $validated = $request->validate([
-            'days' => 'required|array',
-            'user_id' => 'required|exists:users,id',
-            'summary' => 'required|string',
-            'type' => [Rule::enum(EventType::class)],
+            'days'        => 'required|array',
+            'user_id'     => 'required|exists:users,id',
+            'summary'     => 'required|string',
+            'type'        => [Rule::enum(EventType::class)],
             'description' => 'nullable|string',
         ]);
 
         collect($validated['days'])->each(function ($day) use ($calendar, $validated) {
-            $event = new Event();
-            $event->user_id = $validated['user_id'];
-            $event->summary = $validated['summary'];
-            $event->type = $validated['type'];
+            $event              = new Event();
+            $event->user_id     = $validated['user_id'];
+            $event->summary     = $validated['summary'];
+            $event->type        = $validated['type'];
             $event->calendar_id = $calendar->id;
             $event->description = $validated['description'];
-            $event->start_at = Carbon::parse($day['date'])->setTime(17, 00);
-            $event->end_at = Carbon::parse($day['date'])->setTime(22, 00);
+            $event->start_at    = Carbon::parse($day['date'])->setTime(17, 00);
+            $event->end_at      = Carbon::parse($day['date'])->setTime(22, 00);
             $event->save();
         });
 

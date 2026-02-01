@@ -3,59 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Models\Character;
-use App\Models\Weapon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class WeaponController extends Controller
 {
-
     public function addWeapon(Character $character, Request $request): RedirectResponse
     {
-        $request->validate([
-            'weapon_id' => 'required|integer',
+        $validated = $request->validate([
+            'weapon_id' => ['required', 'integer', 'exists:weapons,id'],
         ]);
 
-        $weapon = Weapon::find($request->get('weapon_id'));
-        $character->weapons()->attach($weapon);
+        $character->weapons()->attach($validated['weapon_id']);
 
         return to_route('character.show', $character->slug);
     }
 
-    public function reloadWeapon(Request $request)
+    public function reloadWeapon(Request $request): Response
     {
-        $request->validate([
-            'pivot_id' => 'required|integer',
-            'ammo' => 'required|integer',
+        $validated = $request->validate([
+            'pivot_id' => ['required', 'integer', 'exists:equipables,id'],
+            'ammo'     => ['required', 'integer', 'min:0'],
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => $request->get('ammo')]);
+        DB::table('equipables')->where('id', $validated['pivot_id'])->update(['ammo' => $validated['ammo']]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 
-    public function removeWeapon(Request $request)
+    public function removeWeapon(Request $request): RedirectResponse
     {
-        Validator::make($request->all(), [
-            'character_slug' => 'required|string',
-            'pivot_id' => 'required|integer',
+        $validated = $request->validate([
+            'character_slug' => ['required', 'string', 'exists:characters,slug'],
+            'pivot_id'       => ['required', 'integer', 'exists:equipables,id'],
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->delete();
+        DB::table('equipables')->where('id', $validated['pivot_id'])->delete();
 
-        return to_route('character.show', $request->get('character_slug'));
+        return to_route('character.show', $validated['character_slug']);
     }
 
-    public function fireWeapon(Request $request)
+    public function fireWeapon(Request $request): Response
     {
-        Validator::make($request->all(), [
-            'pivot_id' => 'required|integer',
+        $validated = $request->validate([
+            'pivot_id' => ['required', 'integer', 'exists:equipables,id'],
         ]);
 
-        DB::table('equipables')->where('id', $request->get('pivot_id'))->update(['ammo' => DB::raw('ammo - 1')]);
+        DB::table('equipables')->where('id', $validated['pivot_id'])->update(['ammo' => DB::raw('ammo - 1')]);
 
-        return \response('OK', 200);
+        return response('OK', 200);
     }
 }

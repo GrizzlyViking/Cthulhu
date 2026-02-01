@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -14,6 +12,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('characters')->get();
+
         return Inertia::render('Players', compact('users'));
     }
 
@@ -27,33 +26,36 @@ class UserController extends Controller
 
     public function online(): array
     {
-        return DB::table('sessions')->whereNotNull('user_id', )->get('user_id')->toArray();
+        return DB::table('sessions')->whereNotNull('user_id')->get('user_id')->toArray();
     }
 
     public function playerManagement()
     {
         $users = User::with('characters')->get()->map(function (User $user) {
             return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
+                'id'           => $user->id,
+                'name'         => $user->name,
+                'role'         => $user->role,
                 'sentRelative' => $user->role,
-                'online' => $user->is_online,
-                'content' => ''
+                'online'       => $user->is_online,
+                'content'      => '',
             ];
         });
+
         return Inertia::render('Players', compact('users'));
     }
 
     public function role(User $user, Request $request)
     {
-        $request->validate([
-            'role' => [
-                'required',
-            ]
+        $validated = $request->validate([
+            'role' => ['required', 'string'],
         ]);
 
-        $user->update(['role' => $request->input('role')]);
+        if (DB::table('roles')->where('name', $validated['role'])->exists()) {
+            $user->syncRoles([$validated['role']]);
+        }
+
+        $user->update(['role' => $validated['role']]);
 
         return redirect()->back();
     }

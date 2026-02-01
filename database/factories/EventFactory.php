@@ -20,13 +20,13 @@ class EventFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory()->create()->id,
-            'summary' => fake()->sentence(),
+            'user_id'     => User::factory()->create()->id,
+            'summary'     => fake()->sentence(),
             'description' => fake()->paragraph(),
-            'type' => fake()->randomElement(EventType::cases()),
+            'type'        => fake()->randomElement(EventType::cases()),
             'calendar_id' => Calendar::factory()->create()->id,
-            'start_at' => fake()->dateTimeBetween('-1 months'),
-            'end_at' => fake()->dateTimeBetween('now', '+1 months'),
+            'start_at'    => fake()->dateTimeBetween('-1 months'),
+            'end_at'      => fake()->dateTimeBetween('now', '+1 months'),
         ];
     }
 }

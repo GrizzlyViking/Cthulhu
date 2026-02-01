@@ -1,0 +1,32 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "simplified_null_return": true,
+        "array_indentation": false,
+        "ordered_imports": true,
+        "single_quote": true,
+        "array_syntax": {
+            "syntax": "short"
+        },
+        "new_with_parentheses": {
+            "anonymous_class": true,
+            "named_class": true
+        },
+        "phpdoc_align": {
+            "align": "vertical"
+        },
+        "binary_operator_spaces": {
+            "default": "single_space",
+            "operators": {
+                "=>": "align_single_space_minimal",
+                "=": "align_single_space_minimal"
+            }
+        }
+    },
+    "exclude": [
+        "bootstrap",
+        "storage",
+        "vendor",
+        "node_modules"
+    ]
+}

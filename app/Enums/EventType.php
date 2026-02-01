@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum EventType: string
 {
-    case default = 'default';
+    case default    = 'default';
     case suggestion = 'suggestion';
-    case vote = 'vote';
+    case vote       = 'vote';
 }
