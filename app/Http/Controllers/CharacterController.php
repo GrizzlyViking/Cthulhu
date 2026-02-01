@@ -2,56 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CharacterAttributeUpdateRequest;
+use App\Http\Requests\CharacterSkillUpdateRequest;
+use App\Http\Requests\CharacterStoreRequest;
 use App\Http\Requests\CharacterUpdateRequest;
 use App\Models\Character;
 use App\Models\Skill;
-use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Inertia\Response;
 
 class CharacterController extends Controller
 {
     use AuthorizesRequests;
 
-    protected function user(): User
-    {
-        return auth()->user();
-    }
-
-    public function show(Character $character)
+    public function show(Character $character): Response
     {
         $this->authorize('view', $character);
 
         return Inertia::render('Character', compact('character'));
     }
 
-    public function create()
+    public function create(): Response
     {
         $this->authorize('create', Character::class);
 
         return Inertia::render('Character/Create');
     }
 
-    public function store(Request $request): RedirectResponse|Response
+    public function store(CharacterStoreRequest $request): RedirectResponse
     {
-        $this->authorize('create', Character::class);
-
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255|unique:characters',
-            'user_id'    => 'required|exists:users,id',
-            'occupation' => 'required|string',
-            'age'        => 'required|integer|min:16',
-            'gender'     => 'required|in:Male,Female,Other',
-            'residence'  => 'required|string',
-            'birthplace' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $character       = Character::make($validated);
         $character->slug = Str::slug($validated['name']);
@@ -59,14 +43,14 @@ class CharacterController extends Controller
         $character->refresh();
         $character->addAllSkills();
 
-        return to_route('character.show', [$character->slug]);
+        return to_route('character.show', $character->slug);
     }
 
-    public function aptitude(Character $character, Skill $skill)
+    public function aptitude(Character $character, Skill $skill): int
     {
         $this->authorize('view', $character);
 
-        return DB::table('character_skill')->where('character_id', $character->id)->where('skill_id', $skill->id)->pluck('value')->first();
+        return (int) $character->skills()->where('skill_id', $skill->id)->first()?->pivot->value ?? 0;
     }
 
     public function update(Character $character, CharacterUpdateRequest $request): RedirectResponse
@@ -76,60 +60,40 @@ class CharacterController extends Controller
         return to_route('character.show', $character->slug);
     }
 
-    public function updateSkill(Character $character, Skill $skill, Request $request): RedirectResponse
+    public function updateSkill(Character $character, Skill $skill, CharacterSkillUpdateRequest $request): RedirectResponse
     {
-        $this->authorize('patch', $character);
-
-        $validated = $request->validate([
-            'value' => ['required', 'integer', 'between:0,100'],
-        ]);
-
         $character->skills()->updateExistingPivot($skill->id, [
-            'value' => $validated['value'],
+            'value' => $request->validated('value'),
         ]);
 
         return to_route('character.show', $character->slug);
     }
 
-    public function attachSkill(Request $request): Response
-    {
-        $validated = $request->validate([
-            'character_id' => 'required|integer|exists:characters,id',
-            'skill_id'     => 'required|integer|exists:skills,id',
-            'value'        => 'required|integer',
-        ]);
-
-        $character = Character::findOrFail($validated['character_id']);
-        $this->authorize('patch', $character);
-
-        DB::table('character_skill')->insert($validated);
-
-        return response('OK', SymfonyResponse::HTTP_CREATED);
-    }
-
-    public function removeSkill(Request $request): Response
-    {
-        $validated = $request->validate([
-            'character_id' => 'required|integer|exists:characters,id',
-            'skill_id'     => 'required|integer|exists:skills,id',
-        ]);
-
-        $character = Character::findOrFail($validated['character_id']);
-        $this->authorize('patch', $character);
-
-        DB::table('character_skill')->where($validated)->delete();
-
-        return response('OK', SymfonyResponse::HTTP_OK);
-    }
-
-    public function updateAttribute(Character $character, Request $request): RedirectResponse
+    public function attachSkill(Character $character, Skill $skill, Request $request): RedirectResponse
     {
         $this->authorize('update', $character);
 
         $validated = $request->validate([
-            'attribute' => ['required', 'string'],
-            'value'     => ['required'],
+            'value' => ['required', 'integer'],
         ]);
+
+        $character->skills()->syncWithoutDetaching([$skill->id => ['value' => $validated['value']]]);
+
+        return to_route('character.show', $character->slug);
+    }
+
+    public function removeSkill(Character $character, Skill $skill): RedirectResponse
+    {
+        $this->authorize('update', $character);
+
+        $character->skills()->detach($skill->id);
+
+        return to_route('character.show', $character->slug);
+    }
+
+    public function updateAttribute(Character $character, CharacterAttributeUpdateRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
 
         $character->update([
             $validated['attribute'] => $validated['value'],
@@ -142,43 +106,38 @@ class CharacterController extends Controller
         return to_route('character.show', $character->slug);
     }
 
-    public function renameCharacter(Character $character, Request $request)
+    public function renameCharacter(Character $character, Request $request): RedirectResponse
     {
-        $this->authorize('patch', $character);
+        $this->authorize('update', $character);
 
-        $validator = Validator::make($request->all(), [
-            'value' => 'required|string',
+        $validated = $request->validate([
+            'value' => ['required', 'string'],
         ]);
 
-        if ($validator->fails()) {
-            return response('Error', 400);
-        }
+        $character->update([
+            'name' => $validated['value'],
+            'slug' => Str::slug($validated['value']),
+        ]);
 
-        $character->setAttribute('name', $request->get('value'));
-        $character->setAttribute('slug', Str::slug($request->get('value')));
-
-        $character->save();
-        $character->refresh();
-
-        return to_route('character.show', [$character->slug]);
+        return to_route('character.show', $character->slug);
     }
 
-    public function avatar(Character $character, Request $request)
+    public function avatar(Character $character, Request $request): RedirectResponse
     {
-        $this->authorize('patch', $character);
+        $this->authorize('update', $character);
 
         $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg'],
         ]);
 
-        $path = $request->avatar->store('avatars/'.$character->slug, 'public');
+        $path = $request->file('avatar')->store('avatars/'.$character->slug, 'public');
 
         $character->update(['avatar' => $path]);
 
-        return to_route('character.show', [$character->slug]);
+        return to_route('character.show', $character->slug);
     }
 
-    public function destroy(Character $character)
+    public function destroy(Character $character): RedirectResponse
     {
         $this->authorize('delete', $character);
 

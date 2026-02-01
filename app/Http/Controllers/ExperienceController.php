@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\Skill;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class ExperienceController extends Controller
 {
-    public function increment(Character $character, Skill $skill)
+    public function increment(Character $character, Skill $skill): Response
     {
         $character->skills()->updateExistingPivot($skill->id, [
             'experience' => DB::raw('experience + 1'),
@@ -17,7 +18,7 @@ class ExperienceController extends Controller
         return response('OK', 200);
     }
 
-    public function reset(Character $character, Skill $skill)
+    public function reset(Character $character, Skill $skill): Response
     {
         $character->skills()->updateExistingPivot($skill->id, [
             'experience' => 0,

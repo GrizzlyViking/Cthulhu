@@ -1,20 +1,18 @@
 <script setup>
-import {debounce} from "lodash";
-import Modal from "/resources/js/Components/Modal.vue";
-import {ref} from "vue";
+import Modal from "@/Components/Modal.vue";
+import { ref } from "vue";
 import axios from "axios";
-import {useForm} from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
 
 const prop = defineProps({
     character: Object,
-    editable: Boolean
+    editable: Boolean,
+    canEdit: Boolean,
 });
 
 const modalShow = ref(false);
-const isSanityModalOpen = ref(false);
 
 let modalAttributes = useForm({
-    character_id: prop.character.id,
     title: '',
     attribute: '',
     value: 0,
@@ -22,104 +20,40 @@ let modalAttributes = useForm({
 
 const saveVitals = () => {
     modalAttributes.put(
-        route('attribute.update', {character: prop.character.slug}),
+        route('attribute.update', { character: prop.character.slug }),
         {
             preserveScroll: true,
-            onSuccess: modalShow.value = false
+            onSuccess: () => { modalShow.value = false; }
         })
 }
 
-let adjustLuck = debounce(() => {
-    axios.put(route('attribute.update', {
-        character: prop.character.slug,
-    }), {
-        attribute: 'luck',
-        value: prop.character.luck
-    });
-}, 600);
-
-let adjustMagicPoints = debounce(() => {
-    axios.put(route('attribute.update', {
-        character: prop.character.slug,
-    }), {
-        attribute: 'magic_points',
-        value: prop.character.magic_points
-    });
-}, 600);
-
-let adjustSanity = debounce((event) => {
-    if ((Number(prop.character.sanity) - 5) > Number(event.target.value)) {
-        openSanityModal();
+const toggleStatus = (attribute, currentValue) => {
+    if (!prop.canEdit) {
+        return;
     }
-    prop.character.sanity = event.target.value;
+    const newValue = !currentValue;
     axios.put(route('attribute.update', {
         character: prop.character.slug,
     }), {
-        attribute: 'sanity',
-        value: event.target.value
-    });
-}, 600)
-
-let unconscious = (setValue) => {
-    prop.character.unconscious = setValue;
-    axios.put(route('attribute.update', {
-        character: prop.character.slug,
-    }), {
-        attribute: 'unconscious',
-        value: prop.character.unconscious
+        attribute: attribute,
+        value: newValue
     }).then(() => {
-        closeModal()
+        prop.character[attribute] = newValue;
     });
 }
 
-let temporaryInsanity = (setValue) => {
-    axios.put(route('attribute.update', {
-        character: prop.character.slug,
-    }), {
-        attribute: 'temporary_insanity',
-        value: setValue
-    }).then(() => {
-        prop.character.temporary_insanity = setValue;
-        closeModal();
-    });
-
-}
-
-const openHitPointsModal = () => {
-    modalAttributes.title = "Hit Points";
-    modalAttributes.attribute = 'hit_points';
-    modalAttributes.value = prop.character.hit_points;
-    // isHitPointsModalOpen.value = true;
+const openAttributeModal = (title, attribute, value) => {
+    if (!prop.canEdit) {
+        return;
+    }
+    modalAttributes.title = title;
+    modalAttributes.attribute = attribute;
+    modalAttributes.value = value;
     modalShow.value = true;
 };
-const openSanityModal = () => {
-    modalAttributes.title = "Sanity";
-    modalAttributes.attribute = 'sanity';
-    modalAttributes.value = prop.character.sanity;
-    modalShow.value = true;
-};
-
-const openLuckModal = () => {
-    modalAttributes.title = "Luck";
-    modalAttributes.attribute = 'luck';
-    modalAttributes.value = prop.character.luck;
-    modalShow.value = true;
-};
-
-const openMagicPointsModal = () => {
-    modalAttributes.title = "Magic Points";
-    modalAttributes.attribute = 'magic_points';
-    modalAttributes.value = prop.character.magic_points;
-    modalShow.value = true;
-};
-
-const resetModal = () => {
-    modalAttributes.attribute_name = '';
-    modalAttributes.attribute_value = 0;
-}
 
 const closeModal = () => {
-    resetModal();
+    modalAttributes.reset();
     modalShow.value = false;
 };
 </script>
@@ -128,8 +62,7 @@ const closeModal = () => {
     <div>
         <dl class="grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
             <div class="relative flex flex-col bg-gray-400/5 p-8">
-
-                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openHitPointsModal">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl cursor-pointer" @click="openAttributeModal('Hit Points', 'hit_points', prop.character.hit_points)">
                     {{ prop.character.hit_points }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Hit points</dt>
@@ -137,33 +70,33 @@ const closeModal = () => {
                     Max hit points:
                     {{ Math.floor((Number(character.constitution) + Number(character.size)) / 5) }}
                 </dd>
-                <div @click="unconscious(!prop.character.unconscious)" v-if="prop.character.unconscious"
-                     class="absolute inset-x-0 top-20 flex justify-center items-center">
+                <div @click="toggleStatus('unconscious', prop.character.unconscious)" v-if="prop.character.unconscious"
+                     class="absolute inset-x-0 top-20 flex justify-center items-center cursor-pointer">
                     <h2 class="border w-36 rounded-md border-red-600 text-2xl text-red-400 rotate-45 font-semibold tracking-tight">
-                        Uncuncious</h2>
+                        Unconscious</h2>
                 </div>
             </div>
             <div class="relative flex flex-col bg-gray-400/5 p-8">
-                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openSanityModal">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl cursor-pointer" @click="openAttributeModal('Sanity', 'sanity', prop.character.sanity)">
                     {{ prop.character.sanity }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Sanity</dt>
                 <dd class="text-cthulhu-green-800 text-xs">Starting sanity: {{ prop.character.power }}</dd>
-                <div @click="temporaryInsanity(!prop.character.temporary_insanity)"
+                <div @click="toggleStatus('temporary_insanity', prop.character.temporary_insanity)"
                      v-if="prop.character.temporary_insanity"
-                     class="absolute inset-x-0 top-10 flex justify-center items-center">
+                     class="absolute inset-x-0 top-10 flex justify-center items-center cursor-pointer">
                     <h2 class="border w-36 rounded-md border-red-600 text-2xl text-red-400 rotate-45 font-semibold tracking-tight">
                         Temporary Insanity</h2>
                 </div>
             </div>
             <div class="flex flex-col bg-gray-400/5 p-8">
-                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openLuckModal">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl cursor-pointer" @click="openAttributeModal('Luck', 'luck', prop.character.luck)">
                     {{ prop.character.luck }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Luck</dt>
             </div>
             <div class="flex flex-col bg-gray-400/5 p-8">
-                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl" @click="openMagicPointsModal">
+                <dd class="font-semibold tracking-tight text-cthulhu-green-800 text-5xl cursor-pointer" @click="openAttributeModal('Magic Points', 'magic_points', prop.character.magic_points)">
                     {{ prop.character.magic_points }}
                 </dd>
                 <dt class="text-sm font-semibold leading-6 text-gray-600">Magic points</dt>

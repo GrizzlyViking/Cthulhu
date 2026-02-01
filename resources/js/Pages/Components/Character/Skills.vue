@@ -1,67 +1,51 @@
 <script setup>
 import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
-import {debounce} from "lodash";
-import ModalPopup from "@/Pages/Components/ModalPopup.vue";
-import {ref} from "vue";
-import {useForm, router} from "@inertiajs/vue3";
+import { ref } from "vue";
+import { useForm } from "@inertiajs/vue3";
+import Modal from "@/Components/Modal.vue";
+import axios from "axios";
 
-const prop = defineProps({character: Object, editable: Boolean});
-const cancelBtnRef = ref(null);
+const prop = defineProps({
+    character: Object,
+    editable: Boolean,
+    canEdit: Boolean,
+});
 
-let isEditSkillModalOpen = ref(false);
+const showModal = ref(false);
 
 const closeEditModal = () => {
-    isEditSkillModalOpen.value = false;
+    showModal.value = false;
 };
 
-let newSkill = useForm({
-    character_id: prop.character.id,
+const skillForm = useForm({
     display_name: '',
-    starting_value: 0,
-    new_value: 0,
-    slug: ''
+    slug: '',
+    value: 0,
 })
 
-const updateSkill = debounce((skill) => {
-    router.put(route('character.skill.update', {
+const updateSkill = () => {
+    skillForm.put(route('character.skill.update', {
         character: prop.character.slug,
-        skill: skill.slug,
-    }), {
-        value: Number(skill.new_value)
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            isEditSkillModalOpen.value = false
-        }
-    });
-}, 600);
-
-let deleteSkill = (skill) => {
-    axios.put(route('character.skill.remove', {
-        character: prop.character.slug,
-        skill: skill.slug,
-    }), {
-        preserveScroll: true,
-    }).then (() => {
-        isEditSkillModalOpen.value = false;
-        prop.character.skills = prop.character.skills.filter(s => s.slug !== skill.slug);
-    })
+        skill: skillForm.slug,
+    }), { preserveScroll: true, onSuccess: closeModal })
 }
 
-let openEditModal = (skill) => {
-    newSkill.character_id = prop.character.id;
-    newSkill.display_name = skill.display_name;
-    newSkill.new_value = skill.pivot.value;
-    newSkill.slug = skill.slug;
-    isEditSkillModalOpen.value = true;
+const openEditModal = (skill) => {
+    if (!prop.canEdit) {
+        return;
+    }
+    skillForm.display_name = skill.display_name;
+    skillForm.value = skill.pivot.value;
+    skillForm.slug = skill.slug;
+    showModal.value = true;
 }
 
-let cancelEditSkill = () => {
-    isEditSkillModalOpen.value = false;
-    newSkill.reset();
+const closeModal = () => {
+    skillForm.reset();
+    showModal.value = false;
 }
 
-let resetExperience = (skill) => {
+const resetExperience = (skill) => {
     axios.get(route('experience.reset', {
         character: prop.character.slug,
         skill: skill.slug
@@ -96,66 +80,44 @@ let resetExperience = (skill) => {
         </div>
     </div>
 
-    <modal-popup :is-open="isEditSkillModalOpen" :initial-focus="cancelBtnRef"
-                 @modal-close="closeEditModal"
-                 @response1="closeEditModal"
-                 @response2="() => updateSkill(newSkill)"
-    >
-        <template #title>Edit skill</template>
-        <template #default>
-            <form>
-                <div>
-                    <label for="display_name" class="block text-sm font-medium leading-6 text-gray-900">Display name</label>
-                    <div class="mt-2">
-                        <input type="text"
-                               v-model="newSkill.display_name"
-                               autocomplete="off"
-                               data-1p-ignore
-                               data-lpignore="true"
-                               data-bwignore
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
-                    </div>
-                </div>
-                <div>
-                    <label for="starting_value" class="block text-sm font-medium leading-6 text-gray-900">Value</label>
-                    <div class="mt-2">
-                        <input type="number"
-                               v-model="newSkill.new_value"
-                               inputmode="numeric"
-                               autocomplete="off"
-                               data-1p-ignore
-                               data-lpignore="true"
-                               data-bwignore
-                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
-                    </div>
-                </div>
-            </form>
-        </template>
-        <template #buttons>
-            <div class="mt-4 flex justify-between gap-2">
-                <button
-                    type="button"
-                    ref="cancelBtnRef"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    @click="cancelEditSkill"
-                >Cancel
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    @click="updateSkill(newSkill)"
+    <Modal :show="showModal" @close="closeEditModal" max-width="md">
+        <div class="bg-cthulhu-green-200 p-6 border-cthulhu-green-100 align-bottom">
+            <div class="flex flex-col h-full gap-1">
+                <label
+                    for="starting_value"
+                    class="block text-md font-medium leading-6 text-gray-900"
                 >
-                    Update
-                </button>
-                <button
-                    type="button"
-                    class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    @click="deleteSkill(newSkill)"
-                >
-                    Delete
-                </button>
+                    {{ skillForm.display_name }}
+                </label>
+
+                <div class="flex-grow"></div>
+
+                <div class="flex items-end gap-2">
+                    <input
+                        type="number"
+                        v-model="skillForm.value"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        data-1p-ignore
+                        data-lpignore="true"
+                        data-bwignore
+                        class="block w-full rounded-md border-0 py-1.5
+                       text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300
+                       placeholder:text-gray-400 focus:ring-2 focus:ring-inset
+                       focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+
+                    <button
+                        type="button"
+                        @click="updateSkill"
+                        :disabled="skillForm.processing"
+                        class="rounded-md bg-cthulhu-green-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:opacity-50"
+                    >
+                        {{ skillForm.processing ? 'Saving...' : 'Save' }}
+                    </button>
+                </div>
             </div>
-        </template>
-    </modal-popup>
+        </div>
+    </Modal>
 
 </template>
