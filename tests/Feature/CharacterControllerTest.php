@@ -30,10 +30,13 @@ test('can update character skill', function () {
         'skill'     => $skill->slug,
     ]), [
         'value' => 50,
+        'show'  => false,
     ]);
 
     $response->assertRedirect(route('character.show', $character->slug));
-    expect($character->refresh()->skills()->where('skill_id', $skill->id)->first()->pivot->value)->toBe(50);
+    $pivot = $character->refresh()->skills()->where('skill_id', $skill->id)->first()->pivot;
+    expect($pivot->value)->toBe(50);
+    expect($pivot->show)->toBeFalsy();
 });
 
 test('can update character attribute', function () {

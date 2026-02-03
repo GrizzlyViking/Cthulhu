@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Misc\CharacterCreation;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -131,6 +133,24 @@ class Character extends Model
         );
     }
 
+    /**
+     * Players own characters
+     */
+    #[Scope]
+    public function playersOwn(Builder $query): void
+    {
+        $query->where('user_id', auth()->id())->orderBy('updated_at', 'desc');
+    }
+
+    /**
+     * Scope to show other players characters
+     */
+    #[Scope]
+    public function others(Builder $query): void
+    {
+        $query->where('user_id', '!=', auth()->id());
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -165,7 +185,7 @@ class Character extends Model
 
     public function skills(): BelongsToMany
     {
-        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order')->orderBy('display_name');
+        return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order', 'show')->orderBy('display_name');
     }
 
     public function player(): BelongsTo

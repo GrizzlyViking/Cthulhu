@@ -19,7 +19,7 @@ test('a player cannot edit another players character via patch', function () {
 
     // Player 1 tries to patch Player 2's character
     $response = $this->actingAs($player1)
-        ->patch(route('character.patch', $characterOfPlayer2), [
+        ->put(route('character.update', $characterOfPlayer2), [
             'name' => 'Hacked Name',
         ]);
 
@@ -33,7 +33,7 @@ test('a player can edit their own character via patch', function () {
     $character = Character::factory()->create(['user_id' => $player->id]);
 
     $response = $this->actingAs($player)
-        ->patch(route('character.patch', $character), [
+        ->put(route('character.update', $character), [
             'name' => 'New Valid Name',
         ]);
 
@@ -49,7 +49,7 @@ test('a keeper can edit any character via patch', function () {
     $character = Character::factory()->create(['user_id' => $player->id]);
 
     $response = $this->actingAs($keeper)
-        ->patch(route('character.patch', $character), [
+        ->put(route('character.update', $character), [
             'name' => 'Keeper Edited Name',
         ]);
 

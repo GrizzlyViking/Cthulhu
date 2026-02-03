@@ -64,6 +64,7 @@ class CharacterController extends Controller
     {
         $character->skills()->updateExistingPivot($skill->id, [
             'value' => $request->validated('value'),
+            'show'  => $request->validated('show'),
         ]);
 
         return to_route('character.show', $character->slug);

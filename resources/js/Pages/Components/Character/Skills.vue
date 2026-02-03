@@ -21,6 +21,7 @@ const skillForm = useForm({
     display_name: '',
     slug: '',
     value: 0,
+    show: true,
 })
 
 const updateSkill = () => {
@@ -30,6 +31,7 @@ const updateSkill = () => {
     }), { preserveScroll: true, onSuccess: closeModal })
 }
 
+const skillDescription = ref('')
 const openEditModal = (skill) => {
     if (!prop.canEdit) {
         return;
@@ -37,6 +39,8 @@ const openEditModal = (skill) => {
     skillForm.display_name = skill.display_name;
     skillForm.value = skill.pivot.value;
     skillForm.slug = skill.slug;
+    skillForm.show = skill.pivot.show;
+    skillDescription.value = skill.description;
     showModal.value = true;
 }
 
@@ -56,27 +60,29 @@ const resetExperience = (skill) => {
 <template>
     <div class="shadow-sm rounded-lg">
         <div class="p-6 columns-1 md:columns-2 lg:columns-3 gap-x-3">
-            <div
-                v-for="skill in prop.character.skills"
-                :key="skill.id"
-                class="mb-3 break-inside-avoid grid grid-cols-2 justify-between overflow-clip"
-                style="break-inside: avoid"
-            >
-            <div class="font-bold p-2 align-middle text-right">
-                <span>{{ skill.display_name }}</span>
-                    <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block" @click="resetExperience(skill)">
-                        <div
-                            class="align-middle text-center rounded-full border w-6 h-6"
-                            :class="{
-                                'border-gray-200': (Math.floor(skill.pivot.value/10) > skill.pivot.experience),
-                                'border-red-800 bg-red-800 colour text-color-white': (Math.floor(skill.pivot.value/10) <= skill.pivot.experience)
-                              }"
-                        > {{ skill.pivot.experience }}</div>
+            <template v-for="skill in prop.character.skills" :key="skill.id">
+                <div
+                    v-if="skill.pivot.show"
+                    class="mb-3 break-inside-avoid grid grid-cols-2 justify-between overflow-clip"
+                    style="break-inside: avoid"
+                    :class="{ 'opacity-50': !skill.pivot.show }"
+                >
+                    <div class="font-bold p-2 align-middle text-right">
+                        <span>{{ skill.display_name }}</span>
+                        <div v-if="skill.pivot.experience > 0" class="ml-1 inline-block" @click="resetExperience(skill)">
+                            <div
+                                class="align-middle text-center rounded-full border w-6 h-6"
+                                :class="{
+                                    'border-gray-200': (Math.floor(skill.pivot.value/10) > skill.pivot.experience),
+                                    'border-red-800 bg-red-800 colour text-color-white': (Math.floor(skill.pivot.value/10) <= skill.pivot.experience)
+                                  }"
+                            > {{ skill.pivot.experience }}</div>
+                        </div>
                     </div>
-                </div>
 
-                <regular-half-fifth @click="openEditModal(skill)" :skill-value="skill.pivot.value"></regular-half-fifth>
-            </div>
+                    <regular-half-fifth @click="openEditModal(skill)" :skill-value="skill.pivot.value"></regular-half-fifth>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -107,6 +113,15 @@ const resetExperience = (skill) => {
                        focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
 
+                    <div class="flex items-center h-9">
+                        <input
+                            id="show_skill"
+                            type="checkbox"
+                            v-model="skillForm.show"
+                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                        />
+                    </div>
+
                     <button
                         type="button"
                         @click="updateSkill"
@@ -115,6 +130,10 @@ const resetExperience = (skill) => {
                     >
                         {{ skillForm.processing ? 'Saving...' : 'Save' }}
                     </button>
+                </div>
+
+                <div v-if="skillDescription" class="mt-4 text-sm text-gray-700 italic">
+                    {{ skillDescription }}
                 </div>
             </div>
         </div>

@@ -55,8 +55,8 @@ let markRead = () => {
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('character.create')" :active="route().current('character.create')">
-                                    Create new Character
+                                <NavLink href="/admin">
+                                    Admin
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
@@ -93,7 +93,9 @@ let markRead = () => {
                                         </template>
 
                                         <template #content>
-                                            <DropdownLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} ({{character.player.name}})</DropdownLink>
+                                            <DropdownLink v-for="character in $page.props.auth.characters.own" :href="route('character.show', {character: character.slug})"> {{ character.name }} ({{character.player.name}})</DropdownLink>
+                                            <DropdownLink v-for="character in $page.props.auth.characters.others" :href="route('character.show', {character: character.slug})"> {{ character.name }} ({{character.player.name}})</DropdownLink>
+                                            <DropdownLink :href="route('character.create')">Create new Character</DropdownLink>
                                         </template>
                                     </Dropdown>
                                 </div>
@@ -188,7 +190,7 @@ let markRead = () => {
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink v-for="character in $page.props.auth.characters" :href="route('character.show', {slug: character.slug})"> {{ character.name }} </ResponsiveNavLink>
+                            <ResponsiveNavLink v-for="character in $page.props.auth.characters.own" :href="route('character.show', {character: character.slug})"> {{ character.name }} </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })"> Calendar </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('message.index')"> Messages </ResponsiveNavLink>

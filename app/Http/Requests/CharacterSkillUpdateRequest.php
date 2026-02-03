@@ -23,6 +23,7 @@ class CharacterSkillUpdateRequest extends FormRequest
     {
         return [
             'value' => ['required', 'integer', 'between:0,100'],
+            'show'  => ['required', 'boolean'],
         ];
     }
 }

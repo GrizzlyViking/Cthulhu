@@ -60,7 +60,7 @@ test('users can update character notes', function () {
     $character = Character::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->actingAs($this->user)
-        ->patch(route('character.patch', $character->slug), [
+        ->put(route('character.update', $character->slug), [
             'notes' => '<p>Some notes</p>',
         ]);
 
