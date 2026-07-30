@@ -250,7 +250,7 @@ class SkillWithDescriptionSeeder extends Seeder
             [
                 'slug'           => 'natural_world',
                 'display_name'   => 'Natural World',
-                'starting_value' => 1,
+                'starting_value' => 10,
                 'description'    => 'Knowledge of flora, fauna, and environmental conditions.',
             ],
             [

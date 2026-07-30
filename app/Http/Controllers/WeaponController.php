@@ -51,7 +51,10 @@ class WeaponController extends Controller
             'pivot_id' => ['required', 'integer', 'exists:equipables,id'],
         ]);
 
-        DB::table('equipables')->where('id', $validated['pivot_id'])->update(['ammo' => DB::raw('ammo - 1')]);
+        DB::table('equipables')
+            ->where('id', $validated['pivot_id'])
+            ->where('ammo', '>', 0)
+            ->update(['ammo' => DB::raw('ammo - 1')]);
 
         return response('OK', 200);
     }

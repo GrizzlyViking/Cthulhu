@@ -23,7 +23,11 @@ class CharacterController extends Controller
     {
         $this->authorize('view', $character);
 
-        return Inertia::render('Character', compact('character'));
+        $availableSkills = Skill::whereNotIn('id', $character->skills->pluck('id'))
+            ->orderBy('display_name')
+            ->get();
+
+        return Inertia::render('Character', compact('character', 'availableSkills'));
     }
 
     public function create(): Response

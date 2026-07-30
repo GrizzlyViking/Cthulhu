@@ -8,7 +8,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { EllipsisVerticalIcon } from '@heroicons/vue/20/solid'
 import Badge from "@/Pages/Components/Badge.vue";
 
-const prop = defineProps({character: Object, editable: Boolean});
+const prop = defineProps({character: Object, editable: Boolean, canEdit: Boolean});
 
 const page = usePage()
 
@@ -50,11 +50,22 @@ const remove = (weapon) => {
 }
 
 const fireTheWeapon = (weapon) => {
+    if (weapon.pivot.ammo <= 0) return;
     axios.post(route('fire.weapon'), {
         pivot_id: weapon.pivot.id,
-    }).then (() => {
-        weapon.pivot.ammo = weapon.pivot.ammo-1
-    })
+    }).then(() => {
+        weapon.pivot.ammo = weapon.pivot.ammo - 1;
+    });
+}
+
+const setAmmo = (weapon, value) => {
+    const newAmmo = Math.max(0, parseInt(value) || 0);
+    axios.post(route('reload.weapon'), {
+        pivot_id: weapon.pivot.id,
+        ammo: newAmmo,
+    }).then(() => {
+        weapon.pivot.ammo = newAmmo;
+    });
 }
 
 let weaponSkill = computed(() => {
@@ -132,10 +143,23 @@ const build = computed(() => {
                 <div class="min-w-0 flex-auto">
                     <p class="text-sm font-semibold leading-6 text-gray-900 gap-2">
                         <span class="hover:underline">{{ weapon.name }}</span>
-                        <span v-if="!isNaN(weapon.bullets_in_mag)"
-                              @click="fireTheWeapon(weapon)"
-                              class="pl-4 hover:underline"
-                        >Ammo: {{ weapon.pivot.ammo }}</span>
+                        <template v-if="!isNaN(weapon.bullets_in_mag)">
+                            <span v-if="prop.editable && prop.canEdit" class="pl-4 inline-flex items-center gap-1">
+                                Ammo:
+                                <input
+                                    type="number"
+                                    min="0"
+                                    :value="weapon.pivot.ammo"
+                                    @change="setAmmo(weapon, $event.target.value)"
+                                    class="w-16 rounded border border-gray-300 px-1 py-0.5 text-xs text-gray-900"
+                                />
+                            </span>
+                            <span v-else
+                                  @click="fireTheWeapon(weapon)"
+                                  class="pl-4 hover:underline cursor-pointer"
+                                  :class="{ 'opacity-40 cursor-not-allowed': weapon.pivot.ammo <= 0 }"
+                            >Ammo: {{ weapon.pivot.ammo }}</span>
+                        </template>
                     </p>
                     <p class="gap-3 mt-1 flex text-xs leading-5 text-gray-500">
                         <badge :badge-class="{ 'text-xs': true}">{{ weaponSkill(weapon.skill).value }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 2) }} / {{ Math.ceil(weaponSkill(weapon.skill).value / 5) }}</badge>

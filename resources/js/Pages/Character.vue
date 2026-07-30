@@ -15,7 +15,7 @@ import { BookOpenIcon, UserIcon } from "@heroicons/vue/20/solid";
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
-const prop = defineProps({ character: Object });
+const prop = defineProps({ character: Object, availableSkills: Array });
 const editable = ref(false);
 const tabs = [
     { name: 'Skills', icon: UserIcon },
@@ -108,12 +108,12 @@ const saveNotes = () => {
                     <template #Skills>
                         <div class="mx-3 sm:mx-6 lg:mx-8">
                             <div class="bg-cthulhu-green-200 shadow-sm rounded-b-lg px-6">
-                                <Skills :character="prop.character" :can-edit="canEdit" :editable="editable"></Skills>
+                                <Skills :character="prop.character" :can-edit="canEdit" :editable="editable" :available-skills="prop.availableSkills ?? []"></Skills>
                             </div>
                         </div>
                         <div class="m-3 sm:mx-6 lg:mx-8">
                                 <div class="bg-cthulhu-green-200 shadow-sm rounded-lg py-5">
-                                    <Weapons :character="prop.character"></Weapons>
+                                    <Weapons :character="prop.character" :editable="editable" :can-edit="canEdit"></Weapons>
                                 </div>
                         </div>
                     </template>

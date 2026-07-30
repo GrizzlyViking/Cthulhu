@@ -1,7 +1,7 @@
 <script setup>
 import RegularHalfFifth from "@/Pages/Components/RegularHalfFifth.vue";
 import { ref } from "vue";
-import { useForm } from "@inertiajs/vue3";
+import { useForm, router } from "@inertiajs/vue3";
 import Modal from "@/Components/Modal.vue";
 import axios from "axios";
 
@@ -9,6 +9,7 @@ const prop = defineProps({
     character: Object,
     editable: Boolean,
     canEdit: Boolean,
+    availableSkills: Array,
 });
 
 const showModal = ref(false);
@@ -29,6 +30,13 @@ const updateSkill = () => {
         character: prop.character.slug,
         skill: skillForm.slug,
     }), { preserveScroll: true, onSuccess: closeModal })
+}
+
+const removeSkill = () => {
+    router.put(route('character.skill.remove', {
+        character: prop.character.slug,
+        skill: skillForm.slug,
+    }), {}, { preserveScroll: true, onSuccess: closeModal })
 }
 
 const skillDescription = ref('')
@@ -54,6 +62,27 @@ const resetExperience = (skill) => {
         character: prop.character.slug,
         skill: skill.slug
     })).then(() => skill.pivot.experience = 0);
+}
+
+const addSkillSlug = ref('');
+const addSkillValue = ref(1);
+
+const submitAddSkill = () => {
+    if (!addSkillSlug.value) return;
+    router.put(
+        route('character.skill.attach', {
+            character: prop.character.slug,
+            skill: addSkillSlug.value,
+        }),
+        { value: addSkillValue.value },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                addSkillSlug.value = '';
+                addSkillValue.value = 1;
+            },
+        }
+    );
 }
 </script>
 
@@ -83,6 +112,38 @@ const resetExperience = (skill) => {
                     <regular-half-fifth @click="openEditModal(skill)" :skill-value="skill.pivot.value"></regular-half-fifth>
                 </div>
             </template>
+        </div>
+
+        <!-- Add Skill form (edit mode only) -->
+        <div v-if="editable && availableSkills && availableSkills.length > 0" class="px-6 pb-6 border-t border-gray-200 pt-4">
+            <p class="text-sm font-semibold text-gray-700 mb-2">Add skill</p>
+            <div class="flex items-center gap-2 flex-wrap">
+                <select
+                    v-model="addSkillSlug"
+                    class="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                >
+                    <option value="">Select skill…</option>
+                    <option v-for="skill in availableSkills" :key="skill.id" :value="skill.slug">
+                        {{ skill.display_name }} (base {{ skill.starting_value }})
+                    </option>
+                </select>
+                <input
+                    type="number"
+                    v-model="addSkillValue"
+                    min="0"
+                    max="99"
+                    inputmode="numeric"
+                    class="w-20 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                />
+                <button
+                    type="button"
+                    @click="submitAddSkill"
+                    :disabled="!addSkillSlug"
+                    class="rounded-md bg-cthulhu-green-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-700 disabled:opacity-40"
+                >
+                    Add
+                </button>
+            </div>
         </div>
     </div>
 
@@ -129,6 +190,16 @@ const resetExperience = (skill) => {
                         class="rounded-md bg-cthulhu-green-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cthulhu-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800 disabled:opacity-50"
                     >
                         {{ skillForm.processing ? 'Saving...' : 'Save' }}
+                    </button>
+
+                    <button
+                        v-if="canEdit"
+                        type="button"
+                        @click="removeSkill"
+                        :disabled="skillForm.processing"
+                        class="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 disabled:opacity-50"
+                    >
+                        Remove
                     </button>
                 </div>
 
