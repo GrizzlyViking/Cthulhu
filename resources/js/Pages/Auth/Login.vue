@@ -56,9 +56,9 @@ const submit = () => {
             </div>
 
             <div>
-                <label for="group" class="block text-sm/6 font-medium text-white">Group</label>
+                <label for="group" class="field-label">Group</label>
                 <div class="mt-2 grid grid-cols-1">
-                    <select id="group" name="group" class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-1.5 pl-3 pr-8 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:*:bg-gray-800 dark:focus-visible:outline-indigo-500">
+                    <select id="group" name="group" class="field">
                         <option>United States</option>
                         <option selected="">Canada</option>
                         <option>Mexico</option>
@@ -84,7 +84,7 @@ const submit = () => {
             <div class="block mt-4">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                    <span class="ms-2 text-sm text-cthulhu-green-700">Remember me</span>
                 </label>
             </div>
 
@@ -92,7 +92,7 @@ const submit = () => {
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    class="underline text-sm text-cthulhu-green-700 hover:text-cthulhu-green-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cthulhu-green-600"
                 >
                     Forgot your password?
                 </Link>

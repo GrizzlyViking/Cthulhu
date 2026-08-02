@@ -28,59 +28,39 @@ const rollFor = (skill) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
+            <h1 class="display text-2xl text-parchment-100">Dashboard</h1>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <contacts-list
-                            :users="users"
-                        ></contacts-list>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="page">
+            <section class="panel p-4 sm:p-6">
+                <contacts-list :users="users"></contacts-list>
+            </section>
 
-        <div class="py-4" v-if="page.props.auth.listOfMessageUsers.length > 0">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-2 lg:p-6 text-gray-900 lg:w-1/2 mx-auto">
-                        <Message></Message>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <section v-if="page.props.auth.listOfMessageUsers.length > 0" class="panel p-4 sm:p-6">
+                <h2 class="mb-4 text-base font-semibold text-cthulhu-green-900">Send a message</h2>
+                <Message></Message>
+            </section>
 
-        <div class="py-4" v-if="page.props.auth.listOfRollUsers.length > 0">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 shadow-sm sm:rounded-lg">
-                    <div class="p-2 lg:p-6 text-gray-900 lg:w-1/2 mx-auto">
-                        <button
-                            type="button"
-                            @click="rollFor('spot-hidden')"
-                            class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                            Spot hidden
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <section v-if="page.props.auth.listOfRollUsers.length > 0" class="panel p-4 sm:p-6">
+                <h2 class="mb-1 text-base font-semibold text-cthulhu-green-900">Secret roll</h2>
+                <p class="field-hint mb-4">Rolls against the selected players without telling them.</p>
+                <button type="button" class="btn-primary" @click="rollFor('spot-hidden')">
+                    Roll Spot Hidden
+                </button>
+            </section>
 
-        <div class="py-4" v-if="showResultOfRoll">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 shadow-sm sm:rounded-lg p-3">
-
-                    <div class="lg:p-6 text-gray-900 lg:w-3/4 mx-auto bg-cthulhu-green-50 rounded-lg border border-red-600">
-                        <ul>
-                            <li v-for="result in resultOfRoll" class="m-2">
-                                <p>{{ result }}</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <section v-if="showResultOfRoll" class="panel p-4 sm:p-6">
+                <h2 class="mb-3 text-base font-semibold text-cthulhu-green-900">Result</h2>
+                <ul class="flex flex-col gap-2">
+                    <li
+                        v-for="(result, index) in resultOfRoll"
+                        :key="index"
+                        class="rounded-lg bg-parchment-50 px-3 py-2 text-sm text-cthulhu-green-900 ring-1 ring-cthulhu-blood-400/40"
+                    >
+                        {{ result }}
+                    </li>
+                </ul>
+            </section>
         </div>
     </AuthenticatedLayout>
 </template>

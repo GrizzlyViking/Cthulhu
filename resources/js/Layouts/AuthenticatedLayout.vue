@@ -5,8 +5,9 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import {Link, usePage} from '@inertiajs/vue3';
-import Alert from "@/Pages/Components/Alert.vue";
+import { Link, usePage } from '@inertiajs/vue3';
+import Alert from '@/Pages/Components/Alert.vue';
+import { Bars3Icon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 
 const showingNavigationDropdown = ref(false);
 
@@ -17,7 +18,6 @@ let open_alert = ref(false);
 
 Echo.private(`App.Models.User.${page.props.auth.user.id}`)
     .listen('MessageSent', (message) => {
-        console.log(message);
         player_message = message.message;
         open_alert.value = true;
     })
@@ -30,188 +30,154 @@ let markRead = () => {
 <template>
     <div>
         <Alert v-if="open_alert" :open="open_alert" :message="player_message" @mark_read="markRead" />
-        <div class="min-h-screen bg-cthulhu-green-400">
-            <nav class="bg-cthulhu-green-200 border-b border-cthulhu-green-400">
-                <!-- Primary Navigation Menu -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between h-16">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
-                            </div>
 
-                            <!-- Navigation Links -->
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+        <div class="min-h-screen bg-cthulhu-green-950">
+            <nav class="border-b border-cthulhu-green-900 bg-cthulhu-green-900">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="flex h-16 justify-between">
+                        <div class="flex items-center gap-2">
+                            <Link :href="route('dashboard')" class="shrink-0 rounded-md p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                                <ApplicationLogo class="block h-9 w-auto fill-current text-cthulhu-yellow-400" />
+                            </Link>
+
+                            <!-- Primary navigation -->
+                            <div class="hidden items-center gap-1 sm:ms-6 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
-                            </div>
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('message.index')" :active="route().current('message.index')">
                                     Messages
                                 </NavLink>
-                            </div>
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink href="/admin">
-                                    Admin
-                                </NavLink>
-                            </div>
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">
                                     Calendar
                                 </NavLink>
-                            </div>
-                            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                                <!-- Settings Dropdown -->
-                                <div class="ms-3 relative">
-                                    <Dropdown align="left" width="48">
-                                        <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
-                                            >
-                                                Characters
+                                <NavLink href="/admin">Admin</NavLink>
 
-                                                <svg
-                                                    class="ms-2 -me-0.5 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                        </template>
-
-                                        <template #content>
-                                            <DropdownLink v-for="character in $page.props.auth.characters.own" :href="route('character.show', {character: character.slug})"> {{ character.name }} ({{character.player.name}})</DropdownLink>
-                                            <DropdownLink v-for="character in $page.props.auth.characters.others" :href="route('character.show', {character: character.slug})"> {{ character.name }} ({{character.player.name}})</DropdownLink>
-                                            <DropdownLink :href="route('character.create')">Create new Character</DropdownLink>
-                                        </template>
-                                    </Dropdown>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:flex sm:items-center sm:ms-6">
-                            <!-- Settings Dropdown -->
-                            <div class="ms-3 relative">
-                                <Dropdown align="right" width="48">
+                                <Dropdown align="left" width="60">
                                     <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="ms-2 -me-0.5 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                                            Characters
+                                            <ChevronDownIcon class="size-4" aria-hidden="true" />
+                                        </button>
                                     </template>
 
                                     <template #content>
-                                        <DropdownLink :href="route('profile.edit')"> Profile </DropdownLink>
-                                        <DropdownLink :href="route('logout')" method="post" as="button">
-                                            Log Out
+                                        <p class="px-4 pb-1 pt-2 eyebrow">Your investigators</p>
+                                        <DropdownLink
+                                            v-for="character in $page.props.auth.characters.own"
+                                            :key="character.slug"
+                                            :href="route('character.show', { character: character.slug })"
+                                        >
+                                            {{ character.name }}
                                         </DropdownLink>
+
+                                        <template v-if="$page.props.auth.characters.others.length">
+                                            <p class="px-4 pb-1 pt-3 eyebrow">Other investigators</p>
+                                            <DropdownLink
+                                                v-for="character in $page.props.auth.characters.others"
+                                                :key="character.slug"
+                                                :href="route('character.show', { character: character.slug })"
+                                            >
+                                                {{ character.name }}
+                                                <span class="text-cthulhu-green-500">— {{ character.player.name }}</span>
+                                            </DropdownLink>
+                                        </template>
+
+                                        <div class="my-1 divider"></div>
+                                        <DropdownLink :href="route('character.create')">+ Create new character</DropdownLink>
                                     </template>
                                 </Dropdown>
                             </div>
                         </div>
 
+                        <!-- Account -->
+                        <div class="hidden items-center sm:flex">
+                            <Dropdown align="right" width="48">
+                                <template #trigger>
+                                    <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                                        {{ $page.props.auth.user.name }}
+                                        <ChevronDownIcon class="size-4" aria-hidden="true" />
+                                    </button>
+                                </template>
+
+                                <template #content>
+                                    <DropdownLink :href="route('profile.edit')">Profile</DropdownLink>
+                                    <DropdownLink :href="route('faq')">FAQ</DropdownLink>
+                                    <div class="my-1 divider"></div>
+                                    <DropdownLink :href="route('logout')" method="post" as="button">Log out</DropdownLink>
+                                </template>
+                            </Dropdown>
+                        </div>
+
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
                             <button
+                                type="button"
                                 @click="showingNavigationDropdown = !showingNavigationDropdown"
-                                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
+                                :aria-expanded="showingNavigationDropdown"
+                                aria-label="Toggle navigation"
+                                class="inline-flex items-center justify-center rounded-md p-2 text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500"
                             >
-                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path
-                                        :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{ hidden: !showingNavigationDropdown,
-                                            'inline-flex': showingNavigationDropdown
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
+                                <XMarkIcon v-if="showingNavigationDropdown" class="size-6" aria-hidden="true" />
+                                <Bars3Icon v-else class="size-6" aria-hidden="true" />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }"
-                    class="sm:hidden"
-                >
-                    <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            Dashboard
-                        </ResponsiveNavLink>
+                <!-- Mobile menu -->
+                <div v-show="showingNavigationDropdown" class="border-t border-cthulhu-green-800 sm:hidden">
+                    <div class="space-y-1 py-3">
+                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('message.index')" :active="route().current('message.index')">Messages</ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">Calendar</ResponsiveNavLink>
+                        <ResponsiveNavLink href="/admin">Admin</ResponsiveNavLink>
                     </div>
 
-                    <!-- Responsive Settings Options -->
-                    <div class="pt-4 pb-1 border-t border-gray-200">
-                        <div class="px-4">
-                            <div class="font-medium text-base text-gray-800">
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="font-medium text-sm text-gray-500">{{ $page.props.auth.user.email }}</div>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink v-for="character in $page.props.auth.characters.own" :href="route('character.show', {character: character.slug})"> {{ character.name }} </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('character.create')"> Create Character </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })"> Calendar </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('message.index')"> Messages </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('faq')"> FAQ </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('profile.edit')"> Profile </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('logout')" method="post" as="button">
-                                Log Out
+                    <div class="border-t border-cthulhu-green-800 py-3">
+                        <p class="px-4 pb-1 eyebrow-on-dark">Investigators</p>
+                        <div class="space-y-1">
+                            <ResponsiveNavLink
+                                v-for="character in $page.props.auth.characters.own"
+                                :key="character.slug"
+                                :href="route('character.show', { character: character.slug })"
+                            >
+                                {{ character.name }}
                             </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-for="character in $page.props.auth.characters.others"
+                                :key="character.slug"
+                                :href="route('character.show', { character: character.slug })"
+                            >
+                                {{ character.name }}
+                                <span class="text-cthulhu-green-400">— {{ character.player.name }}</span>
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('character.create')">+ Create character</ResponsiveNavLink>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-cthulhu-green-800 py-3">
+                        <div class="px-4 pb-2">
+                            <div class="text-base font-medium text-parchment-100">{{ $page.props.auth.user.name }}</div>
+                            <div class="text-sm text-cthulhu-green-300">{{ $page.props.auth.user.email }}</div>
+                        </div>
+                        <div class="space-y-1">
+                            <ResponsiveNavLink :href="route('faq')">FAQ</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('profile.edit')">Profile</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('logout')" method="post" as="button">Log out</ResponsiveNavLink>
                         </div>
                     </div>
                 </div>
             </nav>
 
-            <!-- Page Heading -->
-            <header class="bg-cthulhu-green-200 shadow" v-if="$slots.header">
-                <div class="bg-cthulhu-green-200 max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between">
+            <!-- Page heading -->
+            <header v-if="$slots.header" class="border-b border-cthulhu-green-900/60 bg-cthulhu-green-900/60">
+                <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
 
-            <!-- Page Content -->
+            <!-- Page content. Pages own their own container width. -->
             <main>
                 <slot />
             </main>

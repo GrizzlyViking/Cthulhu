@@ -1,3 +1,150 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        @apply bg-cthulhu-green-950 text-cthulhu-green-900;
+    }
+
+    /* Numeric stats read better with aligned, uniform-width figures. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@layer components {
+    /* ---- Typography ------------------------------------------------ */
+
+    .display {
+        @apply font-display font-normal tracking-wide;
+    }
+
+    /* Small caps label used above every group of fields. */
+    .eyebrow {
+        @apply text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-cthulhu-green-500;
+    }
+
+    .eyebrow-on-dark {
+        @apply text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-cthulhu-green-200;
+    }
+
+    /* ---- Layout ----------------------------------------------------- */
+
+    /* Standard page container. Pages own their width so the layout stays
+       neutral for screens that have not been converted yet. */
+    .page {
+        @apply mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8;
+    }
+
+    /* ---- Surfaces --------------------------------------------------- */
+
+    /* The main content container: a sheet of aged paper. */
+    .panel {
+        @apply rounded-2xl bg-parchment-100 shadow-card ring-1 ring-cthulhu-green-900/15;
+    }
+
+    /* A block nested inside a panel. */
+    .card {
+        @apply rounded-xl bg-parchment-50 p-4 ring-1 ring-parchment-300;
+    }
+
+    /* A card the Keeper should notice. */
+    .card-marked {
+        @apply rounded-xl bg-cthulhu-yellow-200/50 p-4 ring-1 ring-cthulhu-yellow-500;
+    }
+
+    /* Dark block sitting on the parchment, for contrast. */
+    .card-dark {
+        @apply rounded-xl bg-cthulhu-green-800 p-4 text-parchment-100 ring-1 ring-cthulhu-green-900/40;
+    }
+
+    .divider {
+        @apply border-t border-parchment-300;
+    }
+
+    /* ---- Buttons ---------------------------------------------------- */
+
+    .btn {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition
+               focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+               disabled:cursor-not-allowed disabled:opacity-45;
+    }
+
+    .btn-primary {
+        @apply btn bg-cthulhu-green-800 text-parchment-100 shadow-sm
+               hover:bg-cthulhu-green-700 active:bg-cthulhu-green-900
+               focus-visible:outline-cthulhu-yellow-500;
+    }
+
+    .btn-secondary {
+        @apply btn bg-parchment-200 text-cthulhu-green-900 ring-1 ring-inset ring-parchment-400
+               hover:bg-parchment-300 active:bg-parchment-400
+               focus-visible:outline-cthulhu-green-800;
+    }
+
+    .btn-ghost {
+        @apply btn text-cthulhu-green-800 hover:bg-cthulhu-green-900/10
+               focus-visible:outline-cthulhu-green-800;
+    }
+
+    .btn-danger {
+        @apply btn bg-cthulhu-blood-400 text-white shadow-sm
+               hover:bg-cthulhu-blood-300 active:bg-cthulhu-blood-500
+               focus-visible:outline-cthulhu-blood-400;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    /* ---- Form controls ---------------------------------------------- */
+
+    .field {
+        @apply block w-full rounded-lg border-0 bg-parchment-50 px-3 py-2 text-sm text-cthulhu-green-900
+               shadow-sm ring-1 ring-inset ring-parchment-400
+               placeholder:text-cthulhu-green-500/60
+               focus:ring-2 focus:ring-inset focus:ring-cthulhu-green-600;
+    }
+
+    .field-label {
+        @apply block text-sm font-semibold text-cthulhu-green-900;
+    }
+
+    .field-hint {
+        @apply mt-1 text-xs leading-relaxed text-cthulhu-green-500;
+    }
+
+    .field-error {
+        @apply mt-1 text-xs font-medium text-cthulhu-blood-400;
+    }
+
+    /* Inline editable text that only looks like an input once it can be edited. */
+    .field-inline {
+        @apply w-full rounded border-0 bg-transparent px-1 py-0 text-inherit
+               ring-1 ring-inset ring-transparent transition
+               focus:bg-cthulhu-green-950/40 focus:ring-cthulhu-yellow-500
+               disabled:cursor-default;
+    }
+
+    .field-inline:enabled {
+        @apply bg-cthulhu-green-950/30 ring-cthulhu-green-200/25 hover:ring-cthulhu-yellow-500/60;
+    }
+
+    /* ---- Chips & badges ---------------------------------------------- */
+
+    .chip {
+        @apply inline-flex items-center gap-1 rounded-md bg-cthulhu-green-800/10 px-2 py-1
+               text-xs font-medium text-cthulhu-green-800 ring-1 ring-inset ring-cthulhu-green-800/20;
+    }
+
+    .chip-brass {
+        @apply inline-flex items-center gap-1 rounded-md bg-cthulhu-yellow-200 px-2 py-1
+               text-xs font-medium text-cthulhu-yellow-700 ring-1 ring-inset ring-cthulhu-yellow-500/50;
+    }
+
+    .chip-blood {
+        @apply inline-flex items-center gap-1 rounded-md bg-cthulhu-blood-400/10 px-2 py-1
+               text-xs font-medium text-cthulhu-blood-400 ring-1 ring-inset ring-cthulhu-blood-400/30;
+    }
+}

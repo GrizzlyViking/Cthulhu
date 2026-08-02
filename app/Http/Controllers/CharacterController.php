@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CharacterAttributeUpdateRequest;
+use App\Http\Requests\CharacterBackstoryUpdateRequest;
 use App\Http\Requests\CharacterSkillUpdateRequest;
 use App\Http\Requests\CharacterStoreRequest;
 use App\Http\Requests\CharacterUpdateRequest;
+use App\Misc\CharacterSheet;
 use App\Models\Character;
 use App\Models\Skill;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,11 +33,31 @@ class CharacterController extends Controller
         return Inertia::render('Character', compact('character', 'availableSkills'));
     }
 
-    public function create(): Response
+    /**
+     * The printable sheet.
+     *
+     * This is the one page in the player-facing app that is plain Blade rather
+     * than Inertia: it has to be a self-contained document the browser can send
+     * straight to a printer or "Save as PDF" without the app chrome around it.
+     */
+    public function sheet(Character $character): View
     {
-        $this->authorize('create', Character::class);
+        $this->authorize('view', $character);
 
-        return Inertia::render('Character/Create');
+        $character->loadMissing('skills', 'weapons', 'player');
+
+        return view('character.sheet', [
+            'character'       => $character,
+            'characteristics' => CharacterSheet::characteristics($character),
+            'skillColumns'    => CharacterSheet::skillColumns($character),
+            'wealth'          => CharacterSheet::wealth($character->creditRating()),
+            'fellows'         => Character::with('player')
+                ->where('id', '!=', $character->id)
+                ->whereNull('deleted_at')
+                ->orderBy('name')
+                ->take(6)
+                ->get(),
+        ]);
     }
 
     public function store(CharacterStoreRequest $request): RedirectResponse
@@ -60,6 +83,19 @@ class CharacterController extends Controller
     public function update(Character $character, CharacterUpdateRequest $request): RedirectResponse
     {
         $character->update($request->validated());
+
+        return to_route('character.show', $character->slug);
+    }
+
+    /**
+     * Merge the submitted backstory keys into the stored backstory array,
+     * only overwriting the keys present in the request.
+     */
+    public function updateBackstory(Character $character, CharacterBackstoryUpdateRequest $request): RedirectResponse
+    {
+        $character->update([
+            'backstory' => array_merge($character->backstory ?? [], $request->validated()),
+        ]);
 
         return to_route('character.show', $character->slug);
     }

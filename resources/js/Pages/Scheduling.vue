@@ -1,10 +1,9 @@
 <script setup>
-
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {Head} from "@inertiajs/vue3";
+import { Head } from "@inertiajs/vue3";
 import Calendar from "@/Pages/Components/Calendar.vue";
 
-const props = defineProps({calendar: Object})
+const props = defineProps({ calendar: Object })
 </script>
 
 <template>
@@ -12,21 +11,13 @@ const props = defineProps({calendar: Object})
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
+            <h1 class="display text-2xl text-parchment-100">Calendar</h1>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                    <calendar :calendar="props.calendar" />
-                </div>
-            </div>
-            </div>
+        <div class="page">
+            <section class="panel overflow-hidden p-4 sm:p-6">
+                <calendar :calendar="props.calendar" />
+            </section>
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-
-</style>

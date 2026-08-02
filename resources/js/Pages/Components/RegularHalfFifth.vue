@@ -1,30 +1,36 @@
 <script setup>
-import {computed} from "vue";
+import { computed } from 'vue';
 
-const props = defineProps(['skillValue'])
+const props = defineProps({
+    skillValue: [Number, String],
+    /** Adds a pressable affordance when the parent opens an editor on click. */
+    interactive: {
+        type: Boolean,
+        default: false,
+    },
+});
 
-const halfValue = computed(() => {
-    return Math.ceil(props.skillValue / 2)
-})
-const fifthValue = computed(() => {
-    return Math.ceil(props.skillValue / 5)
-})
+const halfValue = computed(() => Math.ceil(props.skillValue / 2));
+const fifthValue = computed(() => Math.ceil(props.skillValue / 5));
 </script>
 
 <template>
-    <div class="grid grid-cols-3 divide-x border-1 justify-end max-w-36 align-middle">
-        <div
-            class="text-center py-3 rounded-l-lg flex-initial w-12 text-gray-900 border-y border-l border-cthulhu-green-400 bg-gray-50 text-xs read-only:bg-gray-100"
-        >
+    <!--
+        All three cells carry the same fill so the regular value reads as its own
+        box against the parchment row behind it; the group's rounded corners give
+        the leftmost and rightmost cells their rounded outer edge.
+    -->
+    <div
+        class="tabular grid w-full max-w-[9rem] grid-cols-3 divide-x divide-cthulhu-green-800/15 overflow-hidden rounded-lg bg-parchment-200/70 text-center ring-1 ring-inset ring-cthulhu-green-800/25 transition"
+        :class="interactive ? 'cursor-pointer hover:ring-2 hover:ring-cthulhu-yellow-500' : ''"
+    >
+        <div class="py-2 text-sm font-semibold text-cthulhu-green-900" title="Regular success">
             {{ skillValue }}
         </div>
-        <div
-            class="text-center py-3 flex-initial w-12 text-gray-900 border border-cthulhu-green-400 bg-gray-50 text-xs read-only:bg-gray-100"
-        >
+        <div class="py-2 text-sm text-cthulhu-green-700" title="Hard success (half)">
             {{ halfValue }}
         </div>
-        <div
-            class="text-center py-3 rounded-r-lg flex-initial w-12 text-gray-900 border-y border-r border-cthulhu-green-400 bg-gray-50 text-xs read-only:bg-gray-100">
+        <div class="py-2 text-sm text-cthulhu-green-700" title="Extreme success (one fifth)">
             {{ fifthValue }}
         </div>
     </div>

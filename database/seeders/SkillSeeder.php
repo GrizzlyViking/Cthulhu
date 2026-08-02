@@ -28,19 +28,25 @@ class SkillSeeder extends Seeder
             ['slug' => 'electric_repair', 'display_name' => 'Electric Repair', 'starting_value' => 10],
             ['slug' => 'fast_talking', 'display_name' => 'Fast Talking', 'starting_value' => 20],
             ['slug' => 'fighting', 'display_name' => 'Fighting', 'starting_value' => 25],
-            ['slug' => 'firearms_handgun', 'display_name' => 'Firearms Handgun', 'starting_value' => 20],
+            ['slug' => 'firearms-handgun', 'display_name' => 'Firearms (Handgun)', 'starting_value' => 20],
             ['slug' => 'firearms-rifle', 'display_name' => 'Firearms (Rifle)', 'starting_value' => 20],
 
             ['slug' => 'firearms-shotgun', 'display_name' => 'Firearms (Shotgun)', 'starting_value' => 20],
             ['slug' => 'firearms-bow', 'display_name' => 'Firearms (Bow)', 'starting_value' => 20],
             ['slug' => 'fighting-whip', 'display_name' => 'Fighting (Whip)', 'starting_value' => 20],
             ['slug' => 'fighting-brawl', 'display_name' => 'Fighting (Brawl)', 'starting_value' => 20],
-            ['slug' => 'fighting-mg', 'display_name' => 'Fighting (MG)', 'starting_value' => 20],
+            ['slug' => 'firearms-mg', 'display_name' => 'Firearms (MG)', 'starting_value' => 20],
             ['slug' => 'fighting-axe', 'display_name' => 'Fighting (Axe)', 'starting_value' => 20],
             ['slug' => 'fighting-garrote', 'display_name' => 'Fighting (Garrote)', 'starting_value' => 20],
-            ['slug' => 'fighting-smg', 'display_name' => 'Firearms (SMG)', 'starting_value' => 20],
+            ['slug' => 'firearms-smg', 'display_name' => 'Firearms (SMG)', 'starting_value' => 20],
             ['slug' => 'fighting-flail', 'display_name' => 'Fighting (Flail)', 'starting_value' => 20],
             ['slug' => 'fighting-spear', 'display_name' => 'Fighting (Spear)', 'starting_value' => 20],
+            ['slug' => 'fighting-sword', 'display_name' => 'Fighting (Sword)', 'starting_value' => 20],
+            ['slug' => 'fighting-chainsaw', 'display_name' => 'Fighting (Chainsaw)', 'starting_value' => 10],
+            ['slug' => 'firearms-heavy', 'display_name' => 'Firearms (Heavy Weapons)', 'starting_value' => 10],
+            ['slug' => 'firearms-flamethrower', 'display_name' => 'Firearms (Flamethrower)', 'starting_value' => 10],
+            ['slug' => 'artillery', 'display_name' => 'Artillery', 'starting_value' => 1],
+            ['slug' => 'demolitions', 'display_name' => 'Demolitions', 'starting_value' => 1],
 
             ['slug' => 'first_aid', 'display_name' => 'First_aid', 'starting_value' => 30],
             ['slug' => 'history', 'display_name' => 'History', 'starting_value' => 5],
@@ -54,7 +60,7 @@ class SkillSeeder extends Seeder
             ['slug' => 'locksmith', 'display_name' => 'Locksmith', 'starting_value' => 1],
             ['slug' => 'mech_repair', 'display_name' => 'Mech. Repair', 'starting_value' => 1],
             ['slug' => 'medicine', 'display_name' => 'Medicine', 'starting_value' => 1],
-            ['slug' => 'natural_world', 'display_name' => 'Natural_world', 'starting_value' => 1],
+            ['slug' => 'natural_world', 'display_name' => 'Natural_world', 'starting_value' => 10],
             ['slug' => 'navigate', 'display_name' => 'Navigate', 'starting_value' => 10],
             ['slug' => 'occult', 'display_name' => 'Occult', 'starting_value' => 10],
             ['slug' => 'op_hv_machine', 'display_name' => 'Operate heavy machine', 'starting_value' => 1],
@@ -73,10 +79,10 @@ class SkillSeeder extends Seeder
             ['slug' => 'track', 'display_name' => 'Track', 'starting_value' => 10],
         ];
 
-        collect($skills)->map(function ($item, $index) {
+        collect($skills)->each(function (array $item, int $index): void {
             $item['order_by'] = $index;
 
-            Skill::create($item);
+            Skill::updateOrCreate(['slug' => $item['slug']], $item);
         });
     }
 }

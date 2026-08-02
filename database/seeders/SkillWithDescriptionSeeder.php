@@ -104,7 +104,7 @@ class SkillWithDescriptionSeeder extends Seeder
                 'description'    => 'General proficiency in hand-to-hand combat.',
             ],
             [
-                'slug'           => 'firearms_handgun',
+                'slug'           => 'firearms-handgun',
                 'display_name'   => 'Firearms Handgun',
                 'starting_value' => 20,
                 'description'    => 'The ability to use pistols and revolvers effectively.',
@@ -140,8 +140,8 @@ class SkillWithDescriptionSeeder extends Seeder
                 'description'    => 'Unarmed combat, including punches, kicks, and grappling.',
             ],
             [
-                'slug'           => 'fighting-mg',
-                'display_name'   => 'Fighting (MG)',
+                'slug'           => 'firearms-mg',
+                'display_name'   => 'Firearms (MG)',
                 'starting_value' => 20,
                 'description'    => 'Proficiency in using machine guns.',
             ],
@@ -158,7 +158,7 @@ class SkillWithDescriptionSeeder extends Seeder
                 'description'    => 'Specialized skill in using a garrote for strangulation.',
             ],
             [
-                'slug'           => 'fighting-smg',
+                'slug'           => 'firearms-smg',
                 'display_name'   => 'Firearms (SMG)',
                 'starting_value' => 20,
                 'description'    => 'Proficiency in using submachine guns.',

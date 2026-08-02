@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\Era;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Models\Group;
 use Filament\Forms;
@@ -23,6 +24,10 @@ class GroupResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('era')
+                    ->options(collect(Era::cases())->mapWithKeys(fn (Era $era): array => [$era->value => $era->label()]))
+                    ->default(Era::Twenties->value)
+                    ->required(),
             ]);
     }
 

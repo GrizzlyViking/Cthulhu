@@ -8,7 +8,7 @@ class CharacterCreation
 {
     public static function dodge(Character $character): int
     {
-        return floor($character->dexterity / 2);
+        return intdiv($character->dexterity, 2);
     }
 
     public static function sanity(Character $character): int
@@ -18,12 +18,12 @@ class CharacterCreation
 
     public static function magicPoints(Character $character): int
     {
-        return floor($character->power / 5);
+        return intdiv($character->power, 5);
     }
 
     public static function hitPoints(Character $character): int
     {
-        return floor(($character->constitution + $character->size) / 5);
+        return intdiv($character->constitution + $character->size, 10);
     }
 
     public static function moveRate(Character $character): int
@@ -41,37 +41,35 @@ class CharacterCreation
 
     public static function damageBonus(Character $character): string
     {
-        $strAndSiz = $character->strength + $character->size;
-        switch ($strAndSiz) {
-            case $strAndSiz < 64:
-                return '-2';
-            case $strAndSiz >= 65 && $strAndSiz < 84:
-                return '-1';
-            case $strAndSiz >= 85 && $strAndSiz < 124:
-                return 'none';
-            case $strAndSiz >= 125 && $strAndSiz < 164:
-                return '+1D4';
-            case $strAndSiz >= 165 && $strAndSiz < 204:
-                return '+1D6';
-        }
-
+        return match (true) {
+            $character->strength + $character->size <= 64  => '-2',
+            $character->strength + $character->size <= 84  => '-1',
+            $character->strength + $character->size <= 124 => 'none',
+            $character->strength + $character->size <= 164 => '+1D4',
+            $character->strength + $character->size <= 204 => '+1D6',
+            default                                        => '+2D6',
+        };
     }
 
     public static function build(Character $character): int
     {
-        $strAndSiz = $character->strength + $character->size;
-        switch ($strAndSiz) {
-            case $strAndSiz < 64:
-                return -2;
-            case $strAndSiz >= 65 && $strAndSiz < 84:
-                return -1;
-            case $strAndSiz >= 85 && $strAndSiz < 124:
-                return 0;
-            case $strAndSiz >= 125 && $strAndSiz < 164:
-                return +1;
-            case $strAndSiz >= 165 && $strAndSiz < 204:
-                return +2;
-        }
+        return match (true) {
+            $character->strength + $character->size <= 64  => -2,
+            $character->strength + $character->size <= 84  => -1,
+            $character->strength + $character->size <= 124 => 0,
+            $character->strength + $character->size <= 164 => 1,
+            $character->strength + $character->size <= 204 => 2,
+            default                                        => 3,
+        };
+    }
 
+    public static function half(int $value): int
+    {
+        return intdiv($value, 2);
+    }
+
+    public static function fifth(int $value): int
+    {
+        return intdiv($value, 5);
     }
 }

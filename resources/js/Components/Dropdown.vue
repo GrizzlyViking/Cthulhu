@@ -12,7 +12,7 @@ const props = defineProps({
     },
     contentClasses: {
         type: String,
-        default: 'py-1 bg-white',
+        default: 'py-1 bg-parchment-50',
     },
 });
 
@@ -28,7 +28,10 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 const widthClass = computed(() => {
     return {
         48: 'w-48',
-    }[props.width.toString()];
+        56: 'w-56',
+        60: 'w-60',
+        72: 'w-72',
+    }[props.width.toString()] ?? 'w-48';
 });
 
 const alignmentClasses = computed(() => {
@@ -63,12 +66,12 @@ const open = ref(false);
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                class="absolute z-50 mt-2 rounded-lg shadow-raised"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none"
                 @click="open = false"
             >
-                <div class="rounded-md ring-1 ring-black ring-opacity-5" :class="contentClasses">
+                <div class="overflow-hidden rounded-lg ring-1 ring-cthulhu-green-900/20" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

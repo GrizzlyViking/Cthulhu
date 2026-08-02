@@ -4,16 +4,12 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-cthulhu-green-200">
-        <div>
-            <Link href="/">
-                <ApplicationLogo class="w-20 h-20 fill-current text-gray-500" />
-            </Link>
-        </div>
+    <div class="flex min-h-screen flex-col items-center bg-cthulhu-green-950 px-4 pt-10 sm:justify-center sm:pt-0">
+        <Link href="/" class="rounded-lg p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+            <ApplicationLogo class="size-20 fill-current text-cthulhu-yellow-400" />
+        </Link>
 
-        <div
-            class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg"
-        >
+        <div class="panel mt-6 w-full px-6 py-5 sm:max-w-md">
             <slot />
         </div>
     </div>

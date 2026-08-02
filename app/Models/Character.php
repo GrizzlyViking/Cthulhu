@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CharacterStatus;
 use App\Misc\CharacterCreation;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -76,6 +77,10 @@ class Character extends Model
         'unconscious',
         'dying',
         'notes',
+        'status',
+        'backstory',
+        'occupation_id',
+        'wizard_step',
     ];
 
     protected $with = ['skills', 'player', 'weapons'];
@@ -103,6 +108,9 @@ class Character extends Model
             'magic_points'        => 'integer',
             'dodge'               => 'integer',
             'build'               => 'integer',
+            'status'              => CharacterStatus::class,
+            'backstory'           => 'array',
+            'wizard_step'         => 'integer',
         ];
     }
 
@@ -193,9 +201,19 @@ class Character extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function occupationDetails(): BelongsTo
+    {
+        return $this->belongsTo(Occupation::class, 'occupation_id');
+    }
+
+    public function creditRating(): int
+    {
+        return (int) $this->skills->firstWhere('slug', 'credit_rating')?->pivot->value;
+    }
+
     public function weapons(): MorphToMany
     {
-        return $this->morphedByMany(Weapon::class, 'equipable')->withPivot('id', 'ammo');
+        return $this->morphedByMany(Weapon::class, 'equipable')->withPivot('id', 'ammo', 'ammo_reserve');
     }
 
     public function getDamageBonus(): string

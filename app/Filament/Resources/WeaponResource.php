@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\WeaponResource\Pages;
+use App\Misc\WeaponTable;
 use App\Models\Weapon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -23,6 +24,9 @@ class WeaponResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('category')
+                    ->options(array_combine(WeaponTable::categories(), WeaponTable::categories()))
+                    ->native(false),
                 Forms\Components\TextInput::make('skill')
                     ->required()
                     ->maxLength(255),
@@ -43,6 +47,11 @@ class WeaponResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('malfunction')
                     ->maxLength(255),
+                Forms\Components\TextInput::make('era')
+                    ->label('Common in era')
+                    ->maxLength(255),
+                Forms\Components\Toggle::make('impale')
+                    ->helperText('Deals an impale on an extreme success.'),
             ]);
     }
 
@@ -52,6 +61,9 @@ class WeaponResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('category')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('skill')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('damage')
@@ -66,6 +78,11 @@ class WeaponResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('malfunction')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('era')
+                    ->label('Common in era')
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('impale')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -76,6 +93,8 @@ class WeaponResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('category')
+                    ->options(array_combine(WeaponTable::categories(), WeaponTable::categories())),
                 //
             ])
             ->actions([

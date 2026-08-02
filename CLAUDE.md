@@ -14,7 +14,7 @@ A Call of Cthulhu tabletop RPG character sheet web app. Players manage their own
 - **Livewire v3** — available but minimal current usage
 - **Spatie Laravel Permission** — role/permission system (`RoleEnum`: `player`, `keeper`, `admin`)
 - **Laravel Reverb + Echo** — real-time messaging
-- **Tailwind CSS v3** — dark mode supported throughout
+- **Tailwind CSS v3** — single dark-framed theme; `darkMode: 'class'` so `dark:` variants never fire off the OS preference
 - **Vite** — served via Laravel Valet at `cthulhu.test` with TLS
 
 ## Commands
@@ -50,6 +50,18 @@ php artisan db:seed --class=RolesAndPermissionsSeeder
 
 `app/Misc/CharacterCreation.php` contains pure static helpers for derived stats (dodge, sanity, hit points, move rate, damage bonus, build) — these are not stored but computed from the core attributes.
 
+### Weapons & ammunition
+`app/Misc/WeaponTable.php` is the canonical transcription of the Investigator
+Handbook weapons table (pp. 250–254) — 104 weapons with `category`, `era`,
+`impale` and the verbatim "1920s/modern" `cost` cell. Both `WeaponSeeder` and the
+sync migration read from it, so add weapons there rather than in the seeder.
+
+`Character` ↔ `Weapon` is a morph pivot (`equipables`) carrying `ammo` (rounds in
+the magazine) and `ammo_reserve` (rounds carried). Magazine size is derived, not
+stored: `Weapon::$magazine_capacity` parses the book's free-text "Bullets in Gun
+(Mag)" column and returns `null` for anything uncountable. The shoot/reload
+arithmetic lives in `WeaponController` — the client only renders what it returns.
+
 ### Roles
 Three roles (see `RoleEnum`): `player`, `keeper` (= GM), `admin`. Authorization is enforced via `CharacterPolicy` and Spatie permissions. Players may only view/edit their own characters.
 
@@ -61,6 +73,23 @@ Resources for `Character`, `Skill`, `Weapon`, `User`, `Group` are under `app/Fil
 - `resources/js/Pages/Components/Character/` — the five character sheet tab components (Characteristics, Skills, Vitals, Weapons, Backstory)
 - `resources/js/Pages/Composables/` — shared Vue composables
 - `resources/js/Components/` — generic UI primitives (buttons, inputs, modal, tabs)
+
+### Design system
+The visual language is a dark green frame holding parchment-coloured panels, with brass
+accents and blood red reserved for danger and damage. Reusable classes live in
+`@layer components` in `resources/css/app.css` — **use these rather than repeating raw
+utility strings**:
+
+- Layout: `.page` (standard page container — pages own their width; the layout's `<main>` is neutral)
+- Surfaces: `.panel` (parchment sheet), `.card`, `.card-marked` (brass-ringed), `.card-dark`
+- Buttons: `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, plus `.btn-sm`
+- Forms: `.field`, `.field-label`, `.field-hint`, `.field-error`, `.field-inline` (edit-in-place)
+- Text: `.display` (Limelight, for names and page titles), `.eyebrow`, `.eyebrow-on-dark`
+- Chips: `.chip`, `.chip-brass`, `.chip-blood`; `.tabular` for aligned figures
+
+Palette families are `cthulhu-green` (canvas and ink, 50–950), `parchment` (card surfaces),
+`cthulhu-yellow` (brass accents) and `cthulhu-blood` (danger). Do not reach for Tailwind's
+default `gray-*`, `indigo-*` or `bg-white` — nothing in the app uses them.
 
 ### Real-time messaging
 `MessageSent` event broadcasts via Reverb. `resources/js/echo.js` configures Laravel Echo. `SendMessage` is a queued job.
@@ -76,6 +105,8 @@ Resources for `Character`, `Skill`, `Weapon`, `User`, `Group` are under `app/Fil
 - Inertia navigation: use `<Link>` or `router.visit()`, never plain `<a>` tags.
 - Form submissions: use `router.post` / `router.put`; never HTML `<form>` with full-page POST.
 - Tailwind spacing in lists: `gap-*` utilities, not margins.
+- Reach for the `@layer components` classes (`.panel`, `.btn-primary`, `.field`, …) before writing new utility strings.
+- No `dark:` variants — the app ships one theme (see Design system).
 - `env()` only inside `config/` files; everywhere else use `config()`.
 - `vendor/bin/pint --dirty` must pass before any PHP change is considered done.
 - All tests are Pest; create with `php artisan make:test --pest {Name}`.

@@ -1,32 +1,23 @@
 <script setup>
-
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import {Head} from "@inertiajs/vue3";
+import { Head } from "@inertiajs/vue3";
 import SimpleList from "@/Pages/Components/SimpleList.vue";
 
 const props = defineProps({ messages: Object })
 </script>
 
 <template>
-    <Head title="Dashboard"/>
+    <Head title="Messages"/>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
+            <h1 class="display text-2xl text-parchment-100">Messages</h1>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-cthulhu-green-200 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">
-                        <simple-list :list="messages"/>
-                    </div>
-                </div>
-            </div>
+        <div class="page">
+            <section class="panel p-4 sm:p-6">
+                <simple-list :list="messages"/>
+            </section>
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-
-</style>

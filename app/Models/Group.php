@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Era;
 use Database\Factories\GroupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,14 @@ class Group extends Model
     /** @use HasFactory<GroupFactory> */
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'era'];
+
+    protected function casts(): array
+    {
+        return [
+            'era' => Era::class,
+        ];
+    }
 
     public function users(): BelongsToMany
     {

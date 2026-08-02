@@ -10,7 +10,7 @@
                 leave-from="opacity-100"
                 leave-to="opacity-0"
             >
-                <div class="fixed inset-0 bg-black/25"/>
+                <div class="fixed inset-0 bg-cthulhu-green-950/70 backdrop-blur-sm"/>
             </TransitionChild>
 
             <div class="fixed inset-0 overflow-y-auto">
@@ -25,24 +25,20 @@
                         leave-to="opacity-0 scale-95"
                     >
                         <DialogPanel
-                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                            <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
+                            class="w-full max-w-md transform overflow-hidden rounded-2xl bg-parchment-100 p-6 text-left align-middle shadow-raised ring-1 ring-cthulhu-green-900/20 transition-all">
+                            <DialogTitle as="h3" class="text-base font-semibold leading-6 text-cthulhu-green-900">
                                 <slot name="title">Title</slot>
                             </DialogTitle>
-                            <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    <slot name="default">
-                                        Your payment has been successfully submitted. We’ve sent you
-                                        an email with all of the details of your order.
-                                    </slot>
-                                </p>
+                            <div class="mt-3 max-h-[60vh] overflow-y-auto text-sm text-cthulhu-green-800">
+                                <slot name="default"></slot>
                             </div>
-                            <slot  name="buttons">
+                            <slot name="buttons">
+                                <div class="mt-4 flex justify-end gap-2">
                                     <button
                                         v-if="slots.response1 && $slots.response1().length"
                                         ref="closeBtnRef"
                                         type="button"
-                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        class="btn-secondary btn-sm"
                                         @click="emit('response1')"
                                     >
                                         <slot name="response1"></slot>
@@ -50,11 +46,12 @@
                                     <button
                                         v-if="slots.response2 && $slots.response2().length"
                                         type="button"
-                                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                        class="btn-primary btn-sm"
                                         @click="emit('response2')"
                                     >
                                         <slot name="response2"></slot>
                                     </button>
+                                </div>
                             </slot>
                         </DialogPanel>
                     </TransitionChild>
@@ -72,7 +69,7 @@ import {
     DialogPanel,
     DialogTitle,
 } from '@headlessui/vue'
-import {computed, onMounted, ref, useSlots} from "vue";
+import {ref, useSlots} from "vue";
 const closeBtnRef = ref(null);
 
 const props = defineProps({
@@ -91,10 +88,6 @@ const emit = defineEmits([
     'response1',
     'response2'
 ]);
-
-onMounted(() => {
-    console.log(props.isOpen);
-});
 
 const slots = useSlots()
 </script>

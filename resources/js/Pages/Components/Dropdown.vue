@@ -1,21 +1,21 @@
 <template>
     <Listbox as="div" v-model="selected" @update:model-value="emit('update:modelValue', selected)">
-        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">Assigned to</ListboxLabel>
+        <ListboxLabel class="field-label">Assigned to</ListboxLabel>
         <div class="relative mt-2">
-            <ListboxButton class="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                <span class="block truncate">{{ selected.name }}</span>
+            <ListboxButton class="field relative cursor-default pr-10 text-left">
+                <span class="block truncate">{{ selected?.name ?? 'Unassigned' }}</span>
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-        </span>
+                    <ChevronUpDownIcon class="size-5 text-cthulhu-green-500" aria-hidden="true" />
+                </span>
             </ListboxButton>
 
             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-parchment-50 py-1 text-sm shadow-raised ring-1 ring-cthulhu-green-900/20 focus:outline-none">
                     <ListboxOption as="template" v-for="option in props.list" :key="option.id" :value="option" v-slot="{ active, selected }">
-                        <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                        <li :class="[active ? 'bg-cthulhu-green-800 text-parchment-100' : 'text-cthulhu-green-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ option.name }}</span>
-                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                            <span v-if="selected" :class="[active ? 'text-cthulhu-yellow-400' : 'text-cthulhu-green-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                <CheckIcon class="size-5" aria-hidden="true" />
                             </span>
                         </li>
                     </ListboxOption>
@@ -28,7 +28,7 @@
 <script setup>
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
-import {ref} from "vue";
+import { ref } from "vue";
 
 let props = defineProps({
     list: Object,
@@ -36,13 +36,14 @@ let props = defineProps({
     modelValue: Number,
     initiallySelected: {
         type: Number,
-        default: 1,
+        default: null,
     }
 });
 
 const emit = defineEmits(['update:modelValue'])
 
-const selected = ref(props.list[props.initiallySelected])
-
+/* `initiallySelected` is a user id, so match on id rather than array position. */
+const selected = ref(
+    Object.values(props.list ?? {}).find((option) => option.id === props.initiallySelected) ?? null
+)
 </script>
-
