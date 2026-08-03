@@ -17,6 +17,8 @@
         "laravel/tinker": "^2.9",
         "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.21",
+        "symfony/http-client": "^8.1",
+        "symfony/mailgun-mailer": "^8.1",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
