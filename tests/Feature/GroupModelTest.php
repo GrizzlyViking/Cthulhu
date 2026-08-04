@@ -3,10 +3,6 @@
 use App\Models\Character;
 use App\Models\Group;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
-
-uses(RefreshDatabase::class);
 
 it('creates a group via factory', function () {
     $group = Group::factory()->create();
@@ -22,74 +18,50 @@ it('allows mass assignment of name', function () {
         ->and($group->fresh()->name)->toBe('Investigators');
 });
 
-it('relates to users via a many-to-many pivot (group_user)', function () {
+it('has many users via users.group_id', function () {
     $group = Group::factory()->create();
-    $users = User::factory()->count(2)->create();
+    $users = User::factory()->count(2)->inGroup($group)->create();
 
-    $group->users()->attach($users->pluck('id')->all());
-
-    expect($group->users()->count())->toBe(2);
-
-    foreach ($users as $user) {
-        expect(DB::table('group_user')
-            ->where('group_id', $group->id)
-            ->where('user_id', $user->id)
-            ->exists())->toBeTrue();
-    }
+    expect($group->users()->count())->toBe(2)
+        ->and($group->users->pluck('id')->sort()->values()->all())
+        ->toBe($users->pluck('id')->sort()->values()->all());
 });
 
-it('relates to characters via a many-to-many pivot (group_character)', function () {
+it('has many characters via characters.group_id', function () {
     $group      = Group::factory()->create();
-    $characters = Character::factory()->count(2)->create();
+    $characters = Character::factory()->count(2)->create(['group_id' => $group->id]);
 
-    $group->characters()->attach($characters->pluck('id')->all());
-
-    expect($group->characters()->count())->toBe(2);
-
-    foreach ($characters as $character) {
-        expect(DB::table('group_character')
-            ->where('group_id', $group->id)
-            ->where('character_id', $character->id)
-            ->exists())->toBeTrue();
-    }
+    expect($group->characters()->count())->toBe(2)
+        ->and($group->characters->pluck('id')->sort()->values()->all())
+        ->toBe($characters->pluck('id')->sort()->values()->all());
 });
 
-it('cascades pivot rows when a group is deleted', function () {
-    $group     = Group::factory()->create();
-    $user      = User::factory()->create();
-    $character = Character::factory()->create();
-
-    $group->users()->attach($user->id);
-    $group->characters()->attach($character->id);
-
-    $groupId = $group->id;
+it('nulls users.group_id when the group is deleted', function () {
+    $group = Group::factory()->create();
+    $user  = User::factory()->inGroup($group)->create();
 
     $group->delete();
 
-    expect(DB::table('group_user')->where('group_id', $groupId)->count())->toBe(0)
-        ->and(DB::table('group_character')->where('group_id', $groupId)->count())->toBe(0);
+    expect($user->fresh()->group_id)->toBeNull();
 });
 
-it('cascades group_user pivot rows when a user is deleted', function () {
-    $group = Group::factory()->create();
-    $user  = User::factory()->create();
-
-    $group->users()->attach($user->id);
-    $userId = $user->id;
-
-    $user->forceDelete();
-
-    expect(DB::table('group_user')->where('user_id', $userId)->count())->toBe(0);
-});
-
-it('cascades group_character pivot rows when a character is deleted', function () {
+it('orphans characters instead of deleting them when the group is deleted', function () {
     $group     = Group::factory()->create();
-    $character = Character::factory()->create();
+    $character = Character::factory()->create(['group_id' => $group->id]);
 
-    $group->characters()->attach($character->id);
-    $characterId = $character->id;
+    $group->delete();
 
-    $character->forceDelete();
+    $character = $character->fresh();
+    expect($character)->not->toBeNull()
+        ->and($character->trashed())->toBeFalse()
+        ->and($character->group_id)->toBeNull();
+});
 
-    expect(DB::table('group_character')->where('character_id', $characterId)->count())->toBe(0);
+it('counts pending invitations only', function () {
+    $group = Group::factory()->create();
+    \App\Models\Invitation::factory()->for($group)->create();
+    \App\Models\Invitation::factory()->for($group)->accepted()->create();
+    \App\Models\Invitation::factory()->for($group)->expired()->create();
+
+    expect($group->pendingInvitations()->count())->toBe(1);
 });

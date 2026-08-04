@@ -50,7 +50,12 @@ describe('Character.vue', () => {
           AuthenticatedLayout: {
             template: '<div><slot name="header" /><slot /></div>',
           },
-          Backstory: true,
+          // Render the actions slot so the sheet actions are testable
+          Backstory: {
+            name: 'Backstory',
+            props: ['character', 'editable'],
+            template: '<div><slot name="actions" /></div>',
+          },
           Vitals: true,
           Characteristics: true,
           Skills: true,
@@ -73,11 +78,11 @@ describe('Character.vue', () => {
     expect(head.attributes('data-title')).toBe(sampleCharacter.name)
   })
 
-  it('renders header with character and player names', () => {
+  it('renders the print sheet link through the Backstory actions slot', () => {
     const wrapper = mountComponent()
-    const html = wrapper.html()
-    expect(html).toContain(sampleCharacter.name)
-    expect(html).toContain(`(${sampleCharacter.player.name})`)
+    const link = wrapper.get('a[target="_blank"]')
+    expect(link.attributes('href')).toContain('character.sheet')
+    expect(link.attributes('href')).toContain(sampleCharacter.slug)
   })
 
   it('renders Backstory, Vitals, Characteristics, and Skills with correct props', () => {

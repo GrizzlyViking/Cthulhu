@@ -14,20 +14,22 @@ class CharacterPolicy
 
     public function view(User $user, Character $character): bool
     {
-        return true;
+        return $user->id === $character->user_id || $this->sharesGroupWith($user, $character);
     }
 
     public function update(User $user, Character $character): bool
     {
-        return $user->id === $character->user_id || $user->hasRole('keeper');
+        return $user->id === $character->user_id
+            || ($user->hasRole('keeper') && $this->sharesGroupWith($user, $character));
     }
 
     public function patch(User $user, Character $character): bool
     {
-        return $user->id === $character->user_id || $user->hasRole('keeper');
+        return $user->id === $character->user_id
+            || ($user->hasRole('keeper') && $this->sharesGroupWith($user, $character));
     }
 
-    public function delete(User $user, Character $character)
+    public function delete(User $user, Character $character): bool
     {
         return $user->id === $character->user_id || $user->hasRole('admin');
     }
@@ -35,5 +37,14 @@ class CharacterPolicy
     public function assignUser(User $user, Character $character): bool
     {
         return $user->hasRole('admin');
+    }
+
+    /**
+     * Anything beyond a player's own character requires both sides to sit in
+     * the same, non-null group — keepers included, they are per-group.
+     */
+    private function sharesGroupWith(User $user, Character $character): bool
+    {
+        return $user->group_id !== null && $user->group_id === $character->group_id;
     }
 }

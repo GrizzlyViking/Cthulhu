@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Character;
 use App\Models\Skill;
 use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,9 @@ use Illuminate\Support\Str;
 
 class SkillController extends Controller
 {
+    use AuthorizesRequests;
+
+    /** @var array<int, string> */
     private array $rolls = [];
 
     public function store(Request $request): RedirectResponse
@@ -23,11 +27,14 @@ class SkillController extends Controller
             'character_id'   => ['required', 'integer', 'exists:characters,id'],
         ]);
 
+        $character = Character::findOrFail($request->character_id);
+
+        $this->authorize('update', $character);
+
         $skill       = Skill::make($validated);
         $skill->slug = Str::slug($request->display_name);
         $skill->save();
 
-        $character = Character::findOrFail($request->character_id);
         $character->skills()->attach($skill->id, [
             'value' => $validated['value_obtained'] ?? $validated['starting_value'],
         ]);
@@ -37,6 +44,8 @@ class SkillController extends Controller
 
     public function appendAllMissingSkills(Character $character): RedirectResponse
     {
+        $this->authorize('update', $character);
+
         $character->appendSkills();
 
         return to_route('character.show', $character->slug);
@@ -52,7 +61,11 @@ class SkillController extends Controller
 
         $skill = Skill::where('slug', $request->get('skill_slug'))->firstOrFail();
 
-        collect($request->get('users'))->each(function ($user_id) use ($skill) {
+        // Rolls never cross group boundaries: targets outside the roller's
+        // group are dropped silently.
+        $allowedUserIds = User::query()->inGroupOf($request->user())->pluck('id');
+
+        collect($request->get('users'))->filter(fn ($user_id): bool => $allowedUserIds->contains((int) $user_id))->each(function ($user_id) use ($skill) {
             $user = User::find($user_id);
             if ($user instanceof User && $user->characters->first()) {
                 $character = $user->characters->first();

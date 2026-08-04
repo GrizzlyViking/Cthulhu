@@ -5,15 +5,21 @@ import Skills from '@/Pages/Components/Character/Skills.vue';
 import Weapons from '@/Pages/Components/Character/Weapons.vue';
 import Characteristics from '@/Pages/Components/Character/Characteristics.vue';
 import Vitals from '@/Pages/Components/Character/Vitals.vue';
-import { computed, ref } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue';
 import Backstory from '@/Pages/Components/Character/Backstory.vue';
 import BackstoryTab from '@/Pages/Components/Character/BackstoryTab.vue';
 import Dropdown from '@/Pages/Components/Dropdown.vue';
 import Tabs from '@/Components/Tabs.vue';
 import { BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, UserIcon } from '@heroicons/vue/20/solid';
-import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
+/*
+ * Quill is only needed on the Notepad tab, and a static import of
+ * @vueup/vue-quill makes rollup drop this page's chunk facade — the page then
+ * vanishes from the Vite manifest and the route 500s. Load it lazily instead.
+ */
+const QuillEditor = defineAsyncComponent(() => import('@vueup/vue-quill').then((m) => m.QuillEditor));
 
 const prop = defineProps({ character: Object, availableSkills: Array });
 const editable = ref(false);

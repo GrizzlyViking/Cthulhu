@@ -34,6 +34,10 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Select::make('roles')->multiple()->relationship('roles', 'name'),
+                Select::make('group_id')
+                    ->relationship('group', 'name')
+                    ->label('Group')
+                    ->nullable(),
                 Forms\Components\TextInput::make('imageUrl')
                     ->maxLength(255),
             ]);
@@ -60,6 +64,15 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('role')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('group.name')
+                    ->label('Group')
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('blocked_at')
+                    ->label('Blocked')
+                    ->boolean()
+                    ->falseColor('gray')
+                    ->trueColor('danger')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('imageUrl')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('deleted_at')

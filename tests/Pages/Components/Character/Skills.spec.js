@@ -1,71 +1,44 @@
 // tests/Pages/Components/Character/Skills.spec.js
-import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 
-// Mock @inertiajs/vue3's useForm so we can intercept the post call
+// Mock @inertiajs/vue3 so we can intercept form and router calls
 let lastForm
 vi.mock('@inertiajs/vue3', () => {
     const useForm = vi.fn((initial) => {
         lastForm = {
             ...initial,
-            post: vi.fn((url, options = {}) => {
+            processing: false,
+            put: vi.fn((url, options = {}) => {
                 if (typeof options.onSuccess === 'function') options.onSuccess()
-                return Promise.resolve()
             }),
+            reset: vi.fn(),
         }
         return lastForm
     })
-    // router is imported in the component; provide a harmless stub
-    const router = {}
+    const router = {
+        put: vi.fn((url, data, options = {}) => {
+            if (typeof options.onSuccess === 'function') options.onSuccess()
+        }),
+    }
     return { useForm, router }
 })
 
+vi.mock('axios', () => ({
+    default: {
+        get: vi.fn(() => Promise.resolve({})),
+        put: vi.fn(() => Promise.resolve({})),
+    },
+}))
+
+import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import Skills from '@/Pages/Components/Character/Skills.vue'
-
-const RegularHalfFifthStub = {
-    name: 'RegularHalfFifth',
-    props: ['modelValue', 'editable'],
-    emits: ['update:modelValue', 'input'],
-    template: `
-    <input
-      data-testid="skill-input"
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value); $emit('input', $event)"
-    />
-  `,
-}
-
-const ModalPopupStub = {
-    name: 'ModalPopup',
-    props: { isOpen: Boolean },
-    emits: ['modal-close', 'response1', 'response2'],
-    template: `
-    <div v-if="isOpen" data-testid="modal">
-      <slot />
-      <button data-testid="modal-ok" @click="$emit('response2')">OK</button>
-      <button data-testid="modal-cancel" @click="$emit('modal-close')">Cancel</button>
-    </div>
-  `,
-}
-
-const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
+import RegularHalfFifth from '@/Pages/Components/RegularHalfFifth.vue'
 
 describe('Skills.vue', () => {
-    beforeEach(() => {
-        // Stub global route helper
-        globalThis.route = (...args) => `route:${JSON.stringify(args)}`
-
-        // Stub axios used by the component (it’s often global in apps)
-        globalThis.axios = {
-            get: vi.fn(() => Promise.resolve({})),
-            put: vi.fn(() => Promise.resolve({})),
-        }
-    })
-
     afterEach(() => {
         vi.clearAllMocks()
-        delete globalThis.route
-        delete globalThis.axios
     })
 
     const makeCharacter = () => ({
@@ -76,160 +49,143 @@ describe('Skills.vue', () => {
                 id: 1,
                 slug: 'stealth',
                 display_name: 'Stealth',
-                pivot: { value: 40, experience: 0 },
+                description: 'Move without being seen.',
+                pivot: { value: 40, experience: 0, show: true },
             },
             {
                 id: 2,
                 slug: 'spot-hidden',
                 display_name: 'Spot Hidden',
-                pivot: { value: 50, experience: 0 },
+                description: '',
+                pivot: { value: 50, experience: 5, show: true },
+            },
+            {
+                id: 3,
+                slug: 'occult',
+                display_name: 'Occult',
+                description: '',
+                pivot: { value: 5, experience: 0, show: false },
             },
         ],
     })
 
-    const mountComponent = (editable = false) => {
+    const mountComponent = ({ editable = false, canEdit = false, availableSkills = [], character = makeCharacter() } = {}) => {
         return mount(Skills, {
             props: {
-                character: makeCharacter(),
+                character,
                 editable,
+                canEdit,
+                availableSkills,
             },
             global: {
-                components: {
-                    RegularHalfFifth: RegularHalfFifthStub,
-                    ModalPopup: ModalPopupStub,
-                },
+                stubs: { teleport: true },
             },
         })
     }
 
-    it('renders one RegularHalfFifth per skill and shows skill names', () => {
-        const wrapper = mountComponent(false)
-        const inputs = wrapper.findAll('[data-testid="skill-input"]')
-        expect(inputs.length).toBe(2)
+    it('renders a value block per shown skill and hides hidden skills outside edit mode', () => {
+        const wrapper = mountComponent()
+
+        expect(wrapper.findAllComponents(RegularHalfFifth).length).toBe(2)
         expect(wrapper.text()).toContain('Stealth')
         expect(wrapper.text()).toContain('Spot Hidden')
+        expect(wrapper.text()).not.toContain('Occult')
     })
 
-    it('increments experience when clicking a skill name and shows the counter', async () => {
-        const wrapper = mountComponent(false)
+    it('lists hidden skills again in edit mode, with a hint about them', () => {
+        const wrapper = mountComponent({ editable: true })
 
-        // Click on "Stealth" span
-        const stealthSpan = wrapper.findAll('span').find((s) => s.text() === 'Stealth')
-        expect(stealthSpan).toBeTruthy()
-        await stealthSpan.trigger('click')
-
-        // axios.get resolves immediately; wait for DOM to update
-        await flushPromises()
-
-        // Experience should be displayed now (bubble appears)
-        const expBubble = wrapper.findAll('div').find((d) => {
-            const cls = d.classes()
-            return cls.includes('rounded-full') && cls.includes('w-6') && d.text().trim() === '1'
-        })
-        expect(expBubble).toBeTruthy()
+        expect(wrapper.text()).toContain('Occult')
+        expect(wrapper.text()).toContain('1 hidden skill is')
     })
 
-    it('turns the experience bubble red when threshold is reached', async () => {
-        const wrapper = mountComponent(false)
+    it('shows regular, half, and fifth values for a skill', () => {
+        const wrapper = mountComponent()
 
-        // For Stealth: value 40 => threshold floor(40/10) = 4
-        const stealthSpan = wrapper.findAll('span').find((s) => s.text() === 'Stealth')
-        for (let i = 0; i < 4; i++) {
-            await stealthSpan.trigger('click')
-            await flushPromises()
-        }
-
-        const expBubble = wrapper.findAll('div').find((d) => {
-            const cls = d.classes()
-            return cls.includes('rounded-full') && cls.includes('w-6')
-        })
-        expect(expBubble).toBeTruthy()
-        expect(expBubble.classes()).toContain('bg-red-800')
+        // Stealth is 40: half 20, fifth 8
+        expect(wrapper.findAll('[title="Regular success"]')[0].text()).toBe('40')
+        expect(wrapper.findAll('[title="Hard success (half)"]')[0].text()).toBe('20')
+        expect(wrapper.findAll('[title="Extreme success (one fifth)"]')[0].text()).toBe('8')
     })
 
-    it('resets experience when clicking the bubble', async () => {
-        const wrapper = mountComponent(false)
+    it('filters the skill list through the search field', async () => {
+        const wrapper = mountComponent()
 
-        // Increment once so the bubble appears
-        const stealthSpan = wrapper.findAll('span').find((s) => s.text() === 'Stealth')
-        await stealthSpan.trigger('click')
-        await flushPromises()
+        await wrapper.get('input[type="search"]').setValue('spot')
 
-        let expBubble = wrapper.findAll('div').find((d) => {
-            const cls = d.classes()
-            return cls.includes('rounded-full') && cls.includes('w-6')
-        })
-        expect(expBubble).toBeTruthy()
-
-        // Click the parent clickable wrapper that triggers reset
-        await expBubble.trigger('click')
-        await flushPromises()
-
-        // Bubble should disappear
-        expBubble = wrapper.findAll('div').find((d) => {
-            const cls = d.classes()
-            return cls.includes('rounded-full') && cls.includes('w-6')
-        })
-        expect(expBubble).toBeUndefined()
+        expect(wrapper.findAllComponents(RegularHalfFifth).length).toBe(1)
+        expect(wrapper.text()).toContain('Spot Hidden')
+        expect(wrapper.text()).not.toContain('Stealth')
     })
 
-    it('debounces value updates and calls axios.put with numeric value', async () => {
-        vi.useFakeTimers()
+    it('shows the experience bubble, marks it ready to improve, and clears it on click', async () => {
+        const wrapper = mountComponent()
 
-        const wrapper = mountComponent(true)
+        // Spot Hidden: value 50 => threshold 5, experience 5 => ready to improve
+        const bubble = wrapper.findAll('button').find((b) => b.text() === '5')
+        expect(bubble).toBeTruthy()
+        expect(bubble.classes()).toContain('bg-cthulhu-blood-400')
 
-        const firstInput = wrapper.get('[data-testid="skill-input"]')
-        // Simulate typing a new value; our stub emits an 'input' event with target.value
-        await firstInput.setValue('55')
-
-        // Debounce is 600ms
-        expect(globalThis.axios.put).not.toHaveBeenCalled()
-        vi.advanceTimersByTime(600)
-
+        await bubble.trigger('click')
         await flushPromises()
-        expect(globalThis.axios.put).toHaveBeenCalledTimes(1)
-        const [, body] = globalThis.axios.put.mock.calls[0]
-        expect(body).toEqual({ value: 55 })
 
-        vi.useRealTimers()
+        expect(axios.get).toHaveBeenCalledTimes(1)
+        expect(wrapper.findAll('button').find((b) => b.text() === '5')).toBeUndefined()
     })
 
-    it('shows Add Skill button only when editable and posts via useForm on confirm', async () => {
-        const wrapper = mountComponent(true)
+    it('opens the edit modal from the value block and saves through the form', async () => {
+        const wrapper = mountComponent({ canEdit: true })
 
-        const addBtn = wrapper.find('button')
-        expect(addBtn.exists()).toBe(true)
-        expect(addBtn.text()).toMatch(/Add Skill/i)
+        await wrapper.get('[title="Adjust Stealth"]').trigger('click')
 
-        // Opens modal
-        await addBtn.trigger('click')
-        await flushPromises()
+        const valueInput = wrapper.get('#skill_value')
+        expect(valueInput.element.value).toBe('40')
+        expect(wrapper.text()).toContain('Move without being seen.')
 
-        // Modal is visible
-        const modal = wrapper.find('[data-testid="modal"]')
-        expect(modal.exists()).toBe(true)
+        const save = wrapper.findAll('button').find((b) => b.text() === 'Save')
+        await save.trigger('click')
 
-        // Click OK (emits response2 => addSkill)
-        const ok = modal.get('[data-testid="modal-ok"]')
-        await ok.trigger('click')
-        await flushPromises()
-
-        // useForm.post should have been called (captured in lastForm)
-        expect(lastForm).toBeTruthy()
-        expect(lastForm.post).toHaveBeenCalledTimes(1)
-        const [url, options] = lastForm.post.mock.calls[0]
-        expect(typeof url).toBe('string')
-        expect(url.startsWith('route:')).toBe(true)
+        expect(lastForm.put).toHaveBeenCalledTimes(1)
+        const [url, options] = lastForm.put.mock.calls[0]
+        expect(url).toContain('character.skill.update')
+        expect(url).toContain('stealth')
         expect(options).toMatchObject({ preserveScroll: true })
-
-        // Modal should close on success
-        const modalAfter = wrapper.find('[data-testid="modal"]')
-        expect(modalAfter.exists()).toBe(false)
     })
 
-    it('does not show Add Skill button when not editable', () => {
-        const wrapper = mountComponent(false)
-        const addBtn = wrapper.findAll('button').find((b) => /Add Skill/i.test(b.text()))
-        expect(addBtn).toBeUndefined()
+    it('does not open the edit modal without edit rights', async () => {
+        const wrapper = mountComponent({ canEdit: false })
+
+        // Without edit rights the value block carries no title and no editor opens
+        expect(wrapper.find('[title="Adjust Stealth"]').exists()).toBe(false)
+
+        await wrapper.findAllComponents(RegularHalfFifth)[0].find('.grid').trigger('click')
+
+        expect(wrapper.find('#skill_value').exists()).toBe(false)
+    })
+
+    it('adds a skill through the picker in edit mode', async () => {
+        const wrapper = mountComponent({
+            editable: true,
+            availableSkills: [{ id: 9, slug: 'archaeology', display_name: 'Archaeology', starting_value: 1 }],
+        })
+
+        await wrapper.get('select').setValue('archaeology')
+        const addBtn = wrapper.findAll('button').find((b) => b.text() === 'Add')
+        await addBtn.trigger('click')
+
+        expect(router.put).toHaveBeenCalledTimes(1)
+        const [url, data] = router.put.mock.calls[0]
+        expect(url).toContain('character.skill.attach')
+        expect(url).toContain('archaeology')
+        expect(data).toEqual({ value: 1 })
+    })
+
+    it('does not show the add-skill picker outside edit mode', () => {
+        const wrapper = mountComponent({
+            editable: false,
+            availableSkills: [{ id: 9, slug: 'archaeology', display_name: 'Archaeology', starting_value: 1 }],
+        })
+
+        expect(wrapper.find('select').exists()).toBe(false)
     })
 })

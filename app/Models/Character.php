@@ -81,6 +81,7 @@ class Character extends Model
         'backstory',
         'occupation_id',
         'wizard_step',
+        'group_id',
     ];
 
     protected $with = ['skills', 'player', 'weapons'];
@@ -221,5 +222,8 @@ class Character extends Model
         return CharacterCreation::damageBonus($this);
     }
 
-    public function group() {}
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
 }

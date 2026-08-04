@@ -353,11 +353,14 @@ test('revisiting an earlier step never lowers wizard_step', function () {
 });
 
 test('foreign drafts are hidden from shared character lists', function () {
-    $foreignDraft   = wizardDraft($this->user);
-    $foreignVisible = Character::factory()->create(['user_id' => $this->user->id]);
+    $group = Group::factory()->create();
+    $this->user->update(['group_id' => $group->id]);
 
-    $viewer   = User::factory()->create();
-    $ownDraft = wizardDraft($viewer);
+    $foreignDraft   = wizardDraft($this->user, ['group_id' => $group->id]);
+    $foreignVisible = Character::factory()->create(['user_id' => $this->user->id, 'group_id' => $group->id]);
+
+    $viewer   = User::factory()->inGroup($group)->create();
+    $ownDraft = wizardDraft($viewer, ['group_id' => $group->id]);
 
     $this->actingAs($viewer)
         ->get(route('dashboard'))
@@ -431,7 +434,7 @@ test('create page reports 1920s wealth from the allocated credit rating', functi
 
 test('create page uses the modern era of the users group for wealth', function () {
     Group::create(['name' => 'Modern Group', 'era' => Era::Modern->value])
-        ->users()->attach($this->user);
+        ->users()->save($this->user);
 
     $draft = journalistDraft($this->user);
     $draft->skills()->updateExistingPivot(Skill::where('slug', 'credit_rating')->value('id'), ['value' => 20]);

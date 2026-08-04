@@ -31,6 +31,28 @@ test('users can not authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+test('blocked users can not authenticate even with valid credentials', function () {
+    $user = User::factory()->blocked()->create();
+
+    $response = $this->from('/login')->post('/login', [
+        'email'    => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+    // The error must be indistinguishable from a bad password.
+    $response->assertSessionHasErrors(['email' => trans('auth.failed')]);
+});
+
+test('users blocked mid-session are logged out on their next request', function () {
+    $user = User::factory()->blocked()->create();
+
+    $response = $this->actingAs($user)->get(route('dashboard'));
+
+    $response->assertRedirect(route('login'));
+    $this->assertGuest();
+});
+
 test('users can logout', function () {
     $user = User::factory()->create();
 

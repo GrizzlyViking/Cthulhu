@@ -5,9 +5,6 @@ defineProps({
     canLogin: {
         type: Boolean,
     },
-    canRegister: {
-        type: Boolean,
-    },
 });
 </script>
 
@@ -36,10 +33,7 @@ defineProps({
                 <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="btn-primary">
                     Enter
                 </Link>
-                <template v-else>
-                    <Link href="/login" class="btn-primary">Log in</Link>
-                    <Link v-if="canRegister" href="/register" class="btn-secondary">Register</Link>
-                </template>
+                <Link v-else href="/login" class="btn-primary">Log in</Link>
             </div>
         </div>
     </div>

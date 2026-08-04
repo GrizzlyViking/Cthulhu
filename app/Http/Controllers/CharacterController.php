@@ -11,6 +11,7 @@ use App\Misc\CharacterSheet;
 use App\Models\Character;
 use App\Models\Skill;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,12 +52,15 @@ class CharacterController extends Controller
             'characteristics' => CharacterSheet::characteristics($character),
             'skillColumns'    => CharacterSheet::skillColumns($character),
             'wealth'          => CharacterSheet::wealth($character->creditRating()),
-            'fellows'         => Character::with('player')
-                ->where('id', '!=', $character->id)
-                ->whereNull('deleted_at')
-                ->orderBy('name')
-                ->take(6)
-                ->get(),
+            'fellows'         => $character->group_id === null
+                ? new EloquentCollection()
+                : Character::with('player')
+                    ->where('id', '!=', $character->id)
+                    ->where('group_id', $character->group_id)
+                    ->whereNull('deleted_at')
+                    ->orderBy('name')
+                    ->take(6)
+                    ->get(),
         ]);
     }
 
@@ -64,8 +68,9 @@ class CharacterController extends Controller
     {
         $validated = $request->validated();
 
-        $character       = Character::make($validated);
-        $character->slug = Str::slug($validated['name']);
+        $character           = Character::make($validated);
+        $character->slug     = Str::slug($validated['name']);
+        $character->group_id = $request->user()->group_id;
         $character->save();
         $character->refresh();
         $character->addAllSkills();

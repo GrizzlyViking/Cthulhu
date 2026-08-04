@@ -86,6 +86,7 @@ class CharacterWizardController extends Controller
             ...$validated,
             'slug'        => Str::slug($validated['name']),
             'user_id'     => $request->user()->id,
+            'group_id'    => $request->user()->group_id,
             'status'      => CharacterStatus::Draft,
             'wizard_step' => 1,
         ]);
@@ -227,6 +228,6 @@ class CharacterWizardController extends Controller
 
     private function resolveEra(User $user): Era
     {
-        return $user->groups()->first()?->era ?? Era::Twenties;
+        return $user->group?->era ?? Era::Twenties;
     }
 }

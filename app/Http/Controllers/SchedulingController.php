@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\EventType;
 use App\Models\Calendar;
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -36,6 +37,12 @@ class SchedulingController extends Controller
             'type'        => [Rule::enum(EventType::class)],
             'description' => 'nullable|string',
         ]);
+
+        // Events may only be planned for users of the planner's own group.
+        abort_unless(
+            User::query()->inGroupOf($request->user())->whereKey($validated['user_id'])->exists(),
+            403
+        );
 
         collect($validated['days'])->each(function ($day) use ($calendar, $validated) {
             $event              = new Event();

@@ -6,7 +6,7 @@ use App\Enums\Era;
 use Database\Factories\GroupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Group extends Model
 {
@@ -22,14 +22,26 @@ class Group extends Model
         ];
     }
 
-    public function users(): BelongsToMany
+    public function users(): HasMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasMany(User::class);
     }
 
-    public function characters(): BelongsToMany
+    public function characters(): HasMany
     {
-        // Explicit table name because the pivot is "group_character"
-        return $this->belongsToMany(Character::class, 'group_character');
+        return $this->hasMany(Character::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
+
+    /**
+     * Invitations that have neither been accepted nor expired.
+     */
+    public function pendingInvitations(): HasMany
+    {
+        return $this->invitations()->pending();
     }
 }

@@ -37,6 +37,14 @@ class GroupResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('users_count')
+                    ->counts('users')
+                    ->label('Users')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('pending_invitations_count')
+                    ->counts('pendingInvitations')
+                    ->label('Pending invitations')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

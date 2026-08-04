@@ -7,6 +7,8 @@ use App\Misc\WeaponTable;
 use App\Models\Character;
 use App\Models\User;
 use App\Models\Weapon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Middleware;
@@ -35,27 +37,66 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user'       => $request->user(),
+                'user'       => $user,
                 'characters' => [
-                    // Drafts are only ever visible to their owner.
-                    'all' => Character::query()
-                        ->where(function ($query) use ($request) {
-                            $query->where('status', CharacterStatus::Complete)
-                                ->orWhere('user_id', $request->user()?->id);
-                        })
-                        ->get(),
-                    'others' => Character::query()->others()->where('status', CharacterStatus::Complete)->get(),
+                    'all'    => $this->visibleCharacters($user),
+                    'others' => $this->otherCharacters($user),
                     'own'    => Character::query()->playersOwn()->get(),
                     ],
+                // The armoury is rulebook data, not group data — it stays global.
                 'equipment'          => $this->armoury(),
-                'users'              => User::all(),
+                'users'              => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->get(),
                 'listOfMessageUsers' => [],
                 'listOfRollUsers'    => [],
             ],
         ];
+    }
+
+    /**
+     * Every character the user may see: their own (drafts included), plus the
+     * completed characters of their group. Ungrouped users see only their own.
+     */
+    private function visibleCharacters(?User $user): EloquentCollection
+    {
+        if ($user === null) {
+            return new EloquentCollection();
+        }
+
+        return Character::query()
+            // Drafts are only ever visible to their owner.
+            ->where(function (Builder $query) use ($user) {
+                $query->where('status', CharacterStatus::Complete)
+                    ->orWhere('user_id', $user->id);
+            })
+            ->where(function (Builder $query) use ($user) {
+                $query->where('user_id', $user->id);
+
+                if ($user->group_id !== null) {
+                    $query->orWhere('group_id', $user->group_id);
+                }
+            })
+            ->get();
+    }
+
+    /**
+     * Completed characters of the user's groupmates. Empty while ungrouped.
+     */
+    private function otherCharacters(?User $user): EloquentCollection
+    {
+        if ($user?->group_id === null) {
+            return new EloquentCollection();
+        }
+
+        return Character::query()
+            ->others()
+            ->where('status', CharacterStatus::Complete)
+            ->where('group_id', $user->group_id)
+            ->get();
     }
 
     /**

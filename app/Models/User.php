@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -18,6 +21,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $email
  * @property string $password
  * @property string role
+ * @property ?int                  $group_id
+ * @property ?Carbon               $blocked_at
+ * @property ?Group                $group
  * @property Collection<Message>   $messages
  * @property Collection<Character> $characters
  */
@@ -37,6 +43,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'group_id',
+        'blocked_at',
     ];
 
     /**
@@ -59,6 +67,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'blocked_at'        => 'datetime',
         ];
     }
 
@@ -77,8 +86,27 @@ class User extends Authenticatable
         return $this->hasMany(Message::class, 'receiver_id');
     }
 
-    public function groups(): BelongsToMany
+    public function group(): BelongsTo
     {
-        return $this->belongsToMany(Group::class);
+        return $this->belongsTo(Group::class);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
+    }
+
+    /**
+     * Scope to the users visible to the given user: their groupmates when they
+     * belong to a group, or just themselves while they are ungrouped.
+     */
+    #[Scope]
+    public function inGroupOf(Builder $query, User $user): void
+    {
+        if ($user->group_id === null) {
+            $query->where('id', $user->id);
+        } else {
+            $query->where('group_id', $user->group_id);
+        }
     }
 }

@@ -43,7 +43,7 @@ class CharacterFactory extends Factory
         return [
             'name'         => $name = fake()->name(),
             'slug'         => Str::slug($name),
-            'user_id'      => User::factory()->create()->id,
+            'user_id'      => User::factory(),
             'occupation'   => fake()->jobTitle(),
             'residence'    => fake()->city(),
             'birthplace'   => fake()->city(),
