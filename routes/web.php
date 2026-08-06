@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin;
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterWizardController;
+use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PageController;
@@ -55,10 +57,16 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/{character}/weapon/{equipable}/ammo', [WeaponController::class, 'updateAmmo'])->name('weapon.ammo.update');
     Route::delete('/character/{character}/weapon/{equipable}', [WeaponController::class, 'removeWeapon'])->name('remove.weapon');
 
+    // Equipment. `{equipable}` is a row in the pivot, so these also move and
+    // annotate weapons — everything an investigator owns sits in one table.
+    Route::get('/equipment/search', [EquipmentController::class, 'search'])->name('equipment.search');
+    Route::post('/character/{character}/equipment', [EquipmentController::class, 'store'])->name('equipment.store');
+    Route::put('/character/{character}/equipment/{equipable}', [EquipmentController::class, 'update'])->name('equipment.update');
+    Route::delete('/character/{character}/equipment/{equipable}', [EquipmentController::class, 'destroy'])->name('equipment.destroy');
+    Route::post('/character/{character}/storage-locations', [EquipmentController::class, 'storeLocation'])->name('storage.location.store');
+
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
-    Route::put('/users/role/{user}', [UserController::class, 'role'])->name('users.role');
 
     Route::resource('skill', SkillController::class)->only(['store', 'destroy']);
     Route::post('/skill/roll', [SkillController::class, 'roll'])->name('skill.roll');
@@ -70,6 +78,56 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::post('/message/send', [MessageController::class, 'send'])->name('message.send');
     Route::put('/message/read', [MessageController::class, 'read'])->name('message.read');
     Route::get('/message', [MessageController::class, 'index'])->name('message.index');
+});
+
+/*
+ * The admin section. Admins manage their own group and nothing else — anything
+ * that has to reach across groups stays with the artisan commands.
+ */
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [Admin\DashboardController::class, 'index'])->name('index');
+
+    Route::get('/group', [Admin\GroupController::class, 'edit'])->name('group.edit');
+    Route::put('/group', [Admin\GroupController::class, 'update'])->name('group.update');
+
+    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/roles', [Admin\UserController::class, 'updateRoles'])->name('users.roles.update');
+    Route::put('/users/{user}/block', [Admin\UserController::class, 'block'])->name('users.block');
+    Route::delete('/users/{user}/block', [Admin\UserController::class, 'unblock'])->name('users.unblock');
+    Route::delete('/users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
+
+    Route::post('/invitations', [Admin\InvitationController::class, 'store'])->name('invitations.store');
+    Route::delete('/invitations/{invitation}', [Admin\InvitationController::class, 'destroy'])->name('invitations.destroy');
+
+    Route::get('/skills', [Admin\SkillController::class, 'index'])->name('skills.index');
+    Route::get('/weapons', [Admin\WeaponController::class, 'index'])->name('weapons.index');
+    Route::get('/equipment', [Admin\EquipmentController::class, 'index'])->name('equipment.index');
+
+    /*
+     * Skills and the armoury are shared by every group on the server, so the
+     * writes sit behind a toggle — see config/cthulhu.php. Reading them above
+     * is always allowed.
+     */
+    Route::middleware('reference-data')->group(function () {
+        Route::post('/skills', [Admin\SkillController::class, 'store'])->name('skills.store');
+        Route::put('/skills/{skill}', [Admin\SkillController::class, 'update'])->name('skills.update');
+        Route::delete('/skills/{skill}', [Admin\SkillController::class, 'destroy'])->name('skills.destroy');
+        Route::put('/skills/{slug}/restore', [Admin\SkillController::class, 'restore'])->name('skills.restore');
+
+        Route::post('/weapons', [Admin\WeaponController::class, 'store'])->name('weapons.store');
+        Route::put('/weapons/{weapon}', [Admin\WeaponController::class, 'update'])->name('weapons.update');
+        Route::delete('/weapons/{weapon}', [Admin\WeaponController::class, 'destroy'])->name('weapons.destroy');
+        Route::put('/weapons/{id}/restore', [Admin\WeaponController::class, 'restore'])->name('weapons.restore');
+
+        Route::post('/equipment', [Admin\EquipmentController::class, 'store'])->name('equipment.store');
+        Route::put('/equipment/{equipment}', [Admin\EquipmentController::class, 'update'])->name('equipment.update');
+        Route::delete('/equipment/{equipment}', [Admin\EquipmentController::class, 'destroy'])->name('equipment.destroy');
+        Route::put('/equipment/{slug}/restore', [Admin\EquipmentController::class, 'restore'])->name('equipment.restore');
+
+        Route::post('/storage-locations', [Admin\EquipmentController::class, 'storeLocation'])->name('locations.store');
+        Route::put('/storage-locations/{location}', [Admin\EquipmentController::class, 'updateLocation'])->name('locations.update');
+        Route::delete('/storage-locations/{location}', [Admin\EquipmentController::class, 'destroyLocation'])->name('locations.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

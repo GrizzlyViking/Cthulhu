@@ -8,10 +8,13 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Alert from '@/Pages/Components/Alert.vue';
 import { Bars3Icon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { useRoles } from '@/Pages/Composables/useRoles.js';
 
 const showingNavigationDropdown = ref(false);
 
 const page = usePage();
+
+const { isAdmin } = useRoles();
 
 let player_message = {};
 let open_alert = ref(false);
@@ -51,7 +54,9 @@ let markRead = () => {
                                 <NavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">
                                     Calendar
                                 </NavLink>
-                                <NavLink href="/admin">Admin</NavLink>
+                                <NavLink v-if="isAdmin" :href="route('admin.index')" :active="route().current('admin.*')">
+                                    Admin
+                                </NavLink>
 
                                 <Dropdown align="left" width="60">
                                     <template #trigger>
@@ -131,7 +136,9 @@ let markRead = () => {
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('message.index')" :active="route().current('message.index')">Messages</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">Calendar</ResponsiveNavLink>
-                        <ResponsiveNavLink href="/admin">Admin</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="isAdmin" :href="route('admin.index')" :active="route().current('admin.*')">
+                            Admin
+                        </ResponsiveNavLink>
                     </div>
 
                     <div class="border-t border-cthulhu-green-800 py-3">

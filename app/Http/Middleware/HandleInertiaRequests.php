@@ -42,7 +42,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user'       => $user,
+                'user' => $user,
+                // Roles are cumulative, so the frontend gets the whole list
+                // rather than a single value it would have to compare against.
+                'roles'      => $user === null ? [] : $user->roleNames(),
                 'characters' => [
                     'all'    => $this->visibleCharacters($user),
                     'others' => $this->otherCharacters($user),
@@ -50,9 +53,13 @@ class HandleInertiaRequests extends Middleware
                     ],
                 // The armoury is rulebook data, not group data — it stays global.
                 'equipment'          => $this->armoury(),
-                'users'              => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->get(),
+                'users'              => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->with('roles')->get(),
                 'listOfMessageUsers' => [],
                 'listOfRollUsers'    => [],
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
             ],
         ];
     }

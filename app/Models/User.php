@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoleEnum;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,11 +17,10 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
- * @property int    $id
- * @property string $name
- * @property string $email
- * @property string $password
- * @property string role
+ * @property int                   $id
+ * @property string                $name
+ * @property string                $email
+ * @property string                $password
  * @property ?int                  $group_id
  * @property ?Carbon               $blocked_at
  * @property ?Group                $group
@@ -31,7 +31,7 @@ class User extends Authenticatable
 {
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
-    protected $appends = ['isOnline'];
+    protected $appends = ['isOnline', 'role_names'];
 
     /**
      * The attributes that are mass assignable.
@@ -42,7 +42,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'group_id',
         'blocked_at',
     ];
@@ -55,6 +54,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        // The frontend reads `role_names`; the pivot models behind it are noise.
+        'roles',
     ];
 
     /**
@@ -94,6 +95,45 @@ class User extends Authenticatable
     public function isBlocked(): bool
     {
         return $this->blocked_at !== null;
+    }
+
+    /**
+     * Roles are cumulative — a user may hold any combination of player, keeper
+     * and admin — so these ask "does this user have this hat on", never "is
+     * this user exactly this".
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(RoleEnum::ADMIN->value);
+    }
+
+    public function isKeeper(): bool
+    {
+        return $this->hasRole(RoleEnum::KEEPER->value);
+    }
+
+    public function isPlayer(): bool
+    {
+        return $this->hasRole(RoleEnum::PLAYER->value);
+    }
+
+    /**
+     * The user's role names, for sharing with the frontend. Eager-load `roles`
+     * when serialising a list, or this costs a query per user.
+     *
+     * @return array<int, string>
+     */
+    public function roleNames(): array
+    {
+        return $this->getRoleNames()->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getRoleNamesAttribute(): array
+    {
+        return $this->roleNames();
     }
 
     /**

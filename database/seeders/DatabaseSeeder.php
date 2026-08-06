@@ -12,10 +12,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        $this->call(RolesAndPermissionsSeeder::class);
         $this->call(SkillSeeder::class);
         $this->call(OccupationSeeder::class);
         $this->call(WeaponSeeder::class);
+        $this->call(EquipmentSeeder::class);
         $this->call(CalendarSeeder::class);
 
         User::factory()->create([

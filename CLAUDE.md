@@ -10,9 +10,9 @@ A Call of Cthulhu tabletop RPG character sheet web app. Players manage their own
 
 - **PHP 8.4 / Laravel 12** — Inertia.js v1 server-side rendering, no API
 - **Vue 3** — frontend via Inertia pages; no separate SPA routing
-- **Filament v3** — admin panel at `/admin`; resources auto-discovered from `app/Filament/Resources/`
+- **Admin section** — native Inertia pages at `/admin` (see below); Filament has been removed
 - **Livewire v3** — available but minimal current usage
-- **Spatie Laravel Permission** — role/permission system (`RoleEnum`: `player`, `keeper`, `admin`)
+- **Spatie Laravel Permission** — role system (`RoleEnum`: `player`, `keeper`, `admin`); roles are cumulative
 - **Laravel Reverb + Echo** — real-time messaging
 - **Tailwind CSS v3** — single dark-framed theme; `darkMode: 'class'` so `dark:` variants never fire off the OS preference
 - **Vite** — served via Laravel Valet at `cthulhu.test` with TLS
@@ -62,15 +62,75 @@ stored: `Weapon::$magazine_capacity` parses the book's free-text "Bullets in Gun
 (Mag)" column and returns `null` for anything uncountable. The shoot/reload
 arithmetic lives in `WeaponController` — the client only renders what it returns.
 
-### Roles
-Three roles (see `RoleEnum`): `player`, `keeper` (= GM), `admin`. Authorization is enforced via `CharacterPolicy` and Spatie permissions. Players may only view/edit their own characters.
+### Equipment
+`app/Misc/EquipmentTable.php` is the transcription of the handbook's 1920s equipment lists
+(pp. 238–246) — 258 items in 13 sections, carrying the book's price cell verbatim. It holds only what
+an investigator would carry; food, lodging, real estate, furniture, household goods, vehicles and
+fares are deliberately absent, as are the p.246 melee weapons, which live in `WeaponTable` instead.
+Add items there, not in `EquipmentSeeder`.
 
-### Filament admin
-Resources for `Character`, `Skill`, `Weapon`, `User`, `Group` are under `app/Filament/Resources/`. Admin panel is separate from the player-facing Inertia app.
+`equipables` is **both** kinds of possession: `Character::weapons()` and `Character::equipment()` are
+two `morphedByMany` relations over the same table, which is what lets the Equipment tab show a
+revolver and its spare rounds side by side. The pivot carries `storage_location_id`, `quantity` and
+`notes` for both.
+
+`StorageLocation` is a table, not an enum — players add their own from the sheet. The four starting
+places come from `StorageLocation::STARTING_LOCATIONS`.
+
+A name a player types that the catalogue lacks becomes an `EquipmentItem` with `is_custom = true`, so
+the typeahead offers it next time; the admin Equipment page filters to those for pruning. Prices are
+only ever shown while choosing — never against something already owned.
+
+### Roles
+Three roles (see `RoleEnum`): `player`, `keeper` (= GM), `admin`. **Roles are cumulative** — a user
+may hold any combination of the three, so always ask `hasRole()` / `isAdmin()` / `isKeeper()`, never
+compare against a single value. Spatie's `model_has_roles` pivot is the only source of truth; the old
+`users.role` column is gone.
+
+The frontend reads `usePage().props.auth.roles` (an array) via the `useRoles()` composable in
+`resources/js/Pages/Composables/useRoles.js`. Serialised users carry `role_names`; eager-load `roles`
+when listing them or it costs a query per row.
+
+Authorization is enforced via `CharacterPolicy` and the `admin` middleware alias
+(`EnsureUserIsAdmin`). Players may only view/edit their own characters.
+
+### Admin section
+Native Inertia pages under `/admin`, controllers in `app/Http/Controllers/Admin/` extending
+`AdminController`, Vue pages in `resources/js/Pages/Admin/` wrapped in `AdminLayout`. Pages: Group,
+Users, Skills, Weapons, Equipment.
+
+**Admin authority is per-group.** An admin manages the group they belong to and nothing else:
+`AdminController::requireGroup()` supplies the group, and `memberOfCurrentGroup()` 404s on anyone
+outside it.
+
+Creating groups and moving a player between them reach across groups, so they stay with the artisan
+commands in `app/Console/Commands/` (`php artisan cthulhu:manage` for the interactive menu), which
+run with the server operator's authority rather than any one group's.
+
+### Reference data: skills, weapons and equipment
+These tables are shared by every group on the server, so editing them is not group-scoped and sits
+behind `cthulhu.admin.edit_reference_data` (`config/cthulhu.php`, env
+`CTHULHU_ADMIN_EDIT_REFERENCE_DATA`, default on). It is on while one group plays here; **turn it off
+once a second group exists** and the lists go back to being console-only (`SkillSeeder`,
+`App\Misc\WeaponTable`, `App\Misc\EquipmentTable` and the migrations reading from them).
+
+The toggle is enforced by the `reference-data` middleware alias on the write routes, not just hidden
+in the UI. Reading and searching are never gated. Pages get an `editable` prop to decide what to
+offer. It does **not** gate players adding equipment to their own sheets — that goes through
+`EquipmentController`, authorized by `CharacterPolicy`.
+
+`Skill`, `Weapon`, `EquipmentItem` and `StorageLocation` all use `SoftDeletes` ("retire" in the UI).
+A retired row keeps its id, so:
+- it drops out of `$character->skills`, `$character->weapons` and the shared armoury automatically —
+  the relations apply the soft-delete scope;
+- its pivot rows (`character_skill`, `equipables`) survive, so restoring puts it back on every sheet
+  with the values and ammunition each character had;
+- the unique indexes on `skills.slug`, `skills.display_name` and weapon names still cover retired
+  rows, so validation checks uniqueness **including trashed** and tells the admin to restore instead.
 
 ### Vue page structure
 - `resources/js/Pages/` — Inertia page components (one per route)
-- `resources/js/Pages/Components/Character/` — the five character sheet tab components (Characteristics, Skills, Vitals, Weapons, Backstory)
+- `resources/js/Pages/Components/Character/` — the character sheet tab components (Characteristics, Skills, Vitals, Equipment, Backstory). `Equipment.vue` composes `Weapons.vue` (stats and ammunition) over `EquipmentList.vue` (everything owned, grouped by where it is kept)
 - `resources/js/Pages/Composables/` — shared Vue composables
 - `resources/js/Components/` — generic UI primitives (buttons, inputs, modal, tabs)
 

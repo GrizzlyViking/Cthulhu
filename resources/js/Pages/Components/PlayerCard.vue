@@ -1,8 +1,8 @@
 <script setup>
-import { ChatBubbleLeftRightIcon, CubeIcon, TrashIcon } from "@heroicons/vue/20/solid/index.js";
+import { ChatBubbleLeftRightIcon, CubeIcon } from "@heroicons/vue/20/solid/index.js";
 import Badge from "@/Pages/Components/Badge.vue";
 import { computed } from "vue";
-import { router, usePage } from "@inertiajs/vue3";
+import { usePage } from "@inertiajs/vue3";
 
 let prop = defineProps({ player: Object })
 
@@ -38,21 +38,6 @@ const addPlayerToRollList = (player) => {
     }
 }
 
-const deleteUser = (user_id) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-        router.delete(route('users.destroy', { user: user_id }));
-    }
-}
-
-const updateUserRole = (user_id, new_role) => {
-    router.put(
-        route('users.role', { user: user_id }),
-        { role: new_role }
-    )
-}
-
-const firstName = computed(() => prop.player.name.replace(/^(\w+).*/, "$1"));
-
 const toggleClass = (isSelected) => [
     'inline-flex flex-1 items-center justify-center gap-2 px-2 py-3 text-sm font-semibold transition',
     isSelected
@@ -70,7 +55,7 @@ const toggleClass = (isSelected) => [
                 :class="player.isOnline ? 'bg-cthulhu-green-350' : 'bg-cthulhu-green-500/40'"
                 :title="player.isOnline ? 'Online' : 'Offline'"
             ></span>
-            <Badge>{{ player.role }}</Badge>
+            <Badge v-for="role in player.role_names" :key="role">{{ role }}</Badge>
         </div>
     </div>
 
@@ -85,31 +70,4 @@ const toggleClass = (isSelected) => [
         </button>
     </div>
 
-    <div class="grid grid-cols-2 divide-x divide-parchment-300 border-t border-parchment-300">
-        <button
-            v-if="player.role === 'player'"
-            type="button"
-            class="inline-flex flex-1 items-center justify-center px-2 py-3 text-sm font-semibold text-cthulhu-green-900 transition hover:bg-parchment-200"
-            @click="updateUserRole(player.id, 'Keeper of Arcane Lore')"
-        >
-            Make {{ firstName }} Keeper
-        </button>
-        <button
-            v-else
-            type="button"
-            class="inline-flex flex-1 items-center justify-center px-2 py-3 text-sm font-semibold text-cthulhu-green-900 transition hover:bg-parchment-200"
-            @click="updateUserRole(player.id, 'player')"
-        >
-            Make {{ firstName }} a Player
-        </button>
-
-        <button
-            type="button"
-            class="inline-flex flex-1 items-center justify-center gap-2 px-2 py-3 text-sm font-semibold text-cthulhu-blood-400 transition hover:bg-cthulhu-blood-400/10"
-            @click="deleteUser(player.id)"
-        >
-            <TrashIcon class="size-5 opacity-70" aria-hidden="true" />
-            Delete
-        </button>
-    </div>
 </template>

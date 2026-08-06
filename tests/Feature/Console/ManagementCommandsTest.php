@@ -1,11 +1,13 @@
 <?php
 
 use App\Enums\Era;
+use App\Enums\RoleEnum;
 use App\Mail\InvitationMail;
 use App\Models\Character;
 use App\Models\Group;
 use App\Models\Invitation;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -136,8 +138,11 @@ describe('player:invite', function () {
     it('records the first admin as the inviter', function () {
         Mail::fake();
 
-        User::factory()->create(['role' => 'player']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $this->seed(RolesAndPermissionsSeeder::class);
+
+        User::factory()->create()->assignRole(RoleEnum::PLAYER->value);
+        $admin = User::factory()->create();
+        $admin->assignRole(RoleEnum::ADMIN->value);
         Group::factory()->create(['name' => 'Dunwich Circle']);
 
         $this->artisan('player:invite', ['email' => 'newcomer@example.com', 'group' => 'Dunwich Circle'])

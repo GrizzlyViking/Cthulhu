@@ -1,35 +1,21 @@
 <script setup>
-import { Head, router } from "@inertiajs/vue3";
-import { TrashIcon } from "@heroicons/vue/20/solid/index.js";
+import { Head, Link } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { useRoles } from "@/Pages/Composables/useRoles.js";
 
 const props = defineProps({ users: Object })
 
-const roles = [
-    { name: 'player' },
-    { name: 'Keeper of Arcane Lore' },
-]
-
-const updateUserRole = (user_id, event) => {
-    router.put(
-        route('users.role', { user: user_id }),
-        { role: event.target.value }
-    )
-}
-
-const deleteUser = (user_id) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-        router.delete(route('users.destroy', { user: user_id }))
-    }
-}
+const { isAdmin } = useRoles();
 </script>
 
 <template>
-    <Head title="Player management"/>
+    <Head title="Players"/>
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="display text-2xl text-parchment-100">Player management</h1>
+            <h1 class="display text-2xl text-parchment-100">Players</h1>
+            <!-- Roles, blocking and removal live in the admin section. -->
+            <Link v-if="isAdmin" :href="route('admin.users.index')" class="btn-secondary btn-sm">Manage players</Link>
         </template>
 
         <div class="page">
@@ -51,23 +37,8 @@ const deleteUser = (user_id) => {
                             </p>
                         </div>
 
-                        <div class="flex shrink-0 items-center gap-2">
-                            <label :for="`role-${item.id}`" class="sr-only">Role</label>
-                            <select
-                                :id="`role-${item.id}`"
-                                v-model="item.role"
-                                class="field w-auto"
-                                @change="updateUserRole(item.id, $event)"
-                            >
-                                <option v-for="role in roles" :key="role.name" :value="role.name">
-                                    {{ role.name }}
-                                </option>
-                            </select>
-
-                            <button type="button" class="btn-danger btn-sm" @click="deleteUser(item.id)">
-                                <TrashIcon class="size-4" aria-hidden="true"/>
-                                Delete
-                            </button>
+                        <div class="flex shrink-0 flex-wrap items-center gap-1.5">
+                            <span v-for="role in item.role_names" :key="role" class="chip">{{ role }}</span>
                         </div>
                     </li>
                 </ul>

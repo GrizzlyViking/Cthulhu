@@ -56,7 +56,6 @@ class InvitationController extends Controller
             'name'     => $validated['name'],
             'email'    => $invitation->email,
             'password' => $validated['password'],
-            'role'     => RoleEnum::PLAYER->value,
             'group_id' => $invitation->group_id,
         ]);
         $user->forceFill(['email_verified_at' => now()])->save();

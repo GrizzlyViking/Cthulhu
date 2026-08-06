@@ -17,6 +17,7 @@ class PageController extends Controller
     {
         $users = User::query()
             ->inGroupOf($request->user())
+            ->with('roles')
             // Drafts are only ever visible to their owner.
             ->with(['characters' => function (HasMany $query) use ($request) {
                 $query->where('status', CharacterStatus::Complete)

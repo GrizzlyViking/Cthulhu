@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import Skills from '@/Pages/Components/Character/Skills.vue';
-import Weapons from '@/Pages/Components/Character/Weapons.vue';
+import Equipment from '@/Pages/Components/Character/Equipment.vue';
 import Characteristics from '@/Pages/Components/Character/Characteristics.vue';
 import Vitals from '@/Pages/Components/Character/Vitals.vue';
 import { computed, defineAsyncComponent, ref } from 'vue';
@@ -12,7 +12,10 @@ import BackstoryTab from '@/Pages/Components/Character/BackstoryTab.vue';
 import Dropdown from '@/Pages/Components/Dropdown.vue';
 import Tabs from '@/Components/Tabs.vue';
 import { BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, UserIcon } from '@heroicons/vue/20/solid';
+import { useRoles } from '@/Pages/Composables/useRoles.js';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
+const { isKeeper } = useRoles();
 
 /*
  * Quill is only needed on the Notepad tab, and a static import of
@@ -21,11 +24,11 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
  */
 const QuillEditor = defineAsyncComponent(() => import('@vueup/vue-quill').then((m) => m.QuillEditor));
 
-const prop = defineProps({ character: Object, availableSkills: Array });
+const prop = defineProps({ character: Object, availableSkills: Array, storageLocations: Array });
 const editable = ref(false);
 const tabs = [
     { name: 'Skills', icon: UserIcon },
-    { name: 'Weapons', icon: BoltIcon },
+    { name: 'Equipment', icon: BoltIcon },
     { name: 'Backstory', icon: IdentificationIcon },
     { name: 'Notepad', icon: BookOpenIcon },
 ];
@@ -56,7 +59,7 @@ const handleFileUpload = () => {
 };
 
 const canEdit = computed(() => {
-    return page.props.auth.user.id === prop.character.user_id || page.props.auth.user.role === 'keeper';
+    return page.props.auth.user.id === prop.character.user_id || isKeeper.value;
 });
 
 const avatarThumb = computed(() =>
@@ -134,8 +137,13 @@ const saveNotes = () => {
                     />
                 </template>
 
-                <template #Weapons>
-                    <Weapons :character="prop.character" :editable="editable" :can-edit="canEdit" />
+                <template #Equipment>
+                    <Equipment
+                        :character="prop.character"
+                        :editable="editable"
+                        :can-edit="canEdit"
+                        :storage-locations="prop.storageLocations ?? []"
+                    />
                 </template>
 
                 <template #Backstory>

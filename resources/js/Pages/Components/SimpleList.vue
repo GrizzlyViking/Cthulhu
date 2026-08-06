@@ -11,7 +11,6 @@
             </div>
 
             <div class="flex shrink-0 flex-col items-end gap-1">
-                <p v-if="item.role" class="chip">{{ item.role }}</p>
                 <p v-if="item.sentRelative" class="text-xs text-cthulhu-green-500">
                     Sent <time :datetime="item.created_at">{{ item.sentRelative }}</time>
                 </p>

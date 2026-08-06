@@ -42,7 +42,7 @@ class PlayerInviteCommand extends Command
         }
 
         /** @var ?User $inviter the first admin, or nobody — invited_by is nullable */
-        $inviter = User::query()->where('role', RoleEnum::ADMIN->value)->orderBy('id')->first();
+        $inviter = User::query()->role(RoleEnum::ADMIN->value)->orderBy('id')->first();
 
         try {
             $invitation = $sendInvitation->send($email, $group, $inviter);

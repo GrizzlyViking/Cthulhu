@@ -2,13 +2,13 @@
 
 use App\Models\Invitation;
 use App\Models\User;
-use Database\Seeders\RoleSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->withoutVite();
-    $this->seed(RoleSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
 });
 
 test('the accept page renders for a valid token', function () {
@@ -49,7 +49,7 @@ test('accepting a valid invitation creates the user in the group with the player
         ->and($user->name)->toBe('Harvey Walters')
         ->and($user->group_id)->toBe($invitation->group_id)
         ->and($user->hasRole('player'))->toBeTrue()
-        ->and($user->role)->toBe('player')
+        ->and($user->roleNames())->toBe(['player'])
         ->and($invitation->fresh()->isAccepted())->toBeTrue();
 
     $this->assertAuthenticated();

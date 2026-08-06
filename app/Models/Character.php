@@ -212,9 +212,20 @@ class Character extends Model
         return (int) $this->skills->firstWhere('slug', 'credit_rating')?->pivot->value;
     }
 
+    /**
+     * Weapons carry ammunition on the pivot; everything an investigator owns
+     * also carries where it is kept, how many there are, and a note.
+     */
     public function weapons(): MorphToMany
     {
-        return $this->morphedByMany(Weapon::class, 'equipable')->withPivot('id', 'ammo', 'ammo_reserve');
+        return $this->morphedByMany(Weapon::class, 'equipable')
+            ->withPivot('id', 'ammo', 'ammo_reserve', 'storage_location_id', 'quantity', 'notes');
+    }
+
+    public function equipment(): MorphToMany
+    {
+        return $this->morphedByMany(EquipmentItem::class, 'equipable')
+            ->withPivot('id', 'storage_location_id', 'quantity', 'notes');
     }
 
     public function getDamageBonus(): string

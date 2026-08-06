@@ -10,6 +10,7 @@ use App\Http\Requests\CharacterUpdateRequest;
 use App\Misc\CharacterSheet;
 use App\Models\Character;
 use App\Models\Skill;
+use App\Models\StorageLocation;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -31,7 +32,12 @@ class CharacterController extends Controller
             ->orderBy('display_name')
             ->get();
 
-        return Inertia::render('Character', compact('character', 'availableSkills'));
+        $character->load('equipment');
+
+        return Inertia::render('Character', [
+            ...compact('character', 'availableSkills'),
+            'storageLocations' => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**

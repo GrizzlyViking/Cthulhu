@@ -28,4 +28,27 @@ enum RoleEnum: string implements EnumInterface
     {
         return Arr::map(self::cases(), fn (self $role) => $role->label());
     }
+
+    /**
+     * Every role as a value/label pair, for the admin role pickers.
+     *
+     * @return array<int, array{value: string, label: string, description: string}>
+     */
+    public static function options(): array
+    {
+        return Arr::map(self::cases(), fn (self $role): array => [
+            'value'       => $role->value,
+            'label'       => $role->label(),
+            'description' => $role->description(),
+        ]);
+    }
+
+    public function description(): string
+    {
+        return match ($this) {
+            self::PLAYER => 'Owns and edits their own investigators.',
+            self::KEEPER => 'Runs the game: sees and edits every sheet in the group, sends messages and rolls in secret.',
+            self::ADMIN  => 'Manages the group itself, its members and their roles.',
+        };
+    }
 }
