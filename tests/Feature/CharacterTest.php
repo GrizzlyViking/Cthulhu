@@ -1,8 +1,11 @@
 <?php
 
 use App\Models\Character;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -86,4 +89,25 @@ test('move rate is calculated correctly', function () {
     $character->update(['age' => 45]);
     // Age 45 => Move - 1 => 8
     expect($character->fresh()->move_rate)->toBe(8);
+});
+
+test('the sheet carries the always-relevant skill slugs and each skill its starting value', function () {
+    config()->set('cthulhu.sheet.always_relevant_skills', ['dodge', 'spot-hidden']);
+
+    $this->user->assignRole('player');
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+    $skill     = Skill::factory()->create(['slug' => 'dodge', 'starting_value' => 30]);
+    $character->skills()->attach($skill, ['value' => 30, 'order' => 1]);
+
+    $this->actingAs($this->user)
+        ->get(route('character.show', $character))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Character')
+            ->where('alwaysRelevantSkills', ['dodge', 'spot-hidden'])
+            // The sheet filter compares each pivot value against the book's
+            // starting value, so that has to travel with the skill.
+            ->where('character.skills', fn (Collection $skills) => $skills
+                ->firstWhere('slug', 'dodge')['starting_value'] === 30
+            )
+        );
 });

@@ -29,4 +29,36 @@ return [
 
     ],
 
+    'sheet' => [
+
+        /*
+        |----------------------------------------------------------------------
+        | Skills that are always relevant
+        |----------------------------------------------------------------------
+        |
+        | The skills tab defaults to showing only what an investigator has
+        | actually put points into — every skill whose value is above the book's
+        | starting value. A full sheet is around seventy skills, most of them
+        | untouched, which is unreadable on a phone at the table.
+        |
+        | The slugs below are shown as well, however untouched: they come up in
+        | almost every session, and a player should not have to go looking for
+        | Dodge when something lunges at them. Add or remove slugs here — the
+        | list is read straight into the sheet, nothing else needs changing.
+        |
+        | Slugs come from the skills table (see SkillSeeder). An unknown slug is
+        | simply ignored, so it is safe to list a skill this group has not added.
+        |
+        */
+
+        'always_relevant_skills' => [
+            'dodge',
+            'spot-hidden',
+            'first_aid',
+            'listen',
+            'psychology',
+        ],
+
+    ],
+
 ];

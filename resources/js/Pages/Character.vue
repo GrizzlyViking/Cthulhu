@@ -24,7 +24,12 @@ const { isKeeper } = useRoles();
  */
 const QuillEditor = defineAsyncComponent(() => import('@vueup/vue-quill').then((m) => m.QuillEditor));
 
-const prop = defineProps({ character: Object, availableSkills: Array, storageLocations: Array });
+const prop = defineProps({
+    character: Object,
+    availableSkills: Array,
+    storageLocations: Array,
+    alwaysRelevantSkills: Array,
+});
 const editable = ref(false);
 const tabs = [
     { name: 'Skills', icon: UserIcon },
@@ -134,6 +139,7 @@ const saveNotes = () => {
                         :can-edit="canEdit"
                         :editable="editable"
                         :available-skills="prop.availableSkills ?? []"
+                        :always-relevant-skills="prop.alwaysRelevantSkills ?? []"
                     />
                 </template>
 

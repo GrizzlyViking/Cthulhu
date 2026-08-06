@@ -39,6 +39,7 @@ import RegularHalfFifth from '@/Pages/Components/RegularHalfFifth.vue'
 describe('Skills.vue', () => {
     afterEach(() => {
         vi.clearAllMocks()
+        window.localStorage.clear()
     })
 
     const makeCharacter = () => ({
@@ -50,6 +51,7 @@ describe('Skills.vue', () => {
                 slug: 'stealth',
                 display_name: 'Stealth',
                 description: 'Move without being seen.',
+                starting_value: 20,
                 pivot: { value: 40, experience: 0, show: true },
             },
             {
@@ -57,6 +59,7 @@ describe('Skills.vue', () => {
                 slug: 'spot-hidden',
                 display_name: 'Spot Hidden',
                 description: '',
+                starting_value: 25,
                 pivot: { value: 50, experience: 5, show: true },
             },
             {
@@ -64,18 +67,48 @@ describe('Skills.vue', () => {
                 slug: 'occult',
                 display_name: 'Occult',
                 description: '',
+                starting_value: 10,
                 pivot: { value: 5, experience: 0, show: false },
+            },
+            // Untouched but shown: still sitting on its starting value.
+            {
+                id: 4,
+                slug: 'accounting',
+                display_name: 'Accounting',
+                description: '',
+                starting_value: 5,
+                pivot: { value: 5, experience: 0, show: true },
+            },
+            // Untouched but listed in the always-relevant config.
+            {
+                id: 5,
+                slug: 'dodge',
+                display_name: 'Dodge',
+                description: '',
+                starting_value: 30,
+                pivot: { value: 30, experience: 0, show: true },
             },
         ],
     })
 
-    const mountComponent = ({ editable = false, canEdit = false, availableSkills = [], character = makeCharacter() } = {}) => {
+    const mountComponent = ({
+        editable = false,
+        canEdit = false,
+        availableSkills = [],
+        character = makeCharacter(),
+        alwaysRelevantSkills = ['dodge'],
+        relevantOnly = false,
+    } = {}) => {
+        // The toggle reads its stored state on mount; most cases here predate it.
+        window.localStorage.setItem('cthulhu.skills.relevant-only', relevantOnly ? 'true' : 'false')
+
         return mount(Skills, {
             props: {
                 character,
                 editable,
                 canEdit,
                 availableSkills,
+                alwaysRelevantSkills,
             },
             global: {
                 stubs: { teleport: true },
@@ -86,7 +119,7 @@ describe('Skills.vue', () => {
     it('renders a value block per shown skill and hides hidden skills outside edit mode', () => {
         const wrapper = mountComponent()
 
-        expect(wrapper.findAllComponents(RegularHalfFifth).length).toBe(2)
+        expect(wrapper.findAllComponents(RegularHalfFifth).length).toBe(4)
         expect(wrapper.text()).toContain('Stealth')
         expect(wrapper.text()).toContain('Spot Hidden')
         expect(wrapper.text()).not.toContain('Occult')
@@ -178,6 +211,62 @@ describe('Skills.vue', () => {
         expect(url).toContain('character.skill.attach')
         expect(url).toContain('archaeology')
         expect(data).toEqual({ value: 1 })
+    })
+
+    describe('the relevant-only filter', () => {
+        it('is on by default and keeps improved skills plus the configured must-haves', () => {
+            // No stored preference at all: this is what a player sees on first visit.
+            const wrapper = mount(Skills, {
+                props: {
+                    character: makeCharacter(),
+                    editable: false,
+                    canEdit: false,
+                    availableSkills: [],
+                    alwaysRelevantSkills: ['dodge'],
+                },
+                global: { stubs: { teleport: true } },
+            })
+
+            expect(wrapper.text()).toContain('Stealth')      // 40 over a base of 20
+            expect(wrapper.text()).toContain('Spot Hidden')  // 50 over a base of 25
+            expect(wrapper.text()).toContain('Dodge')        // untouched, but always relevant
+            expect(wrapper.text()).not.toContain('Accounting') // untouched and not must-have
+        })
+
+        it('shows everything on the sheet once switched off', async () => {
+            const wrapper = mountComponent({ relevantOnly: true })
+
+            expect(wrapper.text()).not.toContain('Accounting')
+
+            await wrapper.get('[role="switch"]').trigger('click')
+
+            expect(wrapper.text()).toContain('Accounting')
+            expect(wrapper.findAllComponents(RegularHalfFifth).length).toBe(4)
+        })
+
+        it('remembers the choice for the next visit', async () => {
+            const wrapper = mountComponent({ relevantOnly: true })
+            await wrapper.get('[role="switch"]').trigger('click')
+
+            expect(window.localStorage.getItem('cthulhu.skills.relevant-only')).toBe('false')
+
+            const next = mountComponent({ relevantOnly: false })
+            expect(next.text()).toContain('Accounting')
+        })
+
+        it('counts what it is holding back', () => {
+            const wrapper = mountComponent({ relevantOnly: true })
+
+            expect(wrapper.text()).toContain('1 skill sits at the starting value')
+        })
+
+        it('looks past the filter while searching', async () => {
+            const wrapper = mountComponent({ relevantOnly: true })
+
+            await wrapper.get('input[type="search"]').setValue('account')
+
+            expect(wrapper.text()).toContain('Accounting')
+        })
     })
 
     it('does not show the add-skill picker outside edit mode', () => {

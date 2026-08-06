@@ -36,7 +36,8 @@ class CharacterController extends Controller
 
         return Inertia::render('Character', [
             ...compact('character', 'availableSkills'),
-            'storageLocations' => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
+            'storageLocations'     => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
+            'alwaysRelevantSkills' => config('cthulhu.sheet.always_relevant_skills'),
         ]);
     }
 

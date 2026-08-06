@@ -1,8 +1,9 @@
 <script setup>
 import RegularHalfFifth from '@/Pages/Components/RegularHalfFifth.vue';
 import SuccessLegend from '@/Pages/Components/SuccessLegend.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
+import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue';
 import Modal from '@/Components/Modal.vue';
 import axios from 'axios';
 import { EyeSlashIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid';
@@ -12,25 +13,70 @@ const prop = defineProps({
     editable: Boolean,
     canEdit: Boolean,
     availableSkills: Array,
+    /** Slugs from cthulhu.sheet.always_relevant_skills — shown however untouched. */
+    alwaysRelevantSkills: { type: Array, default: () => [] },
 });
 
 const showModal = ref(false);
 const query = ref('');
 
+const RELEVANT_ONLY_KEY = 'cthulhu.skills.relevant-only';
+
 /*
- * Hidden skills stay listed while editing so they can be switched back on;
- * in normal view only the skills marked for the sheet appear.
+ * Inertia remounts this page after every save, so the choice has to outlive the
+ * component or it would snap back on halfway through a session.
  */
+const readRelevantOnly = () => {
+    try {
+        return window.localStorage.getItem(RELEVANT_ONLY_KEY) !== 'false';
+    } catch {
+        return true;
+    }
+};
+
+const relevantOnly = ref(readRelevantOnly());
+
+watch(relevantOnly, (value) => {
+    try {
+        window.localStorage.setItem(RELEVANT_ONLY_KEY, value ? 'true' : 'false');
+    } catch {
+        // A browser refusing storage is not worth breaking the sheet over.
+    }
+});
+
+const alwaysRelevant = computed(() => new Set(prop.alwaysRelevantSkills ?? []));
+
+/**
+ * A skill is relevant once the player has put points into it — its value is
+ * above the book's starting value — or if it is one of the handful of slugs
+ * that come up too often to hide.
+ */
+const isRelevant = (skill) =>
+    alwaysRelevant.value.has(skill.slug) || skill.pivot.value > (skill.starting_value ?? 0);
+
+/** The skills on this sheet at all: hidden ones stay listed while editing. */
+const listedSkills = computed(() =>
+    (prop.character.skills ?? []).filter((skill) => skill.pivot.show || prop.editable)
+);
+
 const visibleSkills = computed(() => {
     const needle = query.value.trim().toLowerCase();
 
-    return (prop.character.skills ?? [])
-        .filter((skill) => skill.pivot.show || prop.editable)
-        .filter((skill) => !needle || skill.display_name.toLowerCase().includes(needle));
+    return listedSkills.value
+        .filter((skill) => !needle || skill.display_name.toLowerCase().includes(needle))
+        // Typing a name is an explicit hunt for one skill, so it looks past the filter.
+        .filter((skill) => !relevantOnly.value || needle !== '' || isRelevant(skill));
 });
 
 const hiddenCount = computed(() =>
     (prop.character.skills ?? []).filter((skill) => !skill.pivot.show).length
+);
+
+/** Skills the relevance filter is holding back right now. */
+const unimprovedCount = computed(() =>
+    relevantOnly.value && !query.value.trim()
+        ? listedSkills.value.filter((skill) => !isRelevant(skill)).length
+        : 0
 );
 
 /** A skill is ready to improve once its experience checks reach value/10. */
@@ -117,6 +163,25 @@ const submitAddSkill = () => {
                 <SuccessLegend />
             </div>
 
+            <SwitchGroup as="div" class="flex items-center gap-2">
+                <SwitchLabel class="text-sm font-medium text-cthulhu-green-800">Relevant only</SwitchLabel>
+                <Switch
+                    v-model="relevantOnly"
+                    :class="[
+                        relevantOnly ? 'bg-cthulhu-yellow-500' : 'bg-parchment-400',
+                        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent ring-1 ring-inset ring-parchment-500/40 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-yellow-500',
+                    ]"
+                >
+                    <span
+                        aria-hidden="true"
+                        :class="[
+                            relevantOnly ? 'translate-x-5' : 'translate-x-0',
+                            'pointer-events-none inline-block size-5 transform rounded-full bg-parchment-50 shadow transition',
+                        ]"
+                    />
+                </Switch>
+            </SwitchGroup>
+
             <div class="relative w-full sm:w-64">
                 <MagnifyingGlassIcon
                     class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-cthulhu-green-500"
@@ -131,6 +196,12 @@ const submitAddSkill = () => {
                 />
             </div>
         </header>
+
+        <p v-if="unimprovedCount > 0" class="field-hint mb-3">
+            Showing improved skills only.
+            {{ unimprovedCount }} {{ unimprovedCount === 1 ? 'skill sits' : 'skills sit' }} at the starting value —
+            search by name to reach one, or switch “Relevant only” off.
+        </p>
 
         <p v-if="editable && hiddenCount > 0" class="field-hint mb-3">
             {{ hiddenCount }} hidden {{ hiddenCount === 1 ? 'skill is' : 'skills are' }} greyed out below.
@@ -183,6 +254,9 @@ const submitAddSkill = () => {
 
         <p v-if="visibleSkills.length === 0" class="py-8 text-center text-sm text-cthulhu-green-500">
             <template v-if="query.trim()">No skills match “{{ query }}”.</template>
+            <template v-else-if="unimprovedCount > 0">
+                Nothing improved yet. Switch “Relevant only” off to see all {{ unimprovedCount }} skills.
+            </template>
             <template v-else-if="hiddenCount > 0">
                 Every skill is hidden. Turn on edit mode to bring them back.
             </template>
