@@ -59,7 +59,7 @@ const save = () => {
                     <textarea
                         id="backstory-key_connection"
                         v-model="form.key_connection"
-                        rows="2"
+                        rows="4"
                         aria-label="Key connection"
                         class="field mt-2"
                     ></textarea>
@@ -79,7 +79,7 @@ const save = () => {
                         <textarea
                             :id="`backstory-${field.key}`"
                             v-model="form[field.key]"
-                            rows="3"
+                            rows="7"
                             class="field mt-2"
                         ></textarea>
                         <p v-if="form.errors[field.key]" class="field-error">{{ form.errors[field.key] }}</p>
@@ -99,7 +99,7 @@ const save = () => {
                         <textarea
                             :id="`backstory-${field.key}`"
                             v-model="form[field.key]"
-                            rows="2"
+                            rows="5"
                             class="field mt-2"
                         ></textarea>
                         <p v-if="form.errors[field.key]" class="field-error">{{ form.errors[field.key] }}</p>
@@ -118,7 +118,7 @@ const save = () => {
                     <textarea
                         id="backstory-gear"
                         v-model="form.gear"
-                        rows="3"
+                        rows="6"
                         class="field mt-2"
                     ></textarea>
                     <p v-if="form.errors.gear" class="field-error">{{ form.errors.gear }}</p>

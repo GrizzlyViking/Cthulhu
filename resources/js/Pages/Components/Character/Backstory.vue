@@ -32,10 +32,22 @@ const background = computed(() => [
     { key: 'birthplace', label: 'Birthplace', type: 'text' },
 ]);
 
+/**
+ * Renaming re-slugs the character, so this is a full Inertia visit rather than an
+ * axios call — the redirect carries the page to the new URL.
+ */
 const renameCharacter = (event) => {
-    router.get(route('rename.character', { character: prop.character.slug }), {
-        value: event.target.value,
-    });
+    const name = event.target.value.trim();
+
+    if (! prop.editable || name === '' || name === prop.character.name) {
+        event.target.value = prop.character.name;
+
+        return;
+    }
+
+    router.put(route('character.rename', { character: prop.character.slug }), {
+        value: name,
+    }, { preserveScroll: true });
 };
 </script>
 
@@ -54,12 +66,14 @@ const renameCharacter = (event) => {
 
         <div class="flex flex-col gap-8 p-6 pt-24 sm:p-8 sm:pt-32 lg:pt-40">
             <div class="flex flex-wrap items-end justify-between gap-4">
-                <div class="min-w-0">
+                <!-- The name is the widest thing on the sheet: give it the whole row, and the
+                     rest of the row's slack once the actions fit alongside it. -->
+                <div class="w-full min-w-0 grow sm:w-auto">
                     <p class="eyebrow-on-dark">Investigator</p>
                     <input
-                        v-model="prop.character.name"
+                        :value="prop.character.name"
                         aria-label="Character name"
-                        class="display mt-1 w-full border-0 bg-transparent p-0 text-3xl text-parchment-100 sm:text-4xl lg:text-5xl"
+                        class="display mt-1 w-full min-w-0 border-0 bg-transparent p-0 text-3xl text-parchment-100 sm:text-4xl lg:text-5xl"
                         :class="prop.editable ? 'field-inline' : 'ring-0 focus:ring-0'"
                         :disabled="!prop.editable"
                         @focusout="renameCharacter"

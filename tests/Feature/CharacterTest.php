@@ -111,3 +111,29 @@ test('the sheet carries the always-relevant skill slugs and each skill its start
             )
         );
 });
+
+test('a player can rename their own character and the slug follows', function () {
+    $this->user->assignRole('player');
+    $character = Character::factory()->create([
+        'user_id' => $this->user->id,
+        'name'    => 'Old Name',
+        'slug'    => 'old-name',
+    ]);
+
+    $this->actingAs($this->user)
+        ->put(route('character.rename', $character), ['value' => 'Herbert West'])
+        ->assertRedirect(route('character.show', 'herbert-west'));
+
+    expect($character->fresh())
+        ->name->toBe('Herbert West')
+        ->slug->toBe('herbert-west');
+});
+
+test('a player cannot rename another players character', function () {
+    $this->user->assignRole('player');
+    $character = Character::factory()->create(['user_id' => User::factory()->create()->id]);
+
+    $this->actingAs($this->user)
+        ->put(route('character.rename', $character), ['value' => 'Herbert West'])
+        ->assertForbidden();
+});

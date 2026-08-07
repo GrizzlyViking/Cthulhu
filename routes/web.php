@@ -41,7 +41,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/character/{character}/sheet', [CharacterController::class, 'sheet'])->name('character.sheet');
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
     Route::put('/character/{character}/backstory', [CharacterController::class, 'updateBackstory'])->name('character.backstory.update');
-    Route::get('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
+    Route::put('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
     Route::post('/character/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
     Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
     Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');
