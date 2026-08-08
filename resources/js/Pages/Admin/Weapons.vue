@@ -118,13 +118,6 @@ const restore = (weapon) => {
     <Head title="Weapons" />
 
     <AdminLayout title="Weapons">
-        <template #actions>
-            <button v-if="editable && !filters.trashed" type="button" class="btn-primary btn-sm" @click="openForm(null)">
-                <PlusIcon class="size-4" aria-hidden="true" />
-                New weapon
-            </button>
-        </template>
-
         <section class="panel p-5 sm:p-6">
             <div class="card-marked">
                 <p class="text-sm text-cthulhu-green-900">
@@ -141,8 +134,8 @@ const restore = (weapon) => {
                 </p>
             </div>
 
-            <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
+            <div class="mt-5 flex flex-wrap items-center gap-3">
+                <div class="min-w-0 flex-auto">
                     <label for="weapon-search" class="sr-only">Search weapons</label>
                     <input
                         id="weapon-search"
@@ -155,32 +148,42 @@ const restore = (weapon) => {
 
                 <div>
                     <label for="weapon-category" class="sr-only">Category</label>
-                    <select id="weapon-category" v-model="category" class="field">
+                    <select id="weapon-category" v-model="category" class="field w-auto">
                         <option value="">All categories</option>
                         <option v-for="option in categories" :key="option" :value="option">{{ option }}</option>
                     </select>
                 </div>
 
-                <div class="flex gap-3">
+                <div>
                     <label for="weapon-era" class="sr-only">Era</label>
-                    <select id="weapon-era" v-model="era" class="field">
+                    <select id="weapon-era" v-model="era" class="field w-auto">
                         <option value="">All eras</option>
                         <option v-for="option in eras" :key="option.value" :value="option.value">
                             {{ option.label }}
                         </option>
                     </select>
-
-                    <button
-                        v-if="editable"
-                        type="button"
-                        class="btn-sm whitespace-nowrap"
-                        :class="filters.trashed ? 'btn-primary' : 'btn-secondary'"
-                        @click="reload({ trashed: !filters.trashed })"
-                    >
-                        Retired
-                        <span class="tabular">({{ counts.retired }})</span>
-                    </button>
                 </div>
+
+                <button
+                    v-if="editable"
+                    type="button"
+                    class="btn-sm whitespace-nowrap"
+                    :class="filters.trashed ? 'btn-primary' : 'btn-secondary'"
+                    @click="reload({ trashed: !filters.trashed })"
+                >
+                    Retired
+                    <span class="tabular">({{ counts.retired }})</span>
+                </button>
+
+                <button
+                    v-if="editable && !filters.trashed"
+                    type="button"
+                    class="btn-primary btn-sm whitespace-nowrap"
+                    @click="openForm(null)"
+                >
+                    <PlusIcon class="size-4" aria-hidden="true" />
+                    New weapon
+                </button>
             </div>
 
             <div class="mt-4 overflow-x-auto">

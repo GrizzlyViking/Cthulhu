@@ -115,13 +115,6 @@ const restore = (skill) => {
     <Head title="Skills" />
 
     <AdminLayout title="Skills">
-        <template #actions>
-            <button v-if="editable && !filters.trashed" type="button" class="btn-primary btn-sm" @click="openCreate">
-                <PlusIcon class="size-4" aria-hidden="true" />
-                New skill
-            </button>
-        </template>
-
         <section class="panel p-5 sm:p-6">
             <!-- Skills are one list for the whole server, however many groups play here. -->
             <div class="card-marked">
@@ -171,6 +164,11 @@ const restore = (skill) => {
                 >
                     Retired
                     <span class="tabular">({{ counts.retired }})</span>
+                </button>
+
+                <button v-if="editable && !filters.trashed" type="button" class="btn-primary btn-sm" @click="openCreate">
+                    <PlusIcon class="size-4" aria-hidden="true" />
+                    New skill
                 </button>
             </div>
 

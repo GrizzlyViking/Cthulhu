@@ -117,13 +117,6 @@ const removeLocation = (location) => {
     <Head title="Equipment" />
 
     <AdminLayout title="Equipment">
-        <template #actions>
-            <button v-if="editable && !filters.trashed" type="button" class="btn-primary btn-sm" @click="openForm(null)">
-                <PlusIcon class="size-4" aria-hidden="true" />
-                New item
-            </button>
-        </template>
-
         <!-- Catalogue -->
         <section class="panel p-5 sm:p-6">
             <div class="card-marked">
@@ -182,6 +175,16 @@ const removeLocation = (location) => {
                     @click="reload({ trashed: !filters.trashed })"
                 >
                     Retired <span class="tabular">({{ counts.retired }})</span>
+                </button>
+
+                <button
+                    v-if="editable && !filters.trashed"
+                    type="button"
+                    class="btn-primary btn-sm whitespace-nowrap"
+                    @click="openForm(null)"
+                >
+                    <PlusIcon class="size-4" aria-hidden="true" />
+                    New item
                 </button>
             </div>
 
