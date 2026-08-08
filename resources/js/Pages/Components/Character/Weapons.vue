@@ -7,7 +7,9 @@ import { router, usePage } from '@inertiajs/vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import axios from 'axios';
 import EraChips from '@/Components/EraChips.vue';
+import CollapsibleSection from '@/Components/CollapsibleSection.vue';
 import { belongsToEra } from '@/Pages/Composables/useEra.js';
+import { useFoldedSections } from '@/Pages/Composables/useFoldedSections.js';
 import {
     ArrowPathIcon,
     EllipsisVerticalIcon,
@@ -42,9 +44,17 @@ const inEra = (weapon) => belongsToEra(weapon, prop.era);
 /** Transient per-weapon message, keyed by pivot id ("empty magazine" and friends). */
 const notices = ref({});
 
+/*
+ * The armoury is over a hundred weapons long, which is no way to greet somebody
+ * on a phone. It opens as a list of closed categories — pistols, rifles, the
+ * blunt instruments — and a tap unfolds one.
+ */
+const folded = useFoldedSections();
+
 const openModal = () => {
     weaponQuery.value = '';
     allEras.value = false;
+    folded.closeAll();
     isWeaponModalOpen.value = true;
 };
 
@@ -215,6 +225,35 @@ const armoury = computed(() => {
 
     return [...groups.entries()].map(([category, weapons]) => ({ category, weapons }));
 });
+
+const isFiltering = computed(() => weaponQuery.value.trim() !== '');
+
+/*
+ * A category is open when it has been tapped — but a search unfolds everything,
+ * since hiding the hits behind another tap is precisely what a search is for
+ * avoiding. A lone category is not worth folding either.
+ */
+const isSectionOpen = (category) =>
+    isFiltering.value || armoury.value.length === 1 || folded.isOpen(category);
+
+const allSectionsOpen = computed(() =>
+    armoury.value.every((group) => isSectionOpen(group.category))
+);
+
+const toggleAllSections = () => {
+    if (allSectionsOpen.value) {
+        folded.closeAll();
+
+        return;
+    }
+
+    folded.openAll(armoury.value.map((group) => group.category));
+};
+
+/** The first few names in a closed category, as a hint at what is inside. */
+const previewOf = (weapons) =>
+    weapons.slice(0, 3).map((weapon) => weapon.name).join(', ')
+    + (weapons.length > 3 ? '…' : '');
 </script>
 
 <template>
@@ -424,38 +463,58 @@ const armoury = computed(() => {
                         />
                     </div>
 
-                    <label v-if="otherEraCount > 0" class="inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
-                        <input
-                            v-model="allEras"
-                            type="checkbox"
-                            class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
-                        />
-                        Show every era
-                        <span class="tabular text-xs text-cthulhu-green-500">({{ otherEraCount }} more)</span>
-                    </label>
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <label v-if="otherEraCount > 0" class="inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
+                            <input
+                                v-model="allEras"
+                                type="checkbox"
+                                class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
+                            />
+                            Show every era
+                            <span class="tabular text-xs text-cthulhu-green-500">({{ otherEraCount }} more)</span>
+                        </label>
+
+                        <button
+                            v-if="armoury.length > 1 && !isFiltering"
+                            type="button"
+                            class="btn-ghost btn-sm ms-auto"
+                            @click="toggleAllSections"
+                        >
+                            {{ allSectionsOpen ? 'Fold them all up' : 'Open them all' }}
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-5">
-                    <div v-for="group in armoury" :key="group.category" class="mb-4 last:mb-0">
-                        <p class="eyebrow mb-2">{{ group.category }}</p>
-                        <ul role="list" class="flex flex-col gap-1.5">
-                            <li v-for="w in group.weapons" :key="w.id">
-                                <button
-                                    type="button"
-                                    class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-parchment-50 px-3 py-2 text-left ring-1 ring-parchment-300 transition hover:bg-parchment-200"
-                                    @click="addWeapon(w.id)"
-                                >
-                                    <span class="flex flex-wrap items-center gap-2">
-                                        <span class="text-sm font-semibold text-cthulhu-green-900">{{ w.name }}</span>
-                                        <EraChips v-if="!inEra(w)" :eras="w.eras" :options="eras" />
-                                    </span>
-                                    <span class="tabular text-xs text-cthulhu-green-500">
-                                        {{ w.damage }} · {{ w.base_range }}
-                                        <template v-if="w.magazine_capacity"> · mag {{ w.magazine_capacity }}</template>
-                                    </span>
-                                </button>
-                            </li>
-                        </ul>
+                <div class="flex-1 overflow-y-auto p-4 sm:p-5">
+                    <div class="flex flex-col gap-2">
+                        <CollapsibleSection
+                            v-for="group in armoury"
+                            :key="group.category"
+                            :title="group.category"
+                            :count="group.weapons.length"
+                            :subtitle="isSectionOpen(group.category) ? null : previewOf(group.weapons)"
+                            :open="isSectionOpen(group.category)"
+                            @toggle="folded.toggle(group.category)"
+                        >
+                            <ul role="list" class="flex flex-col gap-1.5">
+                                <li v-for="w in group.weapons" :key="w.id">
+                                    <button
+                                        type="button"
+                                        class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-parchment-50 px-3 py-2.5 text-left ring-1 ring-parchment-300 transition hover:bg-parchment-200"
+                                        @click="addWeapon(w.id)"
+                                    >
+                                        <span class="flex flex-wrap items-center gap-2">
+                                            <span class="text-sm font-semibold text-cthulhu-green-900">{{ w.name }}</span>
+                                            <EraChips v-if="!inEra(w)" :eras="w.eras" :options="eras" />
+                                        </span>
+                                        <span class="tabular text-xs text-cthulhu-green-500">
+                                            {{ w.damage }} · {{ w.base_range }}
+                                            <template v-if="w.magazine_capacity"> · mag {{ w.magazine_capacity }}</template>
+                                        </span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </CollapsibleSection>
                     </div>
 
                     <p v-if="armoury.length === 0" class="py-8 text-center text-sm text-cthulhu-green-500">

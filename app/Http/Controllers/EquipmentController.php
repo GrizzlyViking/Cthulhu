@@ -27,8 +27,9 @@ class EquipmentController extends Controller
     use AuthorizesRequests;
 
     /**
-     * Typeahead over the catalogue. Answers JSON so the field can suggest as
-     * the player types without a page visit.
+     * The catalogue, for browsing and for searching. Answers JSON so the picker
+     * can fill its folded sections when it opens, and narrow them as the player
+     * types, without a page visit.
      */
     public function search(Request $request): JsonResponse
     {
@@ -52,7 +53,11 @@ class EquipmentController extends Controller
                 });
             })
             ->catalogueOrder()
-            ->limit(40)
+            // Generous, because the picker shows the whole era's catalogue
+            // folded up under its section headings when nothing is typed. The
+            // cap is only there so a runaway list of player additions cannot
+            // turn opening the picker into a download.
+            ->limit(600)
             ->get(['id', 'name', 'section', 'cost', 'eras', 'is_custom']);
 
         return response()->json([

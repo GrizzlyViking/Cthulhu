@@ -11,7 +11,9 @@ import {
 } from '@heroicons/vue/20/solid';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import EraChips from '@/Components/EraChips.vue';
+import CollapsibleSection from '@/Components/CollapsibleSection.vue';
 import { belongsToEra } from '@/Pages/Composables/useEra.js';
+import { useFoldedSections } from '@/Pages/Composables/useFoldedSections.js';
 
 const prop = defineProps({
     character: Object,
@@ -120,7 +122,7 @@ watch(query, () => {
 });
 
 watch(allEras, () => {
-    if (query.value.trim() !== '') {
+    if (isAddOpen.value) {
         search();
     }
 });
@@ -139,12 +141,43 @@ const grouped = computed(() => {
 });
 
 /*
+ * The catalogue runs to a couple of hundred things, so it arrives as a shelf of
+ * closed sections — clothing, tools, what a doctor carries — and a tap opens
+ * one. Searching unfolds the lot, since the hits are the point of searching.
+ */
+const folded = useFoldedSections();
+
+const isFiltering = computed(() => query.value.trim() !== '');
+
+const isSectionOpen = (section) =>
+    isFiltering.value || grouped.value.length === 1 || folded.isOpen(section);
+
+const allSectionsOpen = computed(() =>
+    grouped.value.every((group) => isSectionOpen(group.section))
+);
+
+const toggleAllSections = () => {
+    if (allSectionsOpen.value) {
+        folded.closeAll();
+
+        return;
+    }
+
+    folded.openAll(grouped.value.map((group) => group.section));
+};
+
+/** The first few names in a closed section, as a hint at what is inside. */
+const previewOf = (items) =>
+    items.slice(0, 3).map((item) => item.name).join(', ') + (items.length > 3 ? '…' : '');
+
+/*
  * True when what has been typed matches nothing in the catalogue — the moment
  * the player is allowed to invent something rather than pick it.
  */
 const isNovel = computed(() =>
     query.value.trim() !== ''
     && !searching.value
+    && chosen.value === null
     && !results.value.some((item) => item.name.toLowerCase() === query.value.trim().toLowerCase())
 );
 
@@ -155,13 +188,22 @@ const openAdd = () => {
     quantity.value = 1;
     addError.value = '';
     allEras.value = false;
+    folded.closeAll();
     locationId.value = prop.storageLocations[0]?.id ?? null;
     isAddOpen.value = true;
+
+    // Browsing is the way in, so the catalogue is fetched on opening rather
+    // than waiting for something to be typed.
+    search();
 };
 
+/*
+ * Picking marks the row and arms the Add button. It deliberately leaves the
+ * search field alone: writing the name in there would re-run the search and
+ * fold the catalogue away underneath the player mid-browse.
+ */
 const choose = (item) => {
     chosen.value = item;
-    query.value = item.name;
 };
 
 const submit = () => {
@@ -370,63 +412,78 @@ const addLocation = () => {
                         />
                     </div>
 
-                    <label class="mt-3 inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
-                        <input
-                            v-model="allEras"
-                            type="checkbox"
-                            class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
-                        />
-                        Search every era
-                    </label>
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        <label class="inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
+                            <input
+                                v-model="allEras"
+                                type="checkbox"
+                                class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
+                            />
+                            Search every era
+                        </label>
+
+                        <button
+                            v-if="grouped.length > 1 && !isFiltering"
+                            type="button"
+                            class="btn-ghost btn-sm ms-auto"
+                            @click="toggleAllSections"
+                        >
+                            {{ allSectionsOpen ? 'Fold them all up' : 'Open them all' }}
+                        </button>
+                    </div>
 
                     <p v-if="addError" class="field-error">{{ addError }}</p>
                 </div>
 
-                <div class="flex-1 overflow-y-auto p-5">
-                    <div v-for="group in grouped" :key="group.section" class="mb-4 last:mb-0">
-                        <p class="eyebrow mb-2">{{ group.section }}</p>
-                        <ul role="list" class="flex flex-col gap-1.5">
-                            <li v-for="item in group.items" :key="item.id">
-                                <button
-                                    type="button"
-                                    class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg px-3 py-2 text-left ring-1 transition"
-                                    :class="chosen?.id === item.id
-                                        ? 'bg-cthulhu-yellow-200/50 ring-cthulhu-yellow-500'
-                                        : 'bg-parchment-50 ring-parchment-300 hover:bg-parchment-200'"
-                                    @click="choose(item)"
-                                >
-                                    <span class="flex flex-wrap items-center gap-2">
-                                        <span class="text-sm font-semibold text-cthulhu-green-900">{{ item.name }}</span>
-                                        <EraChips
-                                            v-if="!belongsToEra(item, era)"
-                                            :eras="item.eras"
-                                            :options="eras"
-                                        />
-                                    </span>
-                                    <!-- The price is only ever shown while choosing.
-                                         Once it is theirs, what it cost stops mattering. -->
-                                    <span v-if="item.cost" class="tabular text-xs text-cthulhu-green-500">{{ item.cost }}</span>
-                                </button>
-                            </li>
-                        </ul>
+                <div class="flex-1 overflow-y-auto p-4 sm:p-5">
+                    <div class="flex flex-col gap-2">
+                        <CollapsibleSection
+                            v-for="group in grouped"
+                            :key="group.section"
+                            :title="group.section"
+                            :count="group.items.length"
+                            :subtitle="isSectionOpen(group.section) ? null : previewOf(group.items)"
+                            :open="isSectionOpen(group.section)"
+                            @toggle="folded.toggle(group.section)"
+                        >
+                            <ul role="list" class="flex flex-col gap-1.5">
+                                <li v-for="item in group.items" :key="item.id">
+                                    <button
+                                        type="button"
+                                        class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg px-3 py-2.5 text-left ring-1 transition"
+                                        :class="chosen?.id === item.id
+                                            ? 'bg-cthulhu-yellow-200/50 ring-cthulhu-yellow-500'
+                                            : 'bg-parchment-50 ring-parchment-300 hover:bg-parchment-200'"
+                                        @click="choose(item)"
+                                    >
+                                        <span class="flex flex-wrap items-center gap-2">
+                                            <span class="text-sm font-semibold text-cthulhu-green-900">{{ item.name }}</span>
+                                            <EraChips
+                                                v-if="!belongsToEra(item, era)"
+                                                :eras="item.eras"
+                                                :options="eras"
+                                            />
+                                        </span>
+                                        <!-- The price is only ever shown while choosing.
+                                             Once it is theirs, what it cost stops mattering. -->
+                                        <span v-if="item.cost" class="tabular text-xs text-cthulhu-green-500">{{ item.cost }}</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </CollapsibleSection>
                     </div>
 
-                    <p v-if="searching" class="py-6 text-center text-sm text-cthulhu-green-500">Searching…</p>
+                    <p v-if="searching && results.length === 0" class="py-6 text-center text-sm text-cthulhu-green-500">
+                        Fetching the catalogue…
+                    </p>
 
-                    <div v-else-if="isNovel" class="card-marked">
+                    <div v-else-if="isNovel" class="card-marked mt-2">
                         <p class="text-sm text-cthulhu-green-900">
                             Nothing in this era's catalogue is called “{{ query.trim() }}”. Add it anyway and it
                             becomes available to everyone<template v-if="!allEras">, or tick “Search every era”
                             first in case it is filed under the other one</template>.
                         </p>
                     </div>
-
-                    <p
-                        v-else-if="query.trim() === '' && results.length === 0"
-                        class="py-6 text-center text-sm text-cthulhu-green-500"
-                    >
-                        Start typing to search the catalogue.
-                    </p>
                 </div>
 
                 <div class="flex flex-wrap items-end justify-between gap-3 border-t border-parchment-300 p-5">
