@@ -85,34 +85,21 @@ test('an unknown category or era filter is ignored rather than obeyed', function
             ->where('filters.era', ''));
 });
 
-test('the era filter matches within the handbooks availability cell', function () {
-    // The column holds the book's verbatim cell, so a weapon available in both
-    // eras must show up under either one.
-    Weapon::factory()->create(['name' => 'Zzq Both Eras', 'era' => '1920s, Modern']);
-    Weapon::factory()->create(['name' => 'Zzq Twenties Only', 'era' => '1920s, Rare']);
-    Weapon::factory()->create(['name' => 'Zzq Modern Only', 'era' => 'Modern']);
+test('the era filter goes through the eras list, so a weapon in both shows under either', function () {
+    // `era` is the book's verbatim cell and is deliberately not matched on;
+    // `eras` is the list the filter reads. Here the two disagree on purpose.
+    Weapon::factory()->create(['name' => 'Zzq Both Eras', 'era' => '1920s, Modern', 'eras' => Era::all()]);
+    Weapon::factory()->create(['name' => 'Zzq Twenties Only', 'era' => '1920s, Rare', 'eras' => [Era::Twenties->value]]);
+    Weapon::factory()->create(['name' => 'Zzq Modern Only', 'era' => 'Rare', 'eras' => [Era::Modern->value]]);
 
-    $names = fn (string $era) => Weapon::query()
-        ->whereIn('name', ['Zzq Both Eras', 'Zzq Twenties Only', 'Zzq Modern Only'])
-        ->get()
-        ->filter(fn (Weapon $weapon) => str_contains(mb_strtolower($weapon->era), $era))
-        ->pluck('name');
+    $listed = fn (Era $era) => $this->actingAs($this->admin)
+        ->get(route('admin.weapons.index', ['era' => $era->value, 'search' => 'Zzq']))
+        ->viewData('page')['props']['weapons']['data'];
 
-    $this->actingAs($this->admin)
-        ->get(route('admin.weapons.index', ['era' => Era::Twenties->value, 'search' => 'Zzq']))
-        ->assertInertia(fn (Assert $page) => $page->where(
-            'weapons.data',
-            fn (Collection $weapons) => $weapons->pluck('name')->sort()->values()->all()
-                === $names('1920s')->sort()->values()->all()
-        ));
-
-    $this->actingAs($this->admin)
-        ->get(route('admin.weapons.index', ['era' => Era::Modern->value, 'search' => 'Zzq']))
-        ->assertInertia(fn (Assert $page) => $page->where(
-            'weapons.data',
-            fn (Collection $weapons) => $weapons->pluck('name')->sort()->values()->all()
-                === $names('modern')->sort()->values()->all()
-        ));
+    expect(collect($listed(Era::Twenties))->pluck('name')->sort()->values()->all())
+        ->toBe(['Zzq Both Eras', 'Zzq Twenties Only'])
+        ->and(collect($listed(Era::Modern))->pluck('name')->sort()->values()->all())
+        ->toBe(['Zzq Both Eras', 'Zzq Modern Only']);
 });
 
 test('weapons can be searched by name', function () {

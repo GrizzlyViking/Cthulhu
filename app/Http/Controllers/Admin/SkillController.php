@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Era;
 use App\Models\Skill;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class SkillController extends AdminController
     public function index(Request $request): Response
     {
         $search  = trim((string) $request->query('search', ''));
+        $era     = Era::tryFrom((string) $request->query('era', ''));
         $trashed = $request->boolean('trashed');
 
         $skills = Skill::query()
@@ -33,14 +35,20 @@ class SkillController extends AdminController
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $this->whereAnyLike($query, ['display_name', 'slug', 'description'], $search);
             })
+            ->inEra($era)
             ->withCount('characters')
             ->orderBy('display_name')
             ->paginate(25)
             ->withQueryString();
 
         return Inertia::render('Admin/Skills', [
-            'skills'   => $skills,
-            'filters'  => ['search' => $search, 'trashed' => $trashed],
+            'skills'  => $skills,
+            'eras'    => Era::options(),
+            'filters' => [
+                'search'  => $search,
+                'era'     => $era?->value ?? '',
+                'trashed' => $trashed,
+            ],
             'editable' => $this->referenceDataIsEditable(),
             'counts'   => [
                 'active'  => Skill::query()->count(),
@@ -113,10 +121,16 @@ class SkillController extends AdminController
             'description'    => ['nullable', 'string', 'max:2000'],
             'starting_value' => ['required', 'integer', 'min:0', 'max:100'],
             'order_by'       => ['nullable', 'integer', 'min:0', 'max:255'],
+            // Which eras have any use for it. Ticking both, which is the
+            // default, is what nearly every skill wants.
+            'eras'   => ['required', 'array', 'min:1'],
+            'eras.*' => [Rule::enum(Era::class)],
         ], [
             'display_name.unique' => 'A skill with that name already exists. If it is retired, restore it instead.',
             'slug.unique'         => 'That slug is taken. If the skill using it is retired, restore it instead.',
             'slug.required'       => 'The name produced an empty slug — give the skill a slug of its own.',
+            'eras.required'       => 'Pick at least one era, or no group would ever see the skill.',
+            'eras.min'            => 'Pick at least one era, or no group would ever see the skill.',
         ]);
     }
 }

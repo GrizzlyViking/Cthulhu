@@ -37,20 +37,3 @@ test('attach weapon to a character', function () {
     expect($character->weapons->count())->toEqual(1)
         ->and($character->weapons->first())->toBeInstanceOf(Weapon::class);
 });
-
-test('append skills to a character', function () {
-    $character = Character::factory()->create();
-    $before    = $character->skills->count();
-    Skill::create([
-        'slug'           => 'test',
-        'display_name'   => 'test',
-        'description'    => 'test',
-        'starting_value' => 2,
-    ]);
-
-    $character->appendSkills();
-    $character->refresh();
-
-    $after = $character->skills->count();
-    expect($after)->toEqual($before + 1);
-});

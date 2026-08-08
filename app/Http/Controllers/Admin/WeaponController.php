@@ -31,7 +31,7 @@ class WeaponController extends AdminController
     {
         $search   = trim((string) $request->query('search', ''));
         $category = (string) $request->query('category', '');
-        $era      = (string) $request->query('era', '');
+        $era      = Era::tryFrom((string) $request->query('era', ''));
         $trashed  = $request->boolean('trashed');
 
         $categories = WeaponTable::categories();
@@ -42,12 +42,10 @@ class WeaponController extends AdminController
                 $this->whereAnyLike($query, ['name', 'skill', 'damage'], $search);
             })
             ->when(in_array($category, $categories, true), fn (Builder $query) => $query->where('category', $category))
-            // `era` is the handbook's verbatim availability cell — "1920s",
-            // "1920s, Modern", "WWII, Later", "Rare" — not an Era value, so
-            // this matches within the cell rather than against the whole of it.
-            ->when(Era::tryFrom($era) !== null, function (Builder $query) use ($era): void {
-                $this->whereAnyLike($query, ['era'], $era);
-            })
+            // Filtering goes through `eras`, the list read off the handbook's
+            // availability cell. The cell itself stays as printed — "1920s,
+            // Modern", "WWII, Later", "Rare" — and is not something to match on.
+            ->inEra($era)
             // Order the way the handbook prints the table, so the groupings read
             // in the same sequence as the book.
             ->orderByRaw($this->categoryOrdering($categories))
@@ -58,10 +56,7 @@ class WeaponController extends AdminController
         return Inertia::render('Admin/Weapons', [
             'weapons'    => $weapons,
             'categories' => $categories,
-            'eras'       => array_map(
-                fn (Era $case): array => ['value' => $case->value, 'label' => $case->label()],
-                Era::cases(),
-            ),
+            'eras'       => Era::options(),
             // Every live skill, with the book's combat ones first — a house
             // ruled weapon may well want a house ruled skill.
             'skills' => Skill::query()
@@ -71,7 +66,7 @@ class WeaponController extends AdminController
             'filters' => [
                 'search'   => $search,
                 'category' => in_array($category, $categories, true) ? $category : '',
-                'era'      => Era::tryFrom($era)?->value ?? '',
+                'era'      => $era?->value ?? '',
                 'trashed'  => $trashed,
             ],
             'editable' => $this->referenceDataIsEditable(),
@@ -131,11 +126,18 @@ class WeaponController extends AdminController
             'cost'           => ['required', 'string', 'max:255'],
             'malfunction'    => ['nullable', 'string', 'max:255'],
             // Also free text: "1920s", "1920s, Modern", "WWII, Later", "Rare".
+            // It is the book's note, kept as printed; `eras` is what the app
+            // filters on, and the two are set independently so a Keeper can
+            // hand a 1920s table a WWII rifle without rewriting the book.
             'era'    => ['nullable', 'string', 'max:255'],
+            'eras'   => ['required', 'array', 'min:1'],
+            'eras.*' => [Rule::enum(Era::class)],
             'impale' => ['required', 'boolean'],
         ], [
-            'name.unique'  => 'A weapon with that name already exists. If it is retired, restore it instead.',
-            'skill.exists' => 'Pick a skill that exists. Retired skills cannot be attached to a weapon.',
+            'name.unique'   => 'A weapon with that name already exists. If it is retired, restore it instead.',
+            'skill.exists'  => 'Pick a skill that exists. Retired skills cannot be attached to a weapon.',
+            'eras.required' => 'Pick at least one era, or no group could ever carry it.',
+            'eras.min'      => 'Pick at least one era, or no group could ever carry it.',
         ]);
     }
 

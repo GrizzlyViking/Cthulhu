@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Era;
 use App\Enums\RoleEnum;
 use App\Models\Character;
 use App\Models\Skill;
@@ -26,6 +27,7 @@ function skillPayload(array $overrides = []): array
         'display_name'   => 'Dream Lore',
         'description'    => 'What the sleeper knows and cannot prove.',
         'starting_value' => 5,
+        'eras'           => Era::all(),
         ...$overrides,
     ];
 }

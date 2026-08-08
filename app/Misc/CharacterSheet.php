@@ -40,12 +40,22 @@ class CharacterSheet
      * Skills the player has chosen to show, tidied for print and split into
      * three balanced columns.
      *
+     * Unlike the screen, this prints the whole list rather than only what has
+     * been improved — a paper sheet is where the untouched ones get filled in.
+     * The one exception is a skill belonging to another era: it is off the
+     * screen too, and printing it would put Fighting (Chainsaw) on a 1925
+     * investigator's sheet. Give it a value and it comes back.
+     *
      * @return array<int, Collection<int, array{name: string, base: int, value: int, experience: bool}>>
      */
     public static function skillColumns(Character $character, int $columns = 3): array
     {
+        $era = $character->era();
+
         $skills = $character->skills
             ->filter(fn (Skill $skill) => (bool) $skill->pivot->show)
+            ->filter(fn (Skill $skill) => $skill->availableIn($era)
+                || $skill->pivot->value > $skill->starting_value)
             ->sortBy(fn (Skill $skill) => Str::lower(self::skillName($skill)))
             ->map(fn (Skill $skill) => [
                 'name'       => self::skillName($skill),

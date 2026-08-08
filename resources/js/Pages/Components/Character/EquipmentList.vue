@@ -10,11 +10,16 @@ import {
     PlusIcon,
 } from '@heroicons/vue/20/solid';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
+import EraChips from '@/Components/EraChips.vue';
+import { belongsToEra } from '@/Pages/Composables/useEra.js';
 
 const prop = defineProps({
     character: Object,
     canEdit: Boolean,
     storageLocations: { type: Array, default: () => [] },
+    /** The group's era, and every era the server knows about. */
+    era: { type: String, default: null },
+    eras: { type: Array, default: () => [] },
 });
 
 /*
@@ -34,6 +39,7 @@ const possessions = computed(() => {
         quantity: weapon.pivot.quantity ?? 1,
         notes: weapon.pivot.notes,
         locationId: weapon.pivot.storage_location_id,
+        eras: belongsToEra(weapon, prop.era) ? null : (weapon.eras ?? []),
     }));
 
     const equipment = (prop.character.equipment ?? []).map((item) => ({
@@ -46,6 +52,9 @@ const possessions = computed(() => {
         quantity: item.pivot.quantity ?? 1,
         notes: item.pivot.notes,
         locationId: item.pivot.storage_location_id,
+        // Nothing already owned is ever hidden — a modern investigator may well
+        // have inherited the pocket watch — but it is worth marking.
+        eras: belongsToEra(item, prop.era) ? null : (item.eras ?? []),
     }));
 
     return [...weapons, ...equipment];
@@ -82,20 +91,38 @@ const quantity = ref(1);
 const locationId = ref(prop.storageLocations[0]?.id ?? null);
 const addError = ref('');
 
+/*
+ * The catalogue covers both eras, so the search is narrowed to this one and the
+ * rest is a tick away. The server does the narrowing — it answers a capped
+ * number of hits, so filtering here would quietly lose results.
+ */
+const allEras = ref(false);
+
 let debounce = null;
 
-watch(query, (value) => {
+const search = async () => {
+    searching.value = true;
+
+    try {
+        const { data } = await axios.get(route('equipment.search'), {
+            params: { search: query.value, era: prop.era, all_eras: allEras.value },
+        });
+        results.value = data.items;
+    } finally {
+        searching.value = false;
+    }
+};
+
+watch(query, () => {
     chosen.value = null;
     clearTimeout(debounce);
-    debounce = setTimeout(async () => {
-        searching.value = true;
-        try {
-            const { data } = await axios.get(route('equipment.search'), { params: { search: value } });
-            results.value = data.items;
-        } finally {
-            searching.value = false;
-        }
-    }, 250);
+    debounce = setTimeout(search, 250);
+});
+
+watch(allEras, () => {
+    if (query.value.trim() !== '') {
+        search();
+    }
 });
 
 /** Search hits grouped under the book's section headings. */
@@ -127,6 +154,7 @@ const openAdd = () => {
     chosen.value = null;
     quantity.value = 1;
     addError.value = '';
+    allEras.value = false;
     locationId.value = prop.storageLocations[0]?.id ?? null;
     isAddOpen.value = true;
 };
@@ -251,6 +279,7 @@ const addLocation = () => {
                                 />
                                 {{ entry.name }}
                                 <span v-if="entry.quantity > 1" class="chip tabular">×{{ entry.quantity }}</span>
+                                <EraChips v-if="entry.eras" :eras="entry.eras" :options="eras" />
                             </p>
                             <p class="text-xs text-cthulhu-green-500">
                                 {{ entry.section }}<template v-if="entry.detail"> · {{ entry.detail }}</template>
@@ -341,6 +370,15 @@ const addLocation = () => {
                         />
                     </div>
 
+                    <label class="mt-3 inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
+                        <input
+                            v-model="allEras"
+                            type="checkbox"
+                            class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
+                        />
+                        Search every era
+                    </label>
+
                     <p v-if="addError" class="field-error">{{ addError }}</p>
                 </div>
 
@@ -357,7 +395,14 @@ const addLocation = () => {
                                         : 'bg-parchment-50 ring-parchment-300 hover:bg-parchment-200'"
                                     @click="choose(item)"
                                 >
-                                    <span class="text-sm font-semibold text-cthulhu-green-900">{{ item.name }}</span>
+                                    <span class="flex flex-wrap items-center gap-2">
+                                        <span class="text-sm font-semibold text-cthulhu-green-900">{{ item.name }}</span>
+                                        <EraChips
+                                            v-if="!belongsToEra(item, era)"
+                                            :eras="item.eras"
+                                            :options="eras"
+                                        />
+                                    </span>
                                     <!-- The price is only ever shown while choosing.
                                          Once it is theirs, what it cost stops mattering. -->
                                     <span v-if="item.cost" class="tabular text-xs text-cthulhu-green-500">{{ item.cost }}</span>
@@ -370,8 +415,9 @@ const addLocation = () => {
 
                     <div v-else-if="isNovel" class="card-marked">
                         <p class="text-sm text-cthulhu-green-900">
-                            Nothing in the catalogue is called “{{ query.trim() }}”. Add it anyway and it becomes
-                            available to everyone.
+                            Nothing in this era's catalogue is called “{{ query.trim() }}”. Add it anyway and it
+                            becomes available to everyone<template v-if="!allEras">, or tick “Search every era”
+                            first in case it is filed under the other one</template>.
                         </p>
                     </div>
 
@@ -379,7 +425,7 @@ const addLocation = () => {
                         v-else-if="query.trim() === '' && results.length === 0"
                         class="py-6 text-center text-sm text-cthulhu-green-500"
                     >
-                        Start typing to search the 1920s catalogue.
+                        Start typing to search the catalogue.
                     </p>
                 </div>
 

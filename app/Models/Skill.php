@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasEras;
 use Database\Factories\SkillFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,18 +11,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
- * @property int     $id
- * @property string  $slug
- * @property string  $display_name
- * @property string  $description
- * @property int     $starting_value
- * @property int     $order_by
- * @property ?Carbon $deleted_at
+ * @property int           $id
+ * @property string        $slug
+ * @property string        $display_name
+ * @property string        $description
+ * @property int           $starting_value
+ * @property int           $order_by
+ * @property array<string> $eras
+ * @property ?Carbon       $deleted_at
  */
 class Skill extends Model
 {
     /** @use HasFactory<SkillFactory> */
-    use HasFactory, SoftDeletes;
+    use HasEras, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'slug',
@@ -29,9 +31,17 @@ class Skill extends Model
         'description',
         'starting_value',
         'order_by',
+        'eras',
     ];
 
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'eras' => 'array',
+        ];
+    }
 
     public function getRouteKeyName(): string
     {

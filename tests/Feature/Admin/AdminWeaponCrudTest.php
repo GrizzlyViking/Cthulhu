@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Era;
 use App\Enums\RoleEnum;
 use App\Misc\WeaponTable;
 use App\Models\Character;
@@ -37,6 +38,7 @@ function weaponPayload(array $overrides = []): array
         'cost'           => '$15/$120',
         'malfunction'    => '',
         'era'            => '1920s, Modern',
+        'eras'           => Era::all(),
         'impale'         => true,
         ...$overrides,
     ];

@@ -3,24 +3,30 @@ import { ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import EraChips from '@/Components/EraChips.vue';
+import EraPicker from '@/Components/EraPicker.vue';
 import Pagination from '@/Pages/Components/Admin/Pagination.vue';
 import { ArrowUturnLeftIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid';
 
 const props = defineProps({
     skills: { type: Object, required: true },
+    eras: { type: Array, required: true },
     filters: { type: Object, required: true },
     editable: { type: Boolean, required: true },
     counts: { type: Object, required: true },
 });
 
 const search = ref(props.filters.search);
+const era = ref(props.filters.era);
+
+const allEras = props.eras.map((option) => option.value);
 
 let debounce = null;
 
 const reload = (overrides = {}, delay = 0) => {
     clearTimeout(debounce);
     debounce = setTimeout(() => {
-        const query = { search: search.value, trashed: props.filters.trashed, ...overrides };
+        const query = { search: search.value, era: era.value, trashed: props.filters.trashed, ...overrides };
 
         router.get(
             route('admin.skills.index'),
@@ -31,6 +37,7 @@ const reload = (overrides = {}, delay = 0) => {
 };
 
 watch(search, () => reload({}, 300));
+watch(era, () => reload());
 
 // ---- Create / edit ------------------------------------------------------
 
@@ -44,11 +51,19 @@ const form = useForm({
     description: '',
     starting_value: 1,
     order_by: null,
+    eras: [...allEras],
 });
 
 const openCreate = () => {
     editing.value = null;
-    form.defaults({ display_name: '', slug: '', description: '', starting_value: 1, order_by: null });
+    form.defaults({
+        display_name: '',
+        slug: '',
+        description: '',
+        starting_value: 1,
+        order_by: null,
+        eras: [...allEras],
+    });
     form.reset();
     form.clearErrors();
     showForm.value = true;
@@ -62,6 +77,7 @@ const openEdit = (skill) => {
         description: skill.description ?? '',
         starting_value: skill.starting_value,
         order_by: skill.order_by,
+        eras: [...(skill.eras ?? allEras)],
     });
     form.reset();
     form.clearErrors();
@@ -135,6 +151,16 @@ const restore = (skill) => {
                     />
                 </div>
 
+                <div>
+                    <label for="skill-era" class="sr-only">Era</label>
+                    <select id="skill-era" v-model="era" class="field">
+                        <option value="">All eras</option>
+                        <option v-for="option in eras" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
+
                 <!-- Retired skills are out of the way but never gone. -->
                 <button
                     v-if="editable"
@@ -154,6 +180,7 @@ const restore = (skill) => {
                         <tr class="border-b border-parchment-300">
                             <th scope="col" class="py-2 pr-3 eyebrow">Skill</th>
                             <th scope="col" class="py-2 pr-3 eyebrow">Slug</th>
+                            <th scope="col" class="py-2 pr-3 eyebrow">Era</th>
                             <th scope="col" class="py-2 pr-3 eyebrow text-right">Base</th>
                             <th scope="col" class="py-2 pr-3 eyebrow text-right">On sheets</th>
                             <th scope="col" class="py-2 pr-3 eyebrow">Description</th>
@@ -164,6 +191,9 @@ const restore = (skill) => {
                         <tr v-for="skill in skills.data" :key="skill.id">
                             <td class="py-2.5 pr-3 font-semibold text-cthulhu-green-900">{{ skill.display_name }}</td>
                             <td class="py-2.5 pr-3 text-xs text-cthulhu-green-500">{{ skill.slug }}</td>
+                            <td class="py-2.5 pr-3">
+                                <EraChips :eras="skill.eras" :options="eras" always />
+                            </td>
                             <td class="py-2.5 pr-3 text-right tabular text-cthulhu-green-900">
                                 {{ skill.starting_value }}%
                             </td>
@@ -197,9 +227,10 @@ const restore = (skill) => {
                         </tr>
 
                         <tr v-if="skills.data.length === 0">
-                            <td :colspan="editable ? 6 : 5" class="py-6 text-center text-sm text-cthulhu-green-500">
+                            <td :colspan="editable ? 7 : 6" class="py-6 text-center text-sm text-cthulhu-green-500">
                                 <template v-if="filters.trashed">No skill has been retired.</template>
                                 <template v-else-if="filters.search">No skill matches “{{ filters.search }}”.</template>
+                                <template v-else-if="filters.era">No skill belongs to that era alone.</template>
                                 <template v-else>There are no skills yet.</template>
                             </td>
                         </tr>
@@ -262,6 +293,14 @@ const restore = (skill) => {
                         <p v-if="form.errors.order_by" class="field-error">{{ form.errors.order_by }}</p>
                     </div>
                 </div>
+
+                <EraPicker
+                    v-model="form.eras"
+                    :eras="eras"
+                    hint="Which eras have any use for the skill. Nearly all of them have both — a modern
+                          table has no more use for Fighting (Chainsaw) in 1925 than a Twenties one does."
+                    :error="form.errors.eras"
+                />
 
                 <div>
                     <label for="skill-description" class="field-label">Description</label>

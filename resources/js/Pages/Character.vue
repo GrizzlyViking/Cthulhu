@@ -11,6 +11,7 @@ import Backstory from '@/Pages/Components/Character/Backstory.vue';
 import BackstoryTab from '@/Pages/Components/Character/BackstoryTab.vue';
 import Dropdown from '@/Pages/Components/Dropdown.vue';
 import Tabs from '@/Components/Tabs.vue';
+import Modal from '@/Components/Modal.vue';
 import { BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, UserIcon } from '@heroicons/vue/20/solid';
 import { useRoles } from '@/Pages/Composables/useRoles.js';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
@@ -29,6 +30,9 @@ const prop = defineProps({
     availableSkills: Array,
     storageLocations: Array,
     alwaysRelevantSkills: Array,
+    /** The group's era, and every era the server knows about. */
+    era: String,
+    eras: Array,
 });
 const editable = ref(false);
 const tabs = [
@@ -47,8 +51,34 @@ const deleteCharacter = () => {
     }
 };
 
-const appendAllMissingSkills = () => {
-    router.get(route('character.append.missing.skills', { character: prop.character.slug }));
+/*
+ * Creating a skill the canonical list lacks. The skill is shared by every
+ * group on the server; it is attached to this sheet on the way out.
+ */
+const showSkillModal = ref(false);
+
+const skillForm = useForm({
+    display_name: '',
+    description: '',
+    starting_value: 1,
+    value_obtained: null,
+    character_id: prop.character.id,
+});
+
+const openSkillModal = () => {
+    skillForm.reset();
+    skillForm.clearErrors();
+    showSkillModal.value = true;
+};
+
+const createSkill = () => {
+    skillForm.post(route('skill.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSkillModal.value = false;
+            skillForm.reset();
+        },
+    });
 };
 
 const form = useForm({
@@ -140,6 +170,8 @@ const saveNotes = () => {
                         :editable="editable"
                         :available-skills="prop.availableSkills ?? []"
                         :always-relevant-skills="prop.alwaysRelevantSkills ?? []"
+                        :era="prop.era"
+                        :eras="prop.eras ?? []"
                     />
                 </template>
 
@@ -149,6 +181,8 @@ const saveNotes = () => {
                         :editable="editable"
                         :can-edit="canEdit"
                         :storage-locations="prop.storageLocations ?? []"
+                        :era="prop.era"
+                        :eras="prop.eras ?? []"
                     />
                 </template>
 
@@ -211,10 +245,10 @@ const saveNotes = () => {
                     <div class="card flex flex-col justify-between gap-2">
                         <div>
                             <p class="eyebrow">Skills</p>
-                            <p class="field-hint">Add every canonical skill this sheet is missing.</p>
+                            <p class="field-hint">Create a skill the handbook list lacks.</p>
                         </div>
-                        <button type="button" class="btn-secondary btn-sm self-start" @click="appendAllMissingSkills">
-                            Append missing skills
+                        <button type="button" class="btn-secondary btn-sm self-start" @click="openSkillModal">
+                            Create skill
                         </button>
                     </div>
 
@@ -229,6 +263,86 @@ const saveNotes = () => {
                     </div>
                 </div>
             </section>
+
+            <Modal :show="showSkillModal" max-width="lg" @close="showSkillModal = false">
+                <form class="flex flex-col gap-4 bg-parchment-100 p-6" @submit.prevent="createSkill">
+                    <div>
+                        <h2 class="display text-lg text-cthulhu-green-900">New skill</h2>
+                        <p class="field-hint">
+                            For anything the handbook list is missing. The skill joins the shared list, so
+                            every investigator can take it afterwards — this sheet gets it straight away.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="new_skill_name" class="field-label">Name</label>
+                        <input
+                            id="new_skill_name"
+                            v-model="skillForm.display_name"
+                            type="text"
+                            maxlength="50"
+                            autocomplete="off"
+                            class="field mt-1"
+                            required
+                        />
+                        <p v-if="skillForm.errors.display_name" class="field-error">{{ skillForm.errors.display_name }}</p>
+                        <p v-if="skillForm.errors.slug" class="field-error">{{ skillForm.errors.slug }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="new_skill_base" class="field-label">Base value</label>
+                            <input
+                                id="new_skill_base"
+                                v-model.number="skillForm.starting_value"
+                                type="number"
+                                min="0"
+                                max="100"
+                                inputmode="numeric"
+                                class="field tabular mt-1"
+                                required
+                            />
+                            <p class="field-hint">What an untrained investigator has.</p>
+                            <p v-if="skillForm.errors.starting_value" class="field-error">{{ skillForm.errors.starting_value }}</p>
+                        </div>
+
+                        <div>
+                            <label for="new_skill_value" class="field-label">Value on this sheet</label>
+                            <input
+                                id="new_skill_value"
+                                v-model.number="skillForm.value_obtained"
+                                type="number"
+                                min="0"
+                                max="100"
+                                inputmode="numeric"
+                                placeholder="same as base"
+                                class="field tabular mt-1"
+                            />
+                            <p class="field-hint">Leave empty to start at the base value.</p>
+                            <p v-if="skillForm.errors.value_obtained" class="field-error">{{ skillForm.errors.value_obtained }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="new_skill_description" class="field-label">Description</label>
+                        <textarea
+                            id="new_skill_description"
+                            v-model="skillForm.description"
+                            rows="3"
+                            class="field mt-1"
+                        ></textarea>
+                        <p class="field-hint">Optional. Shown when the skill is opened on a sheet.</p>
+                        <p v-if="skillForm.errors.description" class="field-error">{{ skillForm.errors.description }}</p>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" class="btn-ghost" @click="showSkillModal = false">Cancel</button>
+                        <button type="submit" class="btn-primary" :disabled="skillForm.processing">
+                            {{ skillForm.processing ? 'Creating…' : 'Create skill' }}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     </AuthenticatedLayout>
 </template>

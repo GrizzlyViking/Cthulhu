@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Era;
 use App\Misc\EquipmentTable;
 use App\Models\Character;
 use App\Models\EquipmentItem;
@@ -33,7 +34,15 @@ class EquipmentController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
+        // The catalogue spans both eras, so the sheet says which one it is
+        // shopping in. Passing nothing — or asking for every era outright —
+        // searches the lot.
+        $era = $request->boolean('all_eras')
+            ? null
+            : Era::tryFrom((string) $request->query('era', ''));
+
         $items = EquipmentItem::query()
+            ->inEra($era)
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], mb_strtolower($search)).'%';
 
@@ -44,7 +53,7 @@ class EquipmentController extends Controller
             })
             ->catalogueOrder()
             ->limit(40)
-            ->get(['id', 'name', 'section', 'cost', 'is_custom']);
+            ->get(['id', 'name', 'section', 'cost', 'eras', 'is_custom']);
 
         return response()->json([
             'items'    => $items,
@@ -167,12 +176,14 @@ class EquipmentController extends Controller
         // rather than making a near-duplicate custom row.
         $existing = EquipmentItem::query()->whereRaw('lower(name) = ?', [mb_strtolower($name)])->first();
 
+        // A player inventing something says nothing about when it existed, so
+        // it starts available throughout; an admin can narrow it later.
         return $existing ?? EquipmentItem::create([
             'slug'       => EquipmentItem::customSlug($name),
             'name'       => $name,
             'section'    => null,
             'cost'       => null,
-            'era'        => null,
+            'eras'       => Era::all(),
             'is_custom'  => true,
             'created_by' => $request->user()?->id,
         ]);

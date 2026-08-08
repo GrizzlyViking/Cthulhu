@@ -6,6 +6,8 @@ import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import axios from 'axios';
+import EraChips from '@/Components/EraChips.vue';
+import { belongsToEra } from '@/Pages/Composables/useEra.js';
 import {
     ArrowPathIcon,
     EllipsisVerticalIcon,
@@ -13,18 +15,36 @@ import {
     PlusIcon,
 } from '@heroicons/vue/20/solid';
 
-const prop = defineProps({ character: Object, editable: Boolean, canEdit: Boolean });
+const prop = defineProps({
+    character: Object,
+    editable: Boolean,
+    canEdit: Boolean,
+    /** The group's era, and every era the server knows about. */
+    era: { type: String, default: null },
+    eras: { type: Array, default: () => [] },
+});
 
 const page = usePage();
 
 const isWeaponModalOpen = ref(false);
 const weaponQuery = ref('');
 
+/*
+ * The armoury holds both eras, and a 1920s table has no use for scrolling past
+ * the Uzi to reach the Thompson. The picker opens on this era and keeps the
+ * rest behind a switch rather than dropping them — the Keeper decides what an
+ * investigator is allowed to be holding, not this list.
+ */
+const allEras = ref(false);
+
+const inEra = (weapon) => belongsToEra(weapon, prop.era);
+
 /** Transient per-weapon message, keyed by pivot id ("empty magazine" and friends). */
 const notices = ref({});
 
 const openModal = () => {
     weaponQuery.value = '';
+    allEras.value = false;
     isWeaponModalOpen.value = true;
 };
 
@@ -170,6 +190,11 @@ const weaponDamage = computed(() => (wDmg, DB) => {
     }
 });
 
+/** How many weapons the era is keeping out of the picker. */
+const otherEraCount = computed(() =>
+    (page.props.auth.equipment ?? []).filter((weapon) => !inEra(weapon)).length
+);
+
 /** The armoury, grouped the way the handbook prints it. */
 const armoury = computed(() => {
     const needle = weaponQuery.value.trim().toLowerCase();
@@ -177,6 +202,7 @@ const armoury = computed(() => {
 
     (page.props.auth.equipment ?? [])
         .filter((weapon) => !needle || weapon.name.toLowerCase().includes(needle))
+        .filter((weapon) => allEras.value || inEra(weapon))
         .forEach((weapon) => {
             const category = weapon.category ?? 'Other';
 
@@ -222,6 +248,7 @@ const armoury = computed(() => {
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <h3 class="text-sm font-semibold text-cthulhu-green-900">{{ weapon.name }}</h3>
                             <span v-if="weapon.impale" class="chip-brass" title="Impales on an extreme success">Impaling</span>
+                            <EraChips v-if="!inEra(weapon)" :eras="weapon.eras" :options="eras" />
                         </div>
                         <p class="mt-0.5 text-xs text-cthulhu-green-500">
                             {{ weapon.skills?.display_name ?? weapon.skill }}
@@ -396,6 +423,16 @@ const armoury = computed(() => {
                             class="field ps-9"
                         />
                     </div>
+
+                    <label v-if="otherEraCount > 0" class="inline-flex items-center gap-2 text-sm text-cthulhu-green-800">
+                        <input
+                            v-model="allEras"
+                            type="checkbox"
+                            class="size-4 rounded border-parchment-400 text-cthulhu-green-600 focus:ring-cthulhu-green-600"
+                        />
+                        Show every era
+                        <span class="tabular text-xs text-cthulhu-green-500">({{ otherEraCount }} more)</span>
+                    </label>
                 </div>
 
                 <div class="flex-1 overflow-y-auto p-5">
@@ -408,7 +445,10 @@ const armoury = computed(() => {
                                     class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-parchment-50 px-3 py-2 text-left ring-1 ring-parchment-300 transition hover:bg-parchment-200"
                                     @click="addWeapon(w.id)"
                                 >
-                                    <span class="text-sm font-semibold text-cthulhu-green-900">{{ w.name }}</span>
+                                    <span class="flex flex-wrap items-center gap-2">
+                                        <span class="text-sm font-semibold text-cthulhu-green-900">{{ w.name }}</span>
+                                        <EraChips v-if="!inEra(w)" :eras="w.eras" :options="eras" />
+                                    </span>
                                     <span class="tabular text-xs text-cthulhu-green-500">
                                         {{ w.damage }} · {{ w.base_range }}
                                         <template v-if="w.magazine_capacity"> · mag {{ w.magazine_capacity }}</template>
@@ -419,7 +459,11 @@ const armoury = computed(() => {
                     </div>
 
                     <p v-if="armoury.length === 0" class="py-8 text-center text-sm text-cthulhu-green-500">
-                        No weapons match “{{ weaponQuery }}”.
+                        <template v-if="weaponQuery.trim()">
+                            No weapons match “{{ weaponQuery }}”<template v-if="!allEras && otherEraCount > 0">
+                            in this era — tick “Show every era” to widen the search</template>.
+                        </template>
+                        <template v-else>The armoury is empty.</template>
                     </p>
                 </div>
 

@@ -46,10 +46,12 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
     Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');
     Route::put('/character/{character}/{skill}/remove', [CharacterController::class, 'removeSkill'])->name('character.skill.remove');
-    Route::get('/character/{character}/append_skills/', [SkillController::class, 'appendAllMissingSkills'])->name('character.append.missing.skills');
 
-    Route::get('/experience/{character}/{skill}/increment', [ExperienceController::class, 'increment'])->name('experience.increment');
-    Route::get('/experience/{character}/{skill}/reset', [ExperienceController::class, 'reset'])->name('experience.reset');
+    // Experience checks. They change the sheet, so they are POSTs — the tally
+    // in the skill's box follows the figure each one hands back.
+    Route::post('/experience/{character}/{skill}/increment', [ExperienceController::class, 'increment'])->name('experience.increment');
+    Route::post('/experience/{character}/{skill}/decrement', [ExperienceController::class, 'decrement'])->name('experience.decrement');
+    Route::post('/experience/{character}/{skill}/reset', [ExperienceController::class, 'reset'])->name('experience.reset');
 
     Route::post('/weapon/equip/{character}', [WeaponController::class, 'addWeapon'])->name('equip.weapon');
     Route::post('/character/{character}/weapon/{equipable}/fire', [WeaponController::class, 'fireWeapon'])->name('fire.weapon');

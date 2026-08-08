@@ -63,6 +63,8 @@ stored: `Weapon::$magazine_capacity` parses the book's free-text "Bullets in Gun
 arithmetic lives in `WeaponController` — the client only renders what it returns.
 
 ### Equipment
+Which eras a weapon is offered in lives in `eras`, not in `era` — see **Eras** below.
+
 `app/Misc/EquipmentTable.php` is the transcription of the handbook's 1920s equipment lists
 (pp. 238–246) — 258 items in 13 sections, carrying the book's price cell verbatim. It holds only what
 an investigator would carry; food, lodging, real estate, furniture, household goods, vehicles and
@@ -118,6 +120,26 @@ The toggle is enforced by the `reference-data` middleware alias on the write rou
 in the UI. Reading and searching are never gated. Pages get an `editable` prop to decide what to
 offer. It does **not** gate players adding equipment to their own sheets — that goes through
 `EquipmentController`, authorized by `CharacterPolicy`.
+
+### Eras
+A group plays in one era (`groups.era`, the `Era` enum: `1920s`, `modern`). `Skill`, `Weapon` and
+`EquipmentItem` each carry an **`eras` JSON list** saying which eras they belong to — a list, because
+most things belong to both. It is **never empty**: something available throughout carries every era,
+and the `HasEras` trait (`app/Models/Concerns/HasEras.php`) normalises an empty list back to all of
+them on save. Use its `inEra(?Era)` scope and `availableIn(?Era)` helper; passing `null` means "every
+era", so callers without one need not branch.
+
+`app/Misc/EraTable.php` is where the values come from. Only the weapons' are from the book —
+`forWeapon()` parses the handbook's printed availability cell ("1920s, Modern", "WWII, Later",
+"Rare"). The skills and equipment are **guesses**, deliberately kept in that one file rather than
+spread through the seeders. `weapons.era` stays as the book prints it and is a note, not a filter;
+`weapons.eras` is what anything queries.
+
+On the character sheet (`$character->era()`, the group's, or the Twenties while ungrouped) the era
+**narrows what is offered, never what is owned**: the weapon and equipment pickers open on this era
+with a "show every era" tick, out-of-era skills stay off the sheet until they have a value above
+their starting one, and anything already owned is shown with an era chip rather than hidden. A
+Keeper handing a 1920s table a Garand is a legitimate move.
 
 `Skill`, `Weapon`, `EquipmentItem` and `StorageLocation` all use `SoftDeletes` ("retire" in the UI).
 A retired row keeps its id, so:

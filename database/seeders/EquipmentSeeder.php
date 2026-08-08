@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Misc\EquipmentTable;
+use App\Misc\EraTable;
 use App\Models\EquipmentItem;
 use App\Models\StorageLocation;
 use Illuminate\Database\Seeder;
@@ -18,7 +19,11 @@ class EquipmentSeeder extends Seeder
         foreach (EquipmentTable::all() as $item) {
             EquipmentItem::updateOrCreate(
                 ['slug' => $item['slug']],
-                [...$item, 'era' => '1920s', 'is_custom' => false],
+                [
+                    ...$item,
+                    'eras'      => EraTable::forEquipment($item['slug'], $item['section']),
+                    'is_custom' => false,
+                ],
             );
         }
 

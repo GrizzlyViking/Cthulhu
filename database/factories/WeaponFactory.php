@@ -30,6 +30,7 @@ class WeaponFactory extends Factory
             'cost'           => '$25 / $400',
             'malfunction'    => '100',
             'era'            => fake()->randomElement(Era::cases())->value,
+            'eras'           => Era::all(),
             'impale'         => true,
         ];
     }

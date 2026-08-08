@@ -3,6 +3,8 @@ import { ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import EraChips from '@/Components/EraChips.vue';
+import EraPicker from '@/Components/EraPicker.vue';
 import Pagination from '@/Pages/Components/Admin/Pagination.vue';
 import { ArrowUturnLeftIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid';
 
@@ -46,6 +48,8 @@ watch([category, era], () => reload());
 
 // ---- Create / edit ------------------------------------------------------
 
+const allEras = props.eras.map((option) => option.value);
+
 const blank = {
     name: '',
     category: props.categories[0],
@@ -57,6 +61,7 @@ const blank = {
     cost: '',
     malfunction: '',
     era: '',
+    eras: [...allEras],
     impale: false,
 };
 
@@ -78,6 +83,7 @@ const openForm = (weapon) => {
         cost: weapon.cost,
         malfunction: weapon.malfunction ?? '',
         era: weapon.era ?? '',
+        eras: [...(weapon.eras ?? allEras)],
         impale: weapon.impale,
     });
     form.reset();
@@ -195,7 +201,10 @@ const restore = (weapon) => {
                     <tbody class="divide-y divide-parchment-300">
                         <tr v-for="weapon in weapons.data" :key="weapon.id">
                             <td class="py-2.5 pr-3">
-                                <span class="font-semibold text-cthulhu-green-900">{{ weapon.name }}</span>
+                                <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span class="font-semibold text-cthulhu-green-900">{{ weapon.name }}</span>
+                                    <EraChips :eras="weapon.eras" :options="eras" />
+                                </span>
                                 <span class="block text-xs text-cthulhu-green-500">
                                     {{ weapon.category }}<template v-if="weapon.era"> · {{ weapon.era }}</template>
                                     <template v-if="weapon.impale"> · impales</template>
@@ -319,10 +328,22 @@ const restore = (weapon) => {
                     </div>
 
                     <div>
-                        <label for="w-era" class="field-label">Era</label>
+                        <label for="w-era" class="field-label">Availability, as printed</label>
                         <input id="w-era" v-model="form.era" type="text" class="field mt-1" placeholder="1920s, Modern" />
-                        <p class="field-hint">The availability cell, verbatim: “1920s”, “1920s, Modern”, “WWII, Later”, “Rare”.</p>
+                        <p class="field-hint">The book's cell, verbatim: “1920s”, “1920s, Modern”, “WWII, Later”, “Rare”. A note, not a filter.</p>
                         <p v-if="form.errors.era" class="field-error">{{ form.errors.era }}</p>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <EraPicker
+                            v-model="form.eras"
+                            :eras="eras"
+                            legend="Offered to"
+                            hint="Which tables see this in the armoury. Read off the cell above when the weapon
+                                  was imported, but yours to overrule — “Rare” says how hard it is to come by,
+                                  not when."
+                            :error="form.errors.eras"
+                        />
                     </div>
 
                     <div class="sm:col-span-2">

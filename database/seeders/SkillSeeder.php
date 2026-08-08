@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Misc\EraTable;
 use App\Models\Skill;
 use Illuminate\Database\Seeder;
 
@@ -81,6 +82,7 @@ class SkillSeeder extends Seeder
 
         collect($skills)->each(function (array $item, int $index): void {
             $item['order_by'] = $index;
+            $item['eras']     = EraTable::forSkill($item['slug']);
 
             Skill::updateOrCreate(['slug' => $item['slug']], $item);
         });

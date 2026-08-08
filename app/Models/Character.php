@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CharacterStatus;
+use App\Enums\Era;
 use App\Misc\CharacterCreation;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Collection;
 
 /**
  * @property int    $id
@@ -178,20 +178,6 @@ class Character extends Model
         return $this;
     }
 
-    public function appendSkills(): Collection
-    {
-        return Skill::all()
-            ->reject(function (Skill $skill) {
-                return $this->skills->contains($skill);
-            })
-            ->each(function (Skill $skill) {
-                $this->skills()->attach($skill, [
-                    'order' => $skill->order_by,
-                    'value' => $skill->starting_value,
-                ]);
-            });
-    }
-
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order', 'show')->orderBy('display_name');
@@ -236,5 +222,15 @@ class Character extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * The era this investigator lives in — their group's. A character with no
+     * group yet plays in the Twenties, the same assumption the creation wizard
+     * makes.
+     */
+    public function era(): Era
+    {
+        return $this->group?->era ?? Era::Twenties;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Misc\EraTable;
 use App\Misc\WeaponTable;
 use App\Models\Weapon;
 use Illuminate\Database\Seeder;
@@ -17,7 +18,10 @@ class WeaponSeeder extends Seeder
     public function run(): void
     {
         foreach (WeaponTable::all() as $weapon) {
-            Weapon::updateOrCreate(['name' => $weapon['name']], $weapon);
+            Weapon::updateOrCreate(
+                ['name' => $weapon['name']],
+                [...$weapon, 'eras' => EraTable::forWeapon($weapon['era'], $weapon['name'])],
+            );
         }
 
         // Not from the book: unarmed brawling still needs something to equip.
@@ -31,6 +35,7 @@ class WeaponSeeder extends Seeder
             'cost'           => '-',
             'malfunction'    => '-',
             'era'            => '1920s, Modern',
+            'eras'           => EraTable::forWeapon('1920s, Modern'),
             'impale'         => false,
         ]);
     }

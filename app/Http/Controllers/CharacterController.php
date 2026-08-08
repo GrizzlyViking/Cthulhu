@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Era;
 use App\Http\Requests\CharacterAttributeUpdateRequest;
 use App\Http\Requests\CharacterBackstoryUpdateRequest;
 use App\Http\Requests\CharacterSkillUpdateRequest;
@@ -38,6 +39,11 @@ class CharacterController extends Controller
             ...compact('character', 'availableSkills'),
             'storageLocations'     => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
             'alwaysRelevantSkills' => config('cthulhu.sheet.always_relevant_skills'),
+            // The group's era. The sheet leads with what belongs to it and
+            // keeps the rest one click away rather than hiding it: a Keeper
+            // running a 1920s game may still hand somebody a Garand.
+            'era'  => $character->era()->value,
+            'eras' => Era::options(),
         ]);
     }
 

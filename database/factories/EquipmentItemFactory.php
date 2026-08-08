@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Era;
 use App\Misc\EquipmentTable;
 use App\Models\EquipmentItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,9 +27,17 @@ class EquipmentItemFactory extends Factory
             'name'      => $name,
             'section'   => fake()->randomElement(EquipmentTable::sections()),
             'cost'      => '$'.fake()->randomFloat(2, 0.1, 99),
-            'era'       => '1920s',
+            'eras'      => Era::all(),
             'is_custom' => false,
         ];
+    }
+
+    /**
+     * Of its time — a Chesterfield overcoat, a carbide lamp.
+     */
+    public function periodOnly(): static
+    {
+        return $this->state(fn (): array => ['eras' => [Era::Twenties->value]]);
     }
 
     /**

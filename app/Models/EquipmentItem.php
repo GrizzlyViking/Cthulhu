@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Misc\EquipmentTable;
+use App\Models\Concerns\HasEras;
 use Database\Factories\EquipmentItemFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,27 +18,27 @@ use Illuminate\Support\Str;
  * A line in the equipment catalogue: either the Investigator Handbook's, or
  * something a player typed that the handbook did not have.
  *
- * @property int     $id
- * @property string  $slug
- * @property string  $name
- * @property ?string $section
- * @property ?string $cost
- * @property ?string $era
- * @property bool    $is_custom
- * @property ?int    $created_by
- * @property ?Carbon $deleted_at
+ * @property int           $id
+ * @property string        $slug
+ * @property string        $name
+ * @property ?string       $section
+ * @property ?string       $cost
+ * @property array<string> $eras
+ * @property bool          $is_custom
+ * @property ?int          $created_by
+ * @property ?Carbon       $deleted_at
  */
 class EquipmentItem extends Model
 {
     /** @use HasFactory<EquipmentItemFactory> */
-    use HasFactory, SoftDeletes;
+    use HasEras, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'slug',
         'name',
         'section',
         'cost',
-        'era',
+        'eras',
         'is_custom',
         'created_by',
     ];
@@ -46,6 +47,7 @@ class EquipmentItem extends Model
     {
         return [
             'is_custom' => 'boolean',
+            'eras'      => 'array',
         ];
     }
 

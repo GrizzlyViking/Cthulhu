@@ -19,7 +19,7 @@ const faqs = [
     {
         id: 3,
         question: 'How do experience checks work?',
-        answer: 'A marker appears beside a skill once it has earned experience. It turns red when the checks reach a tenth of the skill value, meaning the skill is ready to improve. Tap the marker to clear it once you have rolled the improvement.',
+        answer: 'A successful roll earns the skill a mark, and the marks are tallied beside its name. They turn red once they reach a tenth of the skill value, meaning the skill is ready to improve. Tap the skill numbers to open it: there you can add or take away a mark, and clear them all once you have rolled the improvement.',
     },
     {
         id: 4,

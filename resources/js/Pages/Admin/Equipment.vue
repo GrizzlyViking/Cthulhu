@@ -3,12 +3,15 @@ import { ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import EraChips from '@/Components/EraChips.vue';
+import EraPicker from '@/Components/EraPicker.vue';
 import Pagination from '@/Pages/Components/Admin/Pagination.vue';
 import { ArrowUturnLeftIcon, PencilSquareIcon, PlusIcon, TrashIcon } from '@heroicons/vue/20/solid';
 
 const props = defineProps({
     items: { type: Object, required: true },
     sections: { type: Array, required: true },
+    eras: { type: Array, required: true },
     locations: { type: Array, required: true },
     filters: { type: Object, required: true },
     editable: { type: Boolean, required: true },
@@ -17,6 +20,9 @@ const props = defineProps({
 
 const search = ref(props.filters.search);
 const section = ref(props.filters.section);
+const era = ref(props.filters.era);
+
+const allEras = props.eras.map((option) => option.value);
 
 let debounce = null;
 
@@ -26,6 +32,7 @@ const reload = (overrides = {}, delay = 0) => {
         const query = {
             search: search.value,
             section: section.value,
+            era: era.value,
             trashed: props.filters.trashed,
             custom: props.filters.custom,
             ...overrides,
@@ -40,14 +47,14 @@ const reload = (overrides = {}, delay = 0) => {
 };
 
 watch(search, () => reload({}, 300));
-watch(section, () => reload());
+watch([section, era], () => reload());
 
 // ---- Catalogue item form ------------------------------------------------
 
 const editing = ref(null);
 const showForm = ref(false);
 
-const blank = { name: '', section: '', cost: '', era: '1920s' };
+const blank = { name: '', section: '', cost: '', eras: [...allEras] };
 
 const form = useForm({ ...blank });
 
@@ -57,7 +64,7 @@ const openForm = (item) => {
         name: item.name,
         section: item.section ?? '',
         cost: item.cost ?? '',
-        era: item.era ?? '',
+        eras: [...(item.eras ?? allEras)],
     });
     form.reset();
     form.clearErrors();
@@ -148,6 +155,16 @@ const removeLocation = (location) => {
                     </select>
                 </div>
 
+                <div>
+                    <label for="eq-era" class="sr-only">Era</label>
+                    <select id="eq-era" v-model="era" class="field w-auto">
+                        <option value="">All eras</option>
+                        <option v-for="option in eras" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                </div>
+
                 <button
                     type="button"
                     class="btn-sm whitespace-nowrap"
@@ -174,6 +191,7 @@ const removeLocation = (location) => {
                         <tr class="border-b border-parchment-300">
                             <th scope="col" class="py-2 pr-3 eyebrow">Item</th>
                             <th scope="col" class="py-2 pr-3 eyebrow">Section</th>
+                            <th scope="col" class="py-2 pr-3 eyebrow">Era</th>
                             <th scope="col" class="py-2 pr-3 eyebrow">Cost</th>
                             <th scope="col" class="py-2 pr-3 eyebrow text-right">On sheets</th>
                             <th v-if="editable" scope="col" class="py-2 eyebrow text-right">Actions</th>
@@ -186,6 +204,9 @@ const removeLocation = (location) => {
                                 <span v-if="item.is_custom" class="chip-brass ml-2">Added by a player</span>
                             </td>
                             <td class="py-2.5 pr-3 text-cthulhu-green-700">{{ item.section ?? '—' }}</td>
+                            <td class="py-2.5 pr-3">
+                                <EraChips :eras="item.eras" :options="eras" always />
+                            </td>
                             <td class="py-2.5 pr-3 tabular text-cthulhu-green-700">{{ item.cost ?? '—' }}</td>
                             <td class="py-2.5 pr-3 text-right tabular text-cthulhu-green-700">{{ item.characters_count }}</td>
                             <td v-if="editable" class="py-2.5 text-right">
@@ -209,7 +230,7 @@ const removeLocation = (location) => {
                         </tr>
 
                         <tr v-if="items.data.length === 0">
-                            <td :colspan="editable ? 5 : 4" class="py-6 text-center text-sm text-cthulhu-green-500">
+                            <td :colspan="editable ? 6 : 5" class="py-6 text-center text-sm text-cthulhu-green-500">
                                 Nothing matches those filters.
                             </td>
                         </tr>
@@ -292,20 +313,22 @@ const removeLocation = (location) => {
                     <p v-if="form.errors.section" class="field-error">{{ form.errors.section }}</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="eq-cost" class="field-label">Cost</label>
-                        <input id="eq-cost" v-model="form.cost" type="text" class="field mt-1" placeholder="$1.35" />
-                        <p class="field-hint">The book's cell verbatim — ranges and cent signs are fine.</p>
-                        <p v-if="form.errors.cost" class="field-error">{{ form.errors.cost }}</p>
-                    </div>
-
-                    <div>
-                        <label for="eq-era" class="field-label">Era</label>
-                        <input id="eq-era" v-model="form.era" type="text" class="field mt-1" placeholder="1920s" />
-                        <p v-if="form.errors.era" class="field-error">{{ form.errors.era }}</p>
-                    </div>
+                <div>
+                    <label for="eq-cost" class="field-label">Cost</label>
+                    <input id="eq-cost" v-model="form.cost" type="text" class="field mt-1" placeholder="$1.35" />
+                    <p class="field-hint">The book's cell verbatim — ranges and cent signs are fine.</p>
+                    <p v-if="form.errors.cost" class="field-error">{{ form.errors.cost }}</p>
                 </div>
+
+                <EraPicker
+                    v-model="form.eras"
+                    :eras="eras"
+                    legend="Offered to"
+                    hint="Which tables can buy it. The catalogue is the 1920s lists, but most of what is in
+                          it — rope, a compass, a first aid case — would serve a modern investigator just as
+                          well; untick Modern Day for the things that would not."
+                    :error="form.errors.eras"
+                />
 
                 <div class="flex items-center justify-end gap-2">
                     <button type="button" class="btn-ghost" @click="showForm = false">Cancel</button>

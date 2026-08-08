@@ -13,12 +13,21 @@ defineProps({
     editable: Boolean,
     canEdit: Boolean,
     storageLocations: { type: Array, default: () => [] },
+    /** The group's era, and every era the server knows about. */
+    era: { type: String, default: null },
+    eras: { type: Array, default: () => [] },
 });
 </script>
 
 <template>
     <div class="flex flex-col gap-5">
-        <Weapons :character="character" :editable="editable" :can-edit="canEdit" />
-        <EquipmentList :character="character" :can-edit="canEdit" :storage-locations="storageLocations" />
+        <Weapons :character="character" :editable="editable" :can-edit="canEdit" :era="era" :eras="eras" />
+        <EquipmentList
+            :character="character"
+            :can-edit="canEdit"
+            :storage-locations="storageLocations"
+            :era="era"
+            :eras="eras"
+        />
     </div>
 </template>

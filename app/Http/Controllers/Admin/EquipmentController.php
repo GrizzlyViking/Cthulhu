@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Era;
 use App\Misc\EquipmentTable;
 use App\Models\EquipmentItem;
 use App\Models\StorageLocation;
@@ -29,6 +30,7 @@ class EquipmentController extends AdminController
     {
         $search  = trim((string) $request->query('search', ''));
         $section = (string) $request->query('section', '');
+        $era     = Era::tryFrom((string) $request->query('era', ''));
         $trashed = $request->boolean('trashed');
         $custom  = $request->boolean('custom');
 
@@ -41,6 +43,7 @@ class EquipmentController extends AdminController
                 $this->whereAnyLike($query, ['name', 'section'], $search);
             })
             ->when(in_array($section, $sections, true), fn (Builder $query) => $query->where('section', $section))
+            ->inEra($era)
             ->withCount('characters')
             ->catalogueOrder()
             ->paginate(25)
@@ -49,9 +52,11 @@ class EquipmentController extends AdminController
         return Inertia::render('Admin/Equipment', [
             'items'    => $items,
             'sections' => $sections,
+            'eras'     => Era::options(),
             'filters'  => [
                 'search'  => $search,
                 'section' => in_array($section, $sections, true) ? $section : '',
+                'era'     => $era?->value ?? '',
                 'trashed' => $trashed,
                 'custom'  => $custom,
             ],
@@ -166,9 +171,15 @@ class EquipmentController extends AdminController
             'section' => ['nullable', 'string', 'max:255'],
             // The book's price cell verbatim: "$1.35-$2.25", "9¢/lb.", "79¢".
             'cost' => ['nullable', 'string', 'max:255'],
-            'era'  => ['nullable', 'string', 'max:255'],
+            // The catalogue is the 1920s lists, but most of what is in it — rope,
+            // a compass, a first aid case — would serve a modern table just as
+            // well, so this is set per item rather than assumed.
+            'eras'   => ['required', 'array', 'min:1'],
+            'eras.*' => [Rule::enum(Era::class)],
         ], [
-            'name.unique' => 'Something in the catalogue already has that name. If it is retired, restore it instead.',
+            'name.unique'   => 'Something in the catalogue already has that name. If it is retired, restore it instead.',
+            'eras.required' => 'Pick at least one era, or no group could ever buy it.',
+            'eras.min'      => 'Pick at least one era, or no group could ever buy it.',
         ]);
     }
 }
