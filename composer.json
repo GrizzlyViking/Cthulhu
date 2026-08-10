@@ -10,10 +10,8 @@
         "laravel/breeze": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/pulse": "^1.2",
-        "laravel/reverb": "@beta",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
-        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.21",
         "symfony/http-client": "^8.1",
         "symfony/mailgun-mailer": "^8.1",
@@ -60,7 +58,7 @@
             "@php artisan migrate --graceful --ansi"
         ],
         "pint": "pint",
-        "phpstan": "vendor/bin/phpstan -c phpstan.neon"
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=1G"
     },
     "extra": {
         "laravel": {

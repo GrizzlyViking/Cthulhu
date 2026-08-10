@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    # `tests` is deliberately absent. Pest's test closures are bound to the
+    # TestCase at runtime, so every `$this->user` in them reads as an undefined
+    # property on PHPUnit\Framework\TestCase — several hundred errors that say
+    # nothing about the code.
+    paths:
+        - app
+        - config
+        - database
+        - routes
+
+    level: 5

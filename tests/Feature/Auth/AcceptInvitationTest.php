@@ -41,7 +41,7 @@ test('accepting a valid invitation creates the user in the group with the player
         'password_confirmation' => 'secret-password',
     ]);
 
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('home', absolute: false));
 
     $user = User::where('email', $invitation->email)->first();
 

@@ -142,18 +142,3 @@ test('an ungrouped player cannot view another ungrouped players character', func
 
     expect($viewer->can('view', $character))->toBeFalse();
 });
-
-test('messages are not delivered across group boundaries', function () {
-    $group     = Group::factory()->create();
-    $sender    = User::factory()->inGroup($group)->create();
-    $groupmate = User::factory()->inGroup($group)->create();
-    $outsider  = User::factory()->inGroup()->create();
-
-    $this->actingAs($sender)->post(route('message.send'), [
-        'recipients' => [$groupmate->id, $outsider->id],
-        'content'    => 'The stars are right.',
-    ])->assertRedirect();
-
-    $this->assertDatabaseHas('messages', ['receiver_id' => $groupmate->id]);
-    $this->assertDatabaseMissing('messages', ['receiver_id' => $outsider->id]);
-});

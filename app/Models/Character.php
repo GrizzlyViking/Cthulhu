@@ -146,7 +146,7 @@ class Character extends Model
      * Players own characters
      */
     #[Scope]
-    public function playersOwn(Builder $query): void
+    protected function playersOwn(Builder $query): void
     {
         $query->where('user_id', auth()->id())->orderBy('updated_at', 'desc');
     }
@@ -155,7 +155,7 @@ class Character extends Model
      * Scope to show other players characters
      */
     #[Scope]
-    public function others(Builder $query): void
+    protected function others(Builder $query): void
     {
         $query->where('user_id', '!=', auth()->id());
     }

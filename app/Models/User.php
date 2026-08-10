@@ -24,7 +24,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property ?int                  $group_id
  * @property ?Carbon               $blocked_at
  * @property ?Group                $group
- * @property Collection<Message>   $messages
  * @property Collection<Character> $characters
  */
 class User extends Authenticatable
@@ -82,11 +81,6 @@ class User extends Authenticatable
         return DB::table('sessions')->where('user_id', $this->id)->exists();
     }
 
-    public function messages(): HasMany
-    {
-        return $this->hasMany(Message::class, 'receiver_id');
-    }
-
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
@@ -141,7 +135,7 @@ class User extends Authenticatable
      * belong to a group, or just themselves while they are ungrouped.
      */
     #[Scope]
-    public function inGroupOf(Builder $query, User $user): void
+    protected function inGroupOf(Builder $query, User $user): void
     {
         if ($user->group_id === null) {
             $query->where('id', $user->id);

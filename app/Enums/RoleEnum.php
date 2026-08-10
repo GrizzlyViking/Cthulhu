@@ -47,7 +47,7 @@ enum RoleEnum: string implements EnumInterface
     {
         return match ($this) {
             self::PLAYER => 'Owns and edits their own investigators.',
-            self::KEEPER => 'Runs the game: sees and edits every sheet in the group, sends messages and rolls in secret.',
+            self::KEEPER => 'Runs the game: sees and edits every sheet in the group, and rolls in secret.',
             self::ADMIN  => 'Manages the group itself, its members and their roles.',
         };
     }

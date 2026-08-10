@@ -13,7 +13,6 @@ A Call of Cthulhu tabletop RPG character sheet web app. Players manage their own
 - **Admin section** — native Inertia pages at `/admin` (see below); Filament has been removed
 - **Livewire v3** — available but minimal current usage
 - **Spatie Laravel Permission** — role system (`RoleEnum`: `player`, `keeper`, `admin`); roles are cumulative
-- **Laravel Reverb + Echo** — real-time messaging
 - **Tailwind CSS v3** — single dark-framed theme; `darkMode: 'class'` so `dark:` variants never fire off the OS preference
 - **Vite** — served via Laravel Valet at `cthulhu.test` with TLS
 
@@ -33,6 +32,9 @@ npx vitest                                          # JS component tests (vitest
 
 # Code style (run before finalising PHP changes)
 vendor/bin/pint --dirty
+
+# Static analysis
+composer phpstan          # Larastan at level 5 over app/, config/, database/, routes/
 
 # Database
 php artisan migrate
@@ -173,8 +175,11 @@ Palette families are `cthulhu-green` (canvas and ink, 50–950), `parchment` (ca
 `cthulhu-yellow` (brass accents) and `cthulhu-blood` (danger). Do not reach for Tailwind's
 default `gray-*`, `indigo-*` or `bg-white` — nothing in the app uses them.
 
-### Real-time messaging
-`MessageSent` event broadcasts via Reverb. `resources/js/echo.js` configures Laravel Echo. `SendMessage` is a queued job.
+### No broadcasting
+There is none. Player-to-player messaging was a proof of concept that never took off and was
+removed along with the whole Reverb/Echo/Pusher stack; the `messages` table is left in place but
+nothing reads or writes it. The Keeper's secret roll is a plain `axios.post` to `skill.roll` that
+answers with the outcomes — it never needed a socket.
 
 ## Key conventions
 
@@ -191,5 +196,11 @@ default `gray-*`, `indigo-*` or `bg-white` — nothing in the app uses them.
 - No `dark:` variants — the app ships one theme (see Design system).
 - `env()` only inside `config/` files; everywhere else use `config()`.
 - `vendor/bin/pint --dirty` must pass before any PHP change is considered done.
+- `composer phpstan` must stay green too. `phpstan-baseline.neon` freezes the 73 errors that were
+  already there when Larastan was first wired up — nearly all of them Larastan mis-typing Eloquent
+  pivots, scopes and enum casts. Fix errors rather than adding to the baseline; when you do fix one,
+  regenerate with `vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon` so the
+  count only ever falls. Model scopes marked `#[Scope]` must be `protected` — Larastan only reads
+  the attribute on non-public methods, and Laravel's own convention agrees.
 - All tests are Pest; create with `php artisan make:test --pest {Name}`.
 - Feature tests use `RefreshDatabase` (configured in `tests/Pest.php`).

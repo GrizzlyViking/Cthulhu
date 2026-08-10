@@ -34,7 +34,7 @@ const faqs = [
     {
         id: 6,
         question: 'What can the Keeper do?',
-        answer: 'The Keeper can view and edit every sheet, send messages to selected players, and roll skills secretly against chosen investigators without revealing the outcome.',
+        answer: 'The Keeper can view and edit every sheet, and roll skills secretly against chosen investigators without revealing the outcome.',
     },
     {
         id: 7,

@@ -52,10 +52,9 @@ class HandleInertiaRequests extends Middleware
                     'own'    => Character::query()->playersOwn()->get(),
                     ],
                 // The armoury is rulebook data, not group data — it stays global.
-                'equipment'          => $this->armoury(),
-                'users'              => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->with('roles')->get(),
-                'listOfMessageUsers' => [],
-                'listOfRollUsers'    => [],
+                'equipment'       => $this->armoury(),
+                'users'           => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->with('roles')->get(),
+                'listOfRollUsers' => [],
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

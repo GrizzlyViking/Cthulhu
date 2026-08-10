@@ -5,7 +5,6 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterWizardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExperienceController;
-use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchedulingController;
@@ -17,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'welcome'])->name('welcome');
 
 Route::middleware('auth', 'verified')->group(function () {
+    // Where every authenticated entry point lands. It only decides and
+    // redirects — the dashboard stays a page of its own in the nav.
+    Route::get('/home', [PageController::class, 'home'])->name('home');
+
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 
@@ -76,10 +79,6 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::post('/message/send', [MessageController::class, 'send'])->name('message.send');
-    Route::put('/message/read', [MessageController::class, 'read'])->name('message.read');
-    Route::get('/message', [MessageController::class, 'index'])->name('message.index');
 });
 
 /*

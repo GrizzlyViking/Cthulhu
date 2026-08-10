@@ -8,7 +8,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
@@ -17,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Someone already signed in who asks for a guest page lands where
+        // every other authenticated entry point does.
+        $middleware->redirectUsersTo('/home');
 
         $middleware->alias([
             'admin'          => \App\Http\Middleware\EnsureUserIsAdmin::class,

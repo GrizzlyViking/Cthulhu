@@ -30,7 +30,7 @@ defineProps({
             </p>
 
             <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-                <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="btn-primary">
+                <Link v-if="$page.props.auth.user" :href="route('home')" class="btn-primary">
                     Enter
                 </Link>
                 <Link v-else href="/login" class="btn-primary">Log in</Link>

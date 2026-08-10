@@ -2,7 +2,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {Head, usePage} from '@inertiajs/vue3';
 import ContactsList from "@/Pages/Components/ContactsList.vue";
-import Message from "@/Pages/Components/Message.vue";
 import {ref} from "vue";
 
 defineProps(['users', 'skills'])
@@ -34,11 +33,6 @@ const rollFor = (skill) => {
         <div class="page">
             <section class="panel p-4 sm:p-6">
                 <contacts-list :users="users"></contacts-list>
-            </section>
-
-            <section v-if="page.props.auth.listOfMessageUsers.length > 0" class="panel p-4 sm:p-6">
-                <h2 class="mb-4 text-base font-semibold text-cthulhu-green-900">Send a message</h2>
-                <Message></Message>
             </section>
 
             <section v-if="page.props.auth.listOfRollUsers.length > 0" class="panel p-4 sm:p-6">

@@ -5,35 +5,17 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage } from '@inertiajs/vue3';
-import Alert from '@/Pages/Components/Alert.vue';
+import { Link } from '@inertiajs/vue3';
 import { Bars3Icon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 import { useRoles } from '@/Pages/Composables/useRoles.js';
 
 const showingNavigationDropdown = ref(false);
 
-const page = usePage();
-
 const { isAdmin } = useRoles();
-
-let player_message = {};
-let open_alert = ref(false);
-
-Echo.private(`App.Models.User.${page.props.auth.user.id}`)
-    .listen('MessageSent', (message) => {
-        player_message = message.message;
-        open_alert.value = true;
-    })
-
-let markRead = () => {
-    open_alert.value = false;
-}
 </script>
 
 <template>
     <div>
-        <Alert v-if="open_alert" :open="open_alert" :message="player_message" @mark_read="markRead" />
-
         <div class="min-h-screen bg-cthulhu-green-950">
             <nav class="border-b border-cthulhu-green-900 bg-cthulhu-green-900">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -47,9 +29,6 @@ let markRead = () => {
                             <div class="hidden items-center gap-1 sm:ms-6 sm:flex">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
-                                </NavLink>
-                                <NavLink :href="route('message.index')" :active="route().current('message.index')">
-                                    Messages
                                 </NavLink>
                                 <NavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">
                                     Calendar
@@ -134,7 +113,6 @@ let markRead = () => {
                 <div v-show="showingNavigationDropdown" class="border-t border-cthulhu-green-800 sm:hidden">
                     <div class="space-y-1 py-3">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('message.index')" :active="route().current('message.index')">Messages</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">Calendar</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="isAdmin" :href="route('admin.index')" :active="route().current('admin.*')">
                             Admin

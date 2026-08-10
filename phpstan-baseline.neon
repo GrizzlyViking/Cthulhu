@@ -1,0 +1,355 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:pending\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/GroupListCommand.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Console/Commands/GroupListCommand.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Group\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Console/Commands/GroupListCommand.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Console/Commands/PlayerAssignCommand.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/PlayerListCommand.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: App\\Enums\\Characteristic\:\:MOVE_RATE$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Enums/Characteristic.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/Admin/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/DashboardController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\EquipmentItem\>\:\:catalogueOrder\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/EquipmentController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>value" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/EquipmentController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/Admin/GroupController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, email\: string, expiresAt\: string\}, Closure\(App\\Models\\Invitation\)\: array\{id\: int, email\: string, expiresAt\: string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/GroupController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/GroupController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>value" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/SkillController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>value" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Admin/WeaponController.php
+
+		-
+			message: '#^Parameter \#1 \$user of class Illuminate\\Auth\\Events\\Verified constructor expects Illuminate\\Contracts\\Auth\\MustVerifyEmail, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Auth/VerifyEmailController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CharacterController.php
+
+		-
+			message: '#^Called ''Model\:\:make\(\)'' which performs unnecessary work, use ''new Model\(\)''\.$#'
+			identifier: larastan.noModelMake
+			count: 1
+			path: app/Http/Controllers/CharacterController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/CharacterController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:skillPointsFor\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Call to function abort_unless\(\) with false and 403 will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Property App\\Models\\Character\:\:\$backstory \(string\|null\) does not accept array\<mixed, mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Property App\\Models\\Character\:\:\$status \(string\) does not accept App\\Enums\\CharacterStatus\:\:Complete\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\CharacterStatus\:\:Draft will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>era" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Character\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/CharacterWizardController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\EquipmentItem\>\:\:catalogueOrder\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/EquipmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$experience\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ExperienceController.php
+
+		-
+			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\User\>\:\:with\(\) expects array\<array\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>\|string, array\{characters\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: void\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PageController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\CharacterStatus\:\:Draft will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/PageController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:skills\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/SkillController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Weapon\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Weapon\>\:\:\$magazine_capacity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/WeaponController.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 2
+			path: app/Http/Requests/Wizard/WizardSkillsRequest.php
+
+		-
+			message: '#^Call to function is_string\(\) with array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Http/Requests/Wizard/WizardSkillsRequest.php
+
+		-
+			message: '#^Offset ''type'' on array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Http/Requests/Wizard/WizardSkillsRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Skill\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Misc/CharacterSheet.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Misc/CharacterSheet.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{name\: string, base\: int, value\: int, experience\: bool\}, Closure\(App\\Models\\Skill\)\: array\{name\: string, base\: int, value\: int, experience\: bool\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Misc/CharacterSheet.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\Skill\)\: bool given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Misc/CharacterSheet.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sortBy\(\) expects array\<array\{string, string\}\|\(callable\(Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\)\: mixed\)\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string\>\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string, Closure\(App\\Models\\Skill\)\: lowercase\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Misc/CharacterSheet.php
+
+		-
+			message: '#^Static property App\\Misc\\Roll\:\:\$added \(int\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Misc/Roll.php
+
+		-
+			message: '#^Static property App\\Misc\\Roll\:\:\$eyes \(int\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Misc/Roll.php
+
+		-
+			message: '#^Static property App\\Misc\\Roll\:\:\$multiplier \(int\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Misc/Roll.php
+
+		-
+			message: '#^Static property App\\Misc\\Roll\:\:\$rolls \(int\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Misc/Roll.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 3
+			path: app/Misc/Wealth.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$era\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Character.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Character.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>era" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Character.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/EquipmentItem.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:pending\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Group.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Skill.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\User\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\User\:\:\$hidden is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$hidden\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Property ''role_names'' does not exist in model\.$#'
+			identifier: rules.modelAppends
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Weapon.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: database/factories/EventFactory.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: database/factories/UserFactory.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 3
+			path: database/migrations/2024_06_06_125912_create_pulse_tables.php
+
+		-
+			message: '#^Static method Illuminate\\Support\\Facades\\Route\:\:middleware\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: routes/web.php

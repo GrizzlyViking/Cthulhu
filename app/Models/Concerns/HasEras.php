@@ -32,7 +32,7 @@ trait HasEras
      * "every era", so a caller with no era in hand need not branch.
      */
     #[Scope]
-    public function inEra(Builder $query, ?Era $era): void
+    protected function inEra(Builder $query, ?Era $era): void
     {
         if ($era === null) {
             return;
