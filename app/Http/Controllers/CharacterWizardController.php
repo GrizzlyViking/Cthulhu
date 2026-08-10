@@ -93,6 +93,14 @@ class CharacterWizardController extends Controller
 
         $character->addAllSkills();
 
+        // The new investigator joins the campaign the group is playing, so
+        // they appear under Characters rather than in limbo.
+        $activeGameId = $request->user()->group?->active_game_id;
+
+        if ($activeGameId !== null) {
+            $character->games()->syncWithoutDetaching([$activeGameId]);
+        }
+
         return to_route('character.create');
     }
 
@@ -226,8 +234,13 @@ class CharacterWizardController extends Controller
         abort_unless($character->status === CharacterStatus::Draft, 403);
     }
 
+    /**
+     * The era a new investigator is built for: that of the campaign their
+     * group is playing, falling back to the group's default while it has none
+     * and to the Twenties while they are ungrouped.
+     */
     private function resolveEra(User $user): Era
     {
-        return $user->group?->era ?? Era::Twenties;
+        return $user->group?->activeGame?->era ?? $user->group?->era ?? Era::Twenties;
     }
 }

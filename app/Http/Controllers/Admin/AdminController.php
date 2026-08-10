@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Game;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -60,5 +61,18 @@ abstract class AdminController extends Controller
         abort_unless($user->group_id === $group->id, 404);
 
         return $user;
+    }
+
+    /**
+     * Resolve a game within the admin's own group, on the same terms: another
+     * group's campaign 404s rather than merely refusing.
+     */
+    protected function gameOfCurrentGroup(Request $request, Game $game): Game
+    {
+        $group = $this->requireGroup($request);
+
+        abort_unless($game->group_id === $group->id, 404);
+
+        return $game;
     }
 }

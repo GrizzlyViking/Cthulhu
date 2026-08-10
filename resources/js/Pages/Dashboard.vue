@@ -1,59 +1,27 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, usePage} from '@inertiajs/vue3';
-import ContactsList from "@/Pages/Components/ContactsList.vue";
-import {ref} from "vue";
+import { Head, Link } from '@inertiajs/vue3';
+import ContactsList from '@/Pages/Components/ContactsList.vue';
+import { useRoles } from '@/Pages/Composables/useRoles.js';
 
-defineProps(['users', 'skills'])
+defineProps(['users']);
 
-const page = usePage();
-
-let resultOfRoll = ref([]);
-let showResultOfRoll = ref(false);
-
-const rollFor = (skill) => {
-    axios.post(route('skill.roll'), {
-        skill_slug: skill,
-        users: page.props.auth.listOfRollUsers.map((user) => user.id),
-    }).then((response) => {
-        resultOfRoll = response.data;
-        showResultOfRoll.value = true;
-    });
-}
+const { isKeeper } = useRoles();
 </script>
 
 <template>
-    <Head title="Dashboard"/>
+    <Head title="Dashboard" />
 
     <AuthenticatedLayout>
         <template #header>
             <h1 class="display text-2xl text-parchment-100">Dashboard</h1>
+            <!-- Rolling in secret lives on the Keeper's screen, next to the party it is rolled against. -->
+            <Link v-if="isKeeper" :href="route('keeper.index')" class="btn-secondary btn-sm">Keeper screen</Link>
         </template>
 
         <div class="page">
             <section class="panel p-4 sm:p-6">
                 <contacts-list :users="users"></contacts-list>
-            </section>
-
-            <section v-if="page.props.auth.listOfRollUsers.length > 0" class="panel p-4 sm:p-6">
-                <h2 class="mb-1 text-base font-semibold text-cthulhu-green-900">Secret roll</h2>
-                <p class="field-hint mb-4">Rolls against the selected players without telling them.</p>
-                <button type="button" class="btn-primary" @click="rollFor('spot-hidden')">
-                    Roll Spot Hidden
-                </button>
-            </section>
-
-            <section v-if="showResultOfRoll" class="panel p-4 sm:p-6">
-                <h2 class="mb-3 text-base font-semibold text-cthulhu-green-900">Result</h2>
-                <ul class="flex flex-col gap-2">
-                    <li
-                        v-for="(result, index) in resultOfRoll"
-                        :key="index"
-                        class="rounded-lg bg-parchment-50 px-3 py-2 text-sm text-cthulhu-green-900 ring-1 ring-cthulhu-blood-400/40"
-                    >
-                        {{ result }}
-                    </li>
-                </ul>
             </section>
         </div>
     </AuthenticatedLayout>

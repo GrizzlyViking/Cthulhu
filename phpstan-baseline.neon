@@ -7,18 +7,6 @@ parameters:
 			path: app/Console/Commands/GroupListCommand.php
 
 		-
-			message: '#^Cannot access property \$value on string\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Console/Commands/GroupListCommand.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Group\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Console/Commands/GroupListCommand.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:withTrashed\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -37,18 +25,6 @@ parameters:
 			path: app/Enums/Characteristic.php
 
 		-
-			message: '#^Cannot access property \$value on string\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/DashboardController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/DashboardController.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\EquipmentItem\>\:\:catalogueOrder\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -61,20 +37,8 @@ parameters:
 			path: app/Http/Controllers/Admin/EquipmentController.php
 
 		-
-			message: '#^Cannot access property \$value on string\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/GroupController.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, email\: string, expiresAt\: string\}, Closure\(App\\Models\\Invitation\)\: array\{id\: int, email\: string, expiresAt\: string\} given\.$#'
 			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Admin/GroupController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type string\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/GroupController.php
 
@@ -115,12 +79,6 @@ parameters:
 			path: app/Http/Controllers/CharacterController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:skillPointsFor\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/CharacterWizardController.php
-
-		-
 			message: '#^Call to function abort_unless\(\) with false and 403 will always evaluate to false\.$#'
 			identifier: function.impossibleType
 			count: 1
@@ -147,7 +105,7 @@ parameters:
 		-
 			message: '#^Using nullsafe property access "\?\-\>era" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 1
+			count: 2
 			path: app/Http/Controllers/CharacterWizardController.php
 
 		-
@@ -169,6 +127,18 @@ parameters:
 			path: app/Http/Controllers/ExperienceController.php
 
 		-
+			message: '#^Access to an undefined property App\\Models\\Skill\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/KeeperController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Weapon\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/KeeperController.php
+
+		-
 			message: '#^Parameter \#1 \$relations of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\User\>\:\:with\(\) expects array\<array\|\(Closure\(Illuminate\\Database\\Eloquent\\Relations\\Relation\<\*, \*, \*\>\)\: mixed\)\|string\>\|string, array\{characters\: Closure\(Illuminate\\Database\\Eloquent\\Relations\\HasMany\)\: void\} given\.$#'
 			identifier: argument.type
 			count: 1
@@ -179,18 +149,6 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: app/Http/Controllers/PageController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:skills\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/SkillController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Weapon\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Weapon\>\:\:\$magazine_capacity\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/WeaponController.php
 
 		-
 			message: '#^Call to function is_array\(\) with array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} will always evaluate to true\.$#'
@@ -213,31 +171,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Models\\Skill\:\:\$pivot\.$#'
 			identifier: property.notFound
-			count: 4
-			path: app/Misc/CharacterSheet.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Misc/CharacterSheet.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{name\: string, base\: int, value\: int, experience\: bool\}, Closure\(App\\Models\\Skill\)\: array\{name\: string, base\: int, value\: int, experience\: bool\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Misc/CharacterSheet.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:filter\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\Skill\)\: bool given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Misc/CharacterSheet.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sortBy\(\) expects array\<array\{string, string\}\|\(callable\(Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Model\)\: mixed\)\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string\>\|\(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: mixed\)\|string, Closure\(App\\Models\\Skill\)\: lowercase\-string given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 5
 			path: app/Misc/CharacterSheet.php
 
 		-
@@ -271,13 +205,7 @@ parameters:
 			path: app/Misc/Wealth.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$era\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Character.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			message: '#^Access to an undefined property App\\Models\\Skill\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Models/Character.php
@@ -285,7 +213,7 @@ parameters:
 		-
 			message: '#^Using nullsafe property access "\?\-\>era" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 1
+			count: 2
 			path: app/Models/Character.php
 
 		-

@@ -5,6 +5,7 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterWizardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExperienceController;
+use App\Http\Controllers\KeeperController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchedulingController;
@@ -22,6 +23,15 @@ Route::middleware('auth', 'verified')->group(function () {
 
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
     Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+
+    /*
+     * The Keeper's screen. Roles are cumulative, so this asks for the Keeper's
+     * hat specifically — an admin who does not run the game is refused.
+     */
+    Route::middleware('keeper')->prefix('keeper')->name('keeper.')->group(function () {
+        Route::get('/', [KeeperController::class, 'index'])->name('index');
+        Route::post('/roll', [KeeperController::class, 'roll'])->name('roll');
+    });
 
     Route::get('/calendar/{calendar}', [SchedulingController::class, 'calendar'])->name('calendar');
     Route::get('/calendar/{calendar}/get_month', [SchedulingController::class, 'getMonth'])->name('calendar.month');
@@ -45,6 +55,8 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
     Route::put('/character/{character}/backstory', [CharacterController::class, 'updateBackstory'])->name('character.backstory.update');
     Route::put('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
+    // Which of the group's campaigns this investigator is played in.
+    Route::put('/character/{character}/games', [CharacterController::class, 'updateGames'])->name('character.games.update');
     Route::post('/character/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
     Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
     Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');
@@ -73,8 +85,9 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
 
+    // Rolling lives on the Keeper's screen (keeper.roll), against characters
+    // rather than users — a player may have more than one investigator.
     Route::resource('skill', SkillController::class)->only(['store', 'destroy']);
-    Route::post('/skill/roll', [SkillController::class, 'roll'])->name('skill.roll');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -90,6 +103,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
 
     Route::get('/group', [Admin\GroupController::class, 'edit'])->name('group.edit');
     Route::put('/group', [Admin\GroupController::class, 'update'])->name('group.update');
+
+    // The group's campaigns. Group data, so not behind the reference-data toggle.
+    Route::post('/games', [Admin\GameController::class, 'store'])->name('games.store');
+    Route::put('/games/{game}', [Admin\GameController::class, 'update'])->name('games.update');
+    Route::put('/games/{game}/activate', [Admin\GameController::class, 'activate'])->name('games.activate');
+    Route::delete('/games/{game}', [Admin\GameController::class, 'destroy'])->name('games.destroy');
 
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/roles', [Admin\UserController::class, 'updateRoles'])->name('users.roles.update');

@@ -81,6 +81,9 @@ class User extends Authenticatable
         return DB::table('sessions')->where('user_id', $this->id)->exists();
     }
 
+    /**
+     * @return BelongsTo<Group, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);

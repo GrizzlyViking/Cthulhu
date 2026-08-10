@@ -10,6 +10,7 @@ use App\Http\Requests\CharacterStoreRequest;
 use App\Http\Requests\CharacterUpdateRequest;
 use App\Misc\CharacterSheet;
 use App\Models\Character;
+use App\Models\Game;
 use App\Models\Skill;
 use App\Models\StorageLocation;
 use Illuminate\Contracts\View\View;
@@ -18,6 +19,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,12 +41,70 @@ class CharacterController extends Controller
             ...compact('character', 'availableSkills'),
             'storageLocations'     => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
             'alwaysRelevantSkills' => config('cthulhu.sheet.always_relevant_skills'),
-            // The group's era. The sheet leads with what belongs to it and
-            // keeps the rest one click away rather than hiding it: a Keeper
-            // running a 1920s game may still hand somebody a Garand.
+            // The era of the game being played. The sheet leads with what
+            // belongs to it and keeps the rest one click away rather than
+            // hiding it: a Keeper running a 1920s game may still hand
+            // somebody a Garand.
             'era'  => $character->era()->value,
             'eras' => Era::options(),
+            // Every campaign the group has, so the player can move this
+            // investigator between them.
+            'games' => $this->gameOptions($character),
         ]);
+    }
+
+    /**
+     * The group's campaigns, marking the one it is playing. Empty while the
+     * character has no group — there is nothing to join yet.
+     *
+     * @return array<int, array{id: int, name: string, era: string, active: bool}>
+     */
+    private function gameOptions(Character $character): array
+    {
+        if ($character->group_id === null) {
+            return [];
+        }
+
+        $activeGameId = $character->group?->active_game_id;
+
+        return Game::query()
+            ->where('group_id', $character->group_id)
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (Game $game): array => [
+                'id'     => $game->id,
+                'name'   => $game->name,
+                'era'    => $game->era->value,
+                'active' => $game->id === $activeGameId,
+            ])
+            ->all();
+    }
+
+    /**
+     * Which of the group's campaigns this investigator is played in.
+     *
+     * A player moves their own sheet between games; a Keeper may move any in
+     * their group, on the same terms as every other edit to a sheet. Games
+     * belonging to another group are refused rather than silently dropped.
+     */
+    public function updateGames(Character $character, Request $request): RedirectResponse
+    {
+        $this->authorize('update', $character);
+
+        $allowed = $character->group_id === null
+            ? []
+            : Game::query()->where('group_id', $character->group_id)->pluck('id')->all();
+
+        $validated = $request->validate([
+            'games'   => ['present', 'array'],
+            'games.*' => ['integer', Rule::in($allowed)],
+        ], [
+            'games.*.in' => 'That game is not one of your group’s.',
+        ]);
+
+        $character->games()->sync($validated['games']);
+
+        return back()->with('success', 'Games updated.');
     }
 
     /**
@@ -87,6 +147,14 @@ class CharacterController extends Controller
         $character->save();
         $character->refresh();
         $character->addAllSkills();
+
+        // A new investigator joins the campaign the group is playing, so they
+        // show up under Characters rather than in limbo.
+        $activeGameId = $request->user()->group?->active_game_id;
+
+        if ($activeGameId !== null) {
+            $character->games()->syncWithoutDetaching([$activeGameId]);
+        }
 
         return to_route('character.show', $character->slug);
     }

@@ -12,7 +12,7 @@ use function Laravel\Prompts\text;
 
 class GroupCreateCommand extends Command
 {
-    protected $signature = 'group:create {name? : The name of the new group} {--era= : The era the group plays in (1920s or modern)}';
+    protected $signature = 'group:create {name? : The name of the new group} {--era= : The era the group plays in (1920s or modern)} {--game= : The name of its first campaign (defaults to the group name)}';
 
     protected $description = 'Create a new group of investigators';
 
@@ -34,7 +34,14 @@ class GroupCreateCommand extends Command
 
         $group = Group::create(['name' => $name, 'era' => $era]);
 
-        $this->info("Group [{$group->name}] created (era: {$era->value}).");
+        /*
+         * A group with no campaign has nothing for new investigators to join,
+         * so it starts with one. The admin renames it to whatever the players
+         * actually end up calling it.
+         */
+        $game = $group->startGame((string) ($this->option('game') ?? $name), $era);
+
+        $this->info("Group [{$group->name}] created (era: {$era->value}), playing [{$game->name}].");
 
         return self::SUCCESS;
     }

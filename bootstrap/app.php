@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin'          => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'keeper'         => \App\Http\Middleware\EnsureUserIsKeeper::class,
             'reference-data' => \App\Http\Middleware\EnsureReferenceDataIsEditable::class,
         ]);
     })

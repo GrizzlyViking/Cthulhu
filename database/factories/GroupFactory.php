@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Era;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class GroupFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            'era'  => Era::Twenties->value,
         ];
     }
 }

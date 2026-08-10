@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\Era;
+use App\Models\Game;
 use App\Models\Group;
 use App\Models\Invitation;
 use App\Models\User;
@@ -25,9 +26,20 @@ class GroupController extends AdminController
             'group' => [
                 'id'   => $group->id,
                 'name' => $group->name,
-                'era'  => $group->era?->value,
+                'era'  => $group->era->value,
             ],
-            'eras'    => $this->eraOptions(),
+            'eras'  => $this->eraOptions(),
+            'games' => $group->games()
+                ->withCount('characters')
+                ->orderByDesc('id')
+                ->get()
+                ->map(fn (Game $game): array => [
+                    'id'              => $game->id,
+                    'name'            => $game->name,
+                    'era'             => $game->era->value,
+                    'active'          => $game->id === $group->active_game_id,
+                    'charactersCount' => $game->characters_count,
+                ]),
             'members' => User::query()
                 ->where('group_id', $group->id)
                 ->with('roles')

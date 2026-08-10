@@ -30,9 +30,11 @@ const prop = defineProps({
     availableSkills: Array,
     storageLocations: Array,
     alwaysRelevantSkills: Array,
-    /** The group's era, and every era the server knows about. */
+    /** The era of the game being played, and every era the server knows about. */
     era: String,
     eras: Array,
+    /** The group's campaigns, so this investigator can be moved between them. */
+    games: Array,
 });
 const editable = ref(false);
 const tabs = [
@@ -88,6 +90,28 @@ const form = useForm({
 const notesForm = useForm({
     notes: prop.character.notes,
 });
+
+/*
+ * Which campaigns this investigator is played in. Ticking one saves straight
+ * away — there is nothing to confirm, and the nav regroups on the way back.
+ */
+const gamesForm = useForm({
+    games: (prop.character.games ?? []).map((game) => game.id),
+});
+
+const toggleGame = (gameId) => {
+    const index = gamesForm.games.indexOf(gameId);
+
+    if (index === -1) {
+        gamesForm.games.push(gameId);
+    } else {
+        gamesForm.games.splice(index, 1);
+    }
+
+    gamesForm.put(route('character.games.update', { character: prop.character.slug }), {
+        preserveScroll: true,
+    });
+};
 
 const handleFileUpload = () => {
     form.post(route('upload.avatar', { character: prop.character.slug }), { preserveScroll: true });
@@ -250,6 +274,40 @@ const saveNotes = () => {
                         <button type="button" class="btn-secondary btn-sm self-start" @click="openSkillModal">
                             Create skill
                         </button>
+                    </div>
+
+                    <div v-if="prop.games?.length" class="card flex flex-col gap-2">
+                        <div>
+                            <p class="eyebrow">Games</p>
+                            <p class="field-hint">The campaigns this investigator is played in.</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <label
+                                v-for="game in prop.games"
+                                :key="game.id"
+                                class="flex cursor-pointer items-start gap-2.5"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="mt-0.5 size-4 shrink-0 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
+                                    :checked="gamesForm.games.includes(game.id)"
+                                    :disabled="gamesForm.processing"
+                                    @change="toggleGame(game.id)"
+                                />
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-medium text-cthulhu-green-900">
+                                        {{ game.name }}
+                                        <span v-if="game.active" class="chip-brass ml-1">Playing now</span>
+                                    </span>
+                                    <span class="block text-xs text-cthulhu-green-500">
+                                        {{ prop.eras.find((era) => era.value === game.era)?.short ?? game.era }}
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <p v-if="gamesForm.errors.games" class="field-error">{{ gamesForm.errors.games }}</p>
                     </div>
 
                     <div class="card flex flex-col justify-between gap-2">

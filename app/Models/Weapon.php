@@ -11,8 +11,11 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * @property string        $era  the handbook's availability cell, verbatim
- * @property array<string> $eras the same thing the app can filter on
+ * @property string        $era            the handbook's availability cell, verbatim
+ * @property array<string> $eras           the same thing the app can filter on
+ * @property string        $name
+ * @property string        $bullets_in_mag
+ * @property-read ?int     $magazine_capacity rounds the magazine holds, null when it takes none
  */
 class Weapon extends Model
 {

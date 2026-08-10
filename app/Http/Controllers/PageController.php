@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\CharacterStatus;
 use App\Models\Character;
-use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
@@ -61,9 +60,7 @@ class PageController extends Controller
             }])
             ->get();
 
-        $skills = Skill::all();
-
-        return Inertia::render('Dashboard', compact('users', 'skills'));
+        return Inertia::render('Dashboard', compact('users'));
     }
 
     public function welcome(): Response

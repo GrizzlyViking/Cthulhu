@@ -29,13 +29,25 @@ function createSessionFor(User $user): void
 describe('group:create', function () {
     it('creates a group from arguments', function () {
         $this->artisan('group:create', ['name' => 'Arkham Irregulars', '--era' => 'modern'])
-            ->expectsOutputToContain('Group [Arkham Irregulars] created (era: modern).')
+            ->expectsOutputToContain('Group [Arkham Irregulars] created (era: modern), playing [Arkham Irregulars].')
             ->assertExitCode(0);
 
         $group = Group::where('name', 'Arkham Irregulars')->first();
 
         expect($group)->not->toBeNull()
             ->and($group->era)->toBe(Era::Modern);
+    });
+
+    it('starts the group off with a campaign, so new investigators have one to join', function () {
+        $this->artisan('group:create', ['name' => 'Arkham Irregulars', '--era' => 'modern', '--game' => 'The Haunting'])
+            ->assertExitCode(0);
+
+        $group = Group::where('name', 'Arkham Irregulars')->first();
+
+        expect($group->games)->toHaveCount(1)
+            ->and($group->activeGame->name)->toBe('The Haunting')
+            // The campaign is born in the era the group was created in.
+            ->and($group->activeGame->era)->toBe(Era::Modern);
     });
 
     it('prompts for name and era when omitted', function () {

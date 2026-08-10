@@ -25,7 +25,7 @@ class DashboardController extends AdminController
             'group' => $group === null ? null : [
                 'id'   => $group->id,
                 'name' => $group->name,
-                'era'  => $group->era?->value,
+                'era'  => $group->era->value,
             ],
             'counts' => [
                 'members'     => $group === null ? 0 : User::query()->where('group_id', $group->id)->count(),

@@ -111,6 +111,28 @@ Creating groups and moving a player between them reach across groups, so they st
 commands in `app/Console/Commands/` (`php artisan cthulhu:manage` for the interactive menu), which
 run with the server operator's authority rather than any one group's.
 
+### The Keeper's screen
+`/keeper` (`KeeperController`, `resources/js/Pages/Keeper.vue`) is the Keeper's view of the party in
+the group's **active game**: current hit points, sanity, magic points and luck, whatever conditions
+are set, the passive skill values, and any weapon that takes ammunition with its rounds. **Current
+figures only** — maxima belong on the player's own sheet.
+
+Behind the `keeper` middleware alias (`EnsureUserIsKeeper`). Roles are cumulative, so it asks for the
+Keeper's hat specifically: an admin who does not run the game is refused.
+
+`cthulhu.keeper.passive_skills` (`config/cthulhu.php`) drives both the table's skill columns and the
+secret-roll buttons — noticing is passive, so the Keeper rolls it rather than the player asking. An
+unknown slug is ignored. `POST /keeper/roll` rolls **per character** (a player may have several) and
+silently drops anyone outside the active game, the same silence the roll has always kept. Only the
+latest roll is shown; nothing is stored.
+
+Attendance ("here tonight") is per-Keeper, per-game, in `localStorage` — no schema, no effect on
+anyone else's screen. Absentees dim and are left out of the rolls.
+
+`App\Misc\SkillCheck::against()` is the one place the success ladder lives. It is a **house
+simplification** of the Keeper Rulebook fumble rule (1 criticals, 99–100 fumble), kept verbatim from
+the original secret roll — changing it changes the game.
+
 ### Reference data: skills, weapons and equipment
 These tables are shared by every group on the server, so editing them is not group-scoped and sits
 behind `cthulhu.admin.edit_reference_data` (`config/cthulhu.php`, env
@@ -123,8 +145,37 @@ in the UI. Reading and searching are never gated. Pages get an `editable` prop t
 offer. It does **not** gate players adding equipment to their own sheets — that goes through
 `EquipmentController`, authorized by `CharacterPolicy`.
 
+### Games
+A **game** is a campaign — the thing a group actually plays, and what the era belongs to. Characters
+join games **many-to-many** (`character_game`): a game holds a party, and once in a while one
+investigator turns up in two campaigns.
+
+A group plays **one game at a time**, and that is structural rather than a convention: the pointer is
+`groups.active_game_id`, so two games physically cannot both be active. `Group::startGame()` makes
+one (the first becomes active automatically); `Game::activate()` switches which is played.
+
+- `Character::era()` reads the current game's era, falling back to `groups.era` while the character
+  is in no game and to the Twenties while it has no group either.
+- `Character::currentGame()` is the group's active game when the character is in it, otherwise the
+  most recent game they belong to — so a sheet left behind in a finished campaign still reads as
+  that campaign, not as today's.
+- `in_active_game` is **appended** to every serialised character. It is what the nav sorts on:
+  `Characters` holds the active game, `Previous games` holds the rest plus anything in no game.
+- New characters (wizard and `CharacterController::store`) join the group's active game.
+- Games are managed in the admin section under Group — `Admin\GameController`, scoped by
+  `gameOfCurrentGroup()`. They are group data, so **not** behind the reference-data toggle.
+- Deleting a game only takes investigators out of it; their sheets are untouched. The active game
+  cannot be deleted — activate another first, or rename it.
+- Players choose which games their own character is in from the sheet's *Manage sheet* panel
+  (`character.games.update`, authorized by `CharacterPolicy@update`, so a Keeper may move any sheet
+  in their group).
+
+`php artisan group:create` starts a group off with a campaign, so a new group is playable at once.
+`player:assign` moves characters' game membership along with the group, since games are group-scoped.
+
 ### Eras
-A group plays in one era (`groups.era`, the `Era` enum: `1920s`, `modern`). `Skill`, `Weapon` and
+`groups.era` is the era a **new game** is born with — the default, not the thing anything queries;
+what a sheet actually plays in comes from its game (see **Games** above). `Skill`, `Weapon` and
 `EquipmentItem` each carry an **`eras` JSON list** saying which eras they belong to — a list, because
 most things belong to both. It is **never empty**: something available throughout carries every era,
 and the `HasEras` trait (`app/Models/Concerns/HasEras.php`) normalises an empty list back to all of
@@ -137,7 +188,7 @@ era", so callers without one need not branch.
 spread through the seeders. `weapons.era` stays as the book prints it and is a note, not a filter;
 `weapons.eras` is what anything queries.
 
-On the character sheet (`$character->era()`, the group's, or the Twenties while ungrouped) the era
+On the character sheet (`$character->era()` — the game's, then the group's, then the Twenties) the era
 **narrows what is offered, never what is owned**: the weapon and equipment pickers open on this era
 with a "show every era" tick, out-of-era skills stay off the sheet until they have a value above
 their starting one, and anything already owned is shown with an era chip rather than hidden. A
@@ -178,7 +229,7 @@ default `gray-*`, `indigo-*` or `bg-white` — nothing in the app uses them.
 ### No broadcasting
 There is none. Player-to-player messaging was a proof of concept that never took off and was
 removed along with the whole Reverb/Echo/Pusher stack; the `messages` table is left in place but
-nothing reads or writes it. The Keeper's secret roll is a plain `axios.post` to `skill.roll` that
+nothing reads or writes it. The Keeper's secret roll is a plain `axios.post` to `keeper.roll` that
 answers with the outcomes — it never needed a socket.
 
 ## Key conventions

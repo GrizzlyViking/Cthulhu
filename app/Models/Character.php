@@ -84,7 +84,16 @@ class Character extends Model
         'group_id',
     ];
 
-    protected $with = ['skills', 'player', 'weapons'];
+    /*
+     * Games and the group come along because the nav has to sort every visible
+     * character into the campaign being played and the ones that are over, and
+     * the sheet's era is read off them. Both are eager loads, not a query per
+     * character.
+     */
+    protected $with = ['skills', 'player', 'weapons', 'games', 'group'];
+
+    /** @var list<string> */
+    protected $appends = ['in_active_game'];
 
     protected function casts(): array
     {
@@ -178,16 +187,25 @@ class Character extends Model
         return $this;
     }
 
+    /**
+     * @return BelongsToMany<Skill, $this>
+     */
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class)->withPivot('value', 'experience', 'order', 'show')->orderBy('display_name');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function player(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return BelongsTo<Occupation, $this>
+     */
     public function occupationDetails(): BelongsTo
     {
         return $this->belongsTo(Occupation::class, 'occupation_id');
@@ -201,6 +219,8 @@ class Character extends Model
     /**
      * Weapons carry ammunition on the pivot; everything an investigator owns
      * also carries where it is kept, how many there are, and a note.
+     *
+     * @return MorphToMany<Weapon, $this>
      */
     public function weapons(): MorphToMany
     {
@@ -208,6 +228,9 @@ class Character extends Model
             ->withPivot('id', 'ammo', 'ammo_reserve', 'storage_location_id', 'quantity', 'notes');
     }
 
+    /**
+     * @return MorphToMany<EquipmentItem, $this>
+     */
     public function equipment(): MorphToMany
     {
         return $this->morphedByMany(EquipmentItem::class, 'equipable')
@@ -219,18 +242,75 @@ class Character extends Model
         return CharacterCreation::damageBonus($this);
     }
 
+    /**
+     * @return BelongsTo<Group, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
     }
 
     /**
-     * The era this investigator lives in — their group's. A character with no
-     * group yet plays in the Twenties, the same assumption the creation wizard
-     * makes.
+     * The campaigns this investigator is played in. Many-to-many because a
+     * game holds a party, and once in a while one investigator turns up in
+     * two campaigns.
+     *
+     * @return BelongsToMany<Game, $this>
+     */
+    public function games(): BelongsToMany
+    {
+        return $this->belongsToMany(Game::class)->withTimestamps();
+    }
+
+    /**
+     * The game this sheet is being played in: the one its group is running
+     * when the investigator is in it, and otherwise the most recent game they
+     * belong to, so a sheet retired from an old campaign still reads as that
+     * campaign rather than as today's.
+     */
+    public function currentGame(): ?Game
+    {
+        $activeGameId = $this->group?->active_game_id;
+
+        if ($activeGameId !== null) {
+            $active = $this->games->firstWhere('id', $activeGameId);
+
+            if ($active !== null) {
+                return $active;
+            }
+        }
+
+        return $this->games->sortByDesc('id')->first();
+    }
+
+    /**
+     * Whether this investigator is in the campaign their group is playing.
+     *
+     * Appended rather than computed by each caller: it is what the nav sorts
+     * on, and what tells a sheet from a finished campaign apart from one still
+     * in play. Both relations it reads are eager loaded, so it costs nothing
+     * per character.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function inActiveGame(): Attribute
+    {
+        return Attribute::make(
+            get: function (): bool {
+                $activeGameId = $this->group?->active_game_id;
+
+                return $activeGameId !== null && $this->games->contains('id', $activeGameId);
+            }
+        );
+    }
+
+    /**
+     * The era this investigator lives in — their game's. Falling back to the
+     * group's while they are in none, and to the Twenties while they have no
+     * group either, which is the assumption the creation wizard makes.
      */
     public function era(): Era
     {
-        return $this->group?->era ?? Era::Twenties;
+        return $this->currentGame()?->era ?? $this->group?->era ?? Era::Twenties;
     }
 }

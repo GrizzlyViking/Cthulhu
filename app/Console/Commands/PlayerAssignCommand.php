@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ResolvesPlayersAndGroups;
+use App\Models\Character;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\confirm;
@@ -46,7 +47,21 @@ class PlayerAssignCommand extends Command
         }
 
         $user->update(['group_id' => $group->id]);
-        $moved = $user->characters()->withTrashed()->update(['group_id' => $group->id]);
+
+        /*
+         * Games belong to a group, so the characters leave the campaigns of
+         * the group they came from and join whatever the new one is playing.
+         * Retired sheets come too, so restoring one lands it in the right
+         * campaign.
+         */
+        $characters = $user->characters()->withTrashed()->get();
+
+        $characters->each(function (Character $character) use ($group): void {
+            $character->update(['group_id' => $group->id]);
+            $character->games()->sync($group->active_game_id === null ? [] : [$group->active_game_id]);
+        });
+
+        $moved = $characters->count();
 
         $this->info("[{$user->email}] assigned to group [{$group->name}] ({$moved} character(s) moved along).");
 

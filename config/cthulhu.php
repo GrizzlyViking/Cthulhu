@@ -61,4 +61,30 @@ return [
 
     ],
 
+    'keeper' => [
+
+        /*
+        |----------------------------------------------------------------------
+        | The passive skills the Keeper rolls in secret
+        |----------------------------------------------------------------------
+        |
+        | Noticing is passive: the players never ask to roll Spot Hidden, the
+        | Keeper rolls it behind the screen and tells them only what they would
+        | have noticed. These slugs become both a column on the Keeper's screen
+        | — so a glance is often enough and no dice are needed — and the buttons
+        | that roll for the whole party at once.
+        |
+        | Slugs come from the skills table (see SkillSeeder). An unknown slug is
+        | ignored rather than breaking the screen. Order is the column order.
+        |
+        */
+
+        'passive_skills' => [
+            'spot-hidden',
+            'listen',
+            'psychology',
+        ],
+
+    ],
+
 ];
