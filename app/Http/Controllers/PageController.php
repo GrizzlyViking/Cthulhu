@@ -17,13 +17,18 @@ class PageController extends Controller
     /**
      * Where a signed-in user lands.
      *
-     * A player wants their own investigator, not a list, so this hands back
-     * the character they touched most recently. An unfinished draft has no
-     * sheet to show yet, so it goes to the wizard, which resumes it.
+     * A player wants the investigator they are playing, so this hands back the
+     * one they touched most recently **in the game their group is running**. A
+     * sheet left behind in a finished campaign is not somewhere to land: its
+     * player has to make someone new for the game that is actually on, which is
+     * what the wizard is for. An unfinished draft has no sheet to show yet, so
+     * it goes to the wizard too — which resumes it rather than starting over.
      *
-     * With nothing to land on it depends who is asking: a player is sent to
-     * the wizard to make their first investigator, while a Keeper or admin —
-     * who need never have one — gets the dashboard.
+     * With nothing to land on it depends who is asking. The wizard is only for
+     * people who play, and roles are cumulative, so this asks for the player's
+     * hat specifically: a Keeper who also runs an investigator holds it and is
+     * sent to make one, while a Keeper or admin who only runs the game gets the
+     * dashboard.
      */
     public function home(Request $request): RedirectResponse
     {
@@ -31,14 +36,18 @@ class PageController extends Controller
 
         $character = Character::query()
             ->where('user_id', $user->id)
+            // `in_active_game` reads both of these, and filtering happens in
+            // PHP because it is an appended attribute rather than a column.
+            ->with(['group', 'games'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
-            ->first();
+            ->get()
+            ->first(fn (Character $character): bool => $character->in_active_game);
 
         if ($character === null) {
-            return $user->isKeeper() || $user->isAdmin()
-                ? to_route('dashboard')
-                : to_route('character.create');
+            return $user->isPlayer()
+                ? to_route('character.create')
+                : to_route('dashboard');
         }
 
         if ($character->status === CharacterStatus::Draft) {

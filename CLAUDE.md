@@ -161,6 +161,7 @@ one (the first becomes active automatically); `Game::activate()` switches which 
   that campaign, not as today's.
 - `in_active_game` is **appended** to every serialised character. It is what the nav sorts on:
   `Characters` holds the active game, `Previous games` holds the rest plus anything in no game.
+  It is also what the landing route filters on — see **Where a signed-in user lands** below.
 - New characters (wizard and `CharacterController::store`) join the group's active game.
 - Games are managed in the admin section under Group — `Admin\GameController`, scoped by
   `gameOfCurrentGroup()`. They are group data, so **not** behind the reference-data toggle.
@@ -172,6 +173,24 @@ one (the first becomes active automatically); `Game::activate()` switches which 
 
 `php artisan group:create` starts a group off with a campaign, so a new group is playable at once.
 `player:assign` moves characters' game membership along with the group, since games are group-scoped.
+
+### Where a signed-in user lands
+`/home` (`PageController::home`) is a redirect, not a page, and every authenticated entry point
+falls back to it: login, email verification, password confirmation, invitation acceptance, the
+`redirectUsersTo` guest middleware and the welcome page's *Enter*. `redirect()->intended()` still
+wins, so a deep link chased before logging in is unaffected.
+
+It hands back the character the user edited most recently **that is in the group's active game** —
+`in_active_game`, so a sheet left in a finished campaign is not somewhere to land. A draft goes to
+the wizard instead of a sheet, since it has none yet; the wizard resumes it rather than starting
+over.
+
+With nothing to land on, the split is by role, and roles are cumulative so it asks for the player's
+hat specifically (`User::isPlayer()`, **not** `! isKeeper()`): someone who plays goes to the wizard
+to make an investigator for the game that is on, and a Keeper or admin who only runs the game gets
+the dashboard. This gates the redirect only — `CharacterPolicy::create` still lets anyone create.
+
+The dashboard keeps its own route and its place in the nav.
 
 ### Eras
 `groups.era` is the era a **new game** is born with — the default, not the thing anything queries;
