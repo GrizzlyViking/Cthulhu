@@ -155,19 +155,22 @@ verify_the_browser_sees_the_new_routes() {
     [[ -f "$cache" ]] || fail "No ${cache} — routes are not cached."
 
     local url html
-    url=$(grep -E '^APP_URL=' .env | cut -d= -f2- | tr -d '"'"'" )
+    url=$(grep -E '^APP_URL=' .env | head -1 | cut -d= -f2- | tr -d "\"' ")
     html=$(curl -fsS --max-time 20 "$url") || fail "${url} did not answer. The site is down."
 
     # Names as written in routes/web.php. A group prefix means the full name is
     # "keeper.npcs.store" where the file says "npcs.store", so the served list is
     # searched for the suffix.
+    # `|| true` because a deploy that touches no routes is the normal case, and
+    # `set -o pipefail` would otherwise turn "grep found nothing" into a failed
+    # deploy — which is precisely what it did the first time this ran.
     local added name missing=()
     added=$(git diff "$DEPLOYED_FROM" HEAD -- routes/ |
         grep '^+' |
         grep -oE "\->name\('[^']+'\)" |
         sed -E "s/->name\('(.*)'\)/\1/" |
         grep -vE '^$|\.$' |
-        sort -u)
+        sort -u || true)
 
     # Read line by line rather than letting the shell split on whitespace: this
     # file is run by bash, but it should not depend on that to be correct.
