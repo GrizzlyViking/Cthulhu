@@ -192,6 +192,35 @@ the dashboard. This gates the redirect only — `CharacterPolicy::create` still 
 
 The dashboard keeps its own route and its place in the nav.
 
+### Installing to a phone
+The sheet is meant to be added to a player's home screen and run without browser chrome — on
+**iPhone and Android alike** — so `public/manifest.json` (name, icons, `display: standalone`, the dark
+green `theme_color`) plus the `apple-mobile-web-app-*` tags in `resources/views/app.blade.php` are
+part of the app, not decoration. `start_url` is `/home`, so launching the icon lands on the
+investigator being played (see **Where a signed-in user lands**); a player who is signed out gets the
+login screen, since `/home` is behind `auth`.
+
+The manifest carries the whole Android side: Chrome mints a real app from it (own launcher entry, own
+task, splash screen from `background_color` and the 512 icon). iOS needs the Apple tags on top of it.
+
+The home-screen icons (`public/images/icon-{180,192,512}.png`, plus
+`icon-maskable-512.png`) are the nav's brand mark in brass on dark green, **not** the favicons. They
+must stay full-bleed and opaque: iOS composites a transparent icon onto black, and the mark is dark,
+so a transparent PNG disappears on the home screen — which is exactly what the old
+`android-chrome-*.png` and `apple-touch-icon.png` did before they were replaced. The maskable one
+keeps the mark inside the middle ~56% so Android's circle crop cannot clip a tentacle; the `any` ones
+fill the square. `favicon-{16,32}.png` and `favicon.ico` are untouched — they are the browser tab,
+where transparency is right.
+
+The status bar is `black` rather than translucent, which keeps the top inset at 0 and leaves the
+layouts alone. `viewport-fit=cover` plus `env(safe-area-inset-bottom)` on `.page` is what keeps the
+last row of a sheet clear of the home indicator — the inset is 0 in a browser, so it only shows once
+installed.
+
+There is no service worker: nothing is cached and nothing works offline. Chrome has not needed one to
+install from its menu since v108, iOS never did, and the app is useless without the server anyway. It
+does mean Chrome will not raise the automatic install banner — players install from the browser menu.
+
 ### Eras
 `groups.era` is the era a **new game** is born with — the default, not the thing anything queries;
 what a sheet actually plays in comes from its game (see **Games** above). `Skill`, `Weapon` and

@@ -35,6 +35,10 @@
        neutral for screens that have not been converted yet. */
     .page {
         @apply mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8;
+
+        /* Installed as an app, the page runs under the home indicator. The
+           inset is 0 in a browser, so this only shows on the home screen. */
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
     }
 
     /* ---- Surfaces --------------------------------------------------- */
