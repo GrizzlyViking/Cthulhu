@@ -40,6 +40,9 @@ composer phpstan          # Larastan at level 5 over app/, config/, database/, r
 php artisan migrate
 php artisan db:seed --class=SkillSeeder            # seeds canonical skill list
 php artisan db:seed --class=RolesAndPermissionsSeeder
+
+# Deploying (on the server: ssh cthulhu)
+cd /var/www/cthulhu && ./deploy.sh                  # pull, install, build, migrate, optimize
 ```
 
 ## Architecture: how the pieces connect
@@ -317,6 +320,28 @@ There is none. Player-to-player messaging was a proof of concept that never took
 removed along with the whole Reverb/Echo/Pusher stack; the `messages` table is left in place but
 nothing reads or writes it. The Keeper's secret roll is a plain `axios.post` to `keeper.roll` that
 answers with the outcomes — it never needed a socket.
+
+### Deploying
+Production is a plain git checkout at `/var/www/cthulhu` on the host reachable as `ssh cthulhu`
+(Ubuntu, **UTC**, so its timestamps read two hours behind Danish local time). Deploying is
+`./deploy.sh` in that directory, which is the old `git pull` plus everything that has to follow it.
+
+It is safe to run twice, and safe to run after pulling by hand — the pull becomes a no-op and each
+step decides for itself whether it has work. Dependencies are installed only when `composer.lock`
+or `package-lock.json` differs from what was installed last time, which is remembered by hash in
+`storage/app/.deploy-state` (gitignored, and specific to that box). The site is put in maintenance
+mode for the migration alone, with a trap that lifts it however the script exits.
+
+**`php artisan optimize` is the step that must never be skipped**, and the reason the script
+exists. Routes are cached in production, so a route added in a release does not exist until the
+cache is rebuilt — and because `app.blade.php` uses `@routes`, Ziggy hands the browser that stale
+list and `route('...')` throws client-side. The button does nothing, no request reaches the server,
+and **nothing is logged anywhere**. That is what happened to the Keeper's cast on 2026-08-11. The
+script ends by refusing to report success while `bootstrap/cache/routes-v7.php` is older than
+anything in `routes/`.
+
+A full page reload is needed after deploying: Inertia navigation keeps the Ziggy list that was
+baked into the HTML the browser already has.
 
 ## Key conventions
 
