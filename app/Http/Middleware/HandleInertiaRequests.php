@@ -49,7 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'characters' => [
                     'all'    => $this->visibleCharacters($user),
                     'others' => $this->otherCharacters($user),
-                    'own'    => Character::query()->playersOwn()->get(),
+                    'own'    => Character::query()->investigators()->playersOwn()->get(),
                     ],
                 // The armoury is rulebook data, not group data — it stays global.
                 'equipment' => $this->armoury(),
@@ -65,6 +65,9 @@ class HandleInertiaRequests extends Middleware
     /**
      * Every character the user may see: their own (drafts included), plus the
      * completed characters of their group. Ungrouped users see only their own.
+     *
+     * Investigators only. The Keeper's cast shares this table and this group, and
+     * is nobody's to browse — it is only ever listed on the Keeper's own screen.
      */
     private function visibleCharacters(?User $user): EloquentCollection
     {
@@ -73,6 +76,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return Character::query()
+            ->investigators()
             // Drafts are only ever visible to their owner.
             ->where(function (Builder $query) use ($user) {
                 $query->where('status', CharacterStatus::Complete)
@@ -98,6 +102,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return Character::query()
+            ->investigators()
             ->others()
             ->where('status', CharacterStatus::Complete)
             ->where('group_id', $user->group_id)

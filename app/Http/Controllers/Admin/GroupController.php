@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\CharacterKind;
 use App\Enums\Era;
 use App\Models\Game;
 use App\Models\Group;
 use App\Models\Invitation;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -30,7 +32,9 @@ class GroupController extends AdminController
             ],
             'eras'  => $this->eraOptions(),
             'games' => $group->games()
-                ->withCount('characters')
+                // Investigators: a Keeper's cast is in these games too, and is
+                // not the admin's business.
+                ->withCount(['characters' => fn (Builder $query) => $query->where('kind', CharacterKind::Investigator)])
                 ->orderByDesc('id')
                 ->get()
                 ->map(fn (Game $game): array => [

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Archetype;
 use App\Enums\CharacterStatus;
 use App\Misc\SkillCheck;
 use App\Models\Character;
 use App\Models\Game;
+use App\Models\Occupation;
 use App\Models\Skill;
+use App\Models\User;
 use App\Models\Weapon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +25,11 @@ use Inertia\Response;
  * It shows current figures only — hit points, sanity, magic points, luck as
  * they stand. Maxima belong on the player's own sheet; what the Keeper needs
  * mid-scene is who is hurt, who is mad, and who is out of bullets.
+ *
+ * Below the party sits the Keeper's own cast — the cultists and bystanders they
+ * conjured up, read the same way, so a fight has everyone in it on one screen.
+ * Those are made and unmade by {@see Keeper\NpcController}; this screen only
+ * lists them, and only ever to the Keeper who made them.
  */
 class KeeperController extends Controller
 {
@@ -41,6 +49,16 @@ class KeeperController extends Controller
                 ->map(fn (Skill $skill): array => ['slug' => $skill->slug, 'name' => $skill->display_name])
                 ->values()
                 ->all(),
+            // The Keeper's own cast, and what it takes to conjure up another.
+            'cast' => $this->cast($game, $request->user())
+                ->map(fn (Character $character): array => [
+                    ...$this->summarise($character),
+                    'archetype'  => $character->archetype?->label(),
+                    'occupation' => $character->occupation,
+                ])
+                ->all(),
+            'archetypes'  => Archetype::options(),
+            'occupations' => $this->occupations($game),
         ]);
     }
 
@@ -78,7 +96,8 @@ class KeeperController extends Controller
 
     /**
      * The investigators in the campaign the Keeper's group is playing. Drafts
-     * are left out — an unfinished sheet has no figures worth reading.
+     * are left out — an unfinished sheet has no figures worth reading — and so
+     * is the Keeper's own cast, which has a table of its own below the party.
      *
      * @return EloquentCollection<int, Character>
      */
@@ -89,9 +108,49 @@ class KeeperController extends Controller
         }
 
         return $game->characters()
+            ->investigators()
             ->where('status', CharacterStatus::Complete)
             ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * This Keeper's own non-player characters in the game being played. Another
+     * Keeper of the same group sees their own and never these.
+     *
+     * @return EloquentCollection<int, Character>
+     */
+    private function cast(?Game $game, User $keeper): EloquentCollection
+    {
+        if ($game === null) {
+            return new EloquentCollection();
+        }
+
+        return $game->characters()
+            ->castOf($keeper)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * What a new one can be, of the occupations this era has. Empty between
+     * campaigns — there is nothing to conjure anybody into.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    private function occupations(?Game $game): array
+    {
+        if ($game === null) {
+            return [];
+        }
+
+        return Occupation::query()
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (Occupation $occupation): bool => in_array($game->era->value, $occupation->eras, true))
+            ->map(fn (Occupation $occupation): array => ['id' => $occupation->id, 'name' => $occupation->name])
+            ->values()
+            ->all();
     }
 
     /**

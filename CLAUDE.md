@@ -133,6 +133,44 @@ anyone else's screen. Absentees dim and are left out of the rolls.
 simplification** of the Keeper Rulebook fumble rule (1 criticals, 99–100 fumble), kept verbatim from
 the original secret roll — changing it changes the game.
 
+### The Keeper's cast
+Below the party on the same screen sits the Keeper's own cast: characters **nobody plays**, conjured up
+whole in one press so a cultist can be produced mid-scene. `Keeper\NpcController` (`POST /keeper/npcs`,
+`DELETE /keeper/npcs/{character}`) is the whole of it — there is no page and no wizard.
+
+They are rows in `characters`, because a cultist has the same shape as an investigator. Three columns
+tell them apart:
+
+- `kind` (`CharacterKind`: `investigator`, `npc`) — what the row is;
+- `keeper_id` — whose it is. **`user_id` stays null**, which alone keeps them out of every list that
+  asks for a player's own sheets (`playersOwn`, `User::characters()`, the landing route);
+- `archetype` (`Archetype`) — what it was conjured up as, for the chip on the screen.
+
+**Only the Keeper who made one may see it.** `CharacterPolicy` short-circuits on `isNpc()` for view,
+update, patch and delete: not the players, not another Keeper of the same group, not an admin. This is
+deliberately narrower than every other rule in that policy. The lists a player is handed
+(`HandleInertiaRequests`, the admin counts) go through the `investigators()` scope, and
+`keeper.npcs.destroy` answers **404** rather than 403 on somebody else's, so a refusal cannot confirm
+that a cultist exists.
+
+Generation is `App\Misc\NpcGenerator::conjure()`, and it is **not** the book's investigator creation:
+points are spent at random in lumps so two cultists differ, the archetype's `combat_floor` overrides
+whatever the points said, and the ageing rules are skipped. Everything era-dependent — weapons, gear,
+names, which occupations exist — comes from the game being played, so one archetype arms a 1920s cult
+with a revolver and a modern one with a Glock. The numbers live in **`App\Misc\ArchetypeTable`** (a
+house table, meant to be tuned) and the names in `App\Misc\NpcNames`; the occupation is the Keeper's to
+pick from a dropdown, or the archetype picks something typical of itself.
+
+Deleting is **complete**: `Character::purge()` detaches skills, weapons, equipment and games and then
+`forceDelete()`s — `equipables` has no cascade to do it. Deleting a game purges the cast in it too,
+since a cultist is listed nowhere else and would otherwise sit in the table unreachable; the
+investigators keep their sheets, as they always have.
+
+**Monsters** are meant to slot in here: a third `CharacterKind`, a `MonsterTable` of stat blocks where
+`ArchetypeTable` holds archetypes, and a generator reading it instead of occupations. The screen, the
+policy, the purge and the cast query need nothing new — they ask `kind`, not what the thing is. Nothing
+has been written for them because there is no monster manual to transcribe yet.
+
 ### Reference data: skills, weapons and equipment
 These tables are shared by every group on the server, so editing them is not group-scoped and sits
 behind `cthulhu.admin.edit_reference_data` (`config/cthulhu.php`, env
@@ -295,9 +333,9 @@ answers with the outcomes — it never needed a socket.
 - No `dark:` variants — the app ships one theme (see Design system).
 - `env()` only inside `config/` files; everywhere else use `config()`.
 - `vendor/bin/pint --dirty` must pass before any PHP change is considered done.
-- `composer phpstan` must stay green too. `phpstan-baseline.neon` freezes the 73 errors that were
-  already there when Larastan was first wired up — nearly all of them Larastan mis-typing Eloquent
-  pivots, scopes and enum casts. Fix errors rather than adding to the baseline; when you do fix one,
+- `composer phpstan` must stay green too. `phpstan-baseline.neon` freezes what was already there when
+  Larastan was first wired up (73 errors then, 56 now) — nearly all of them Larastan mis-typing
+  Eloquent pivots, scopes and enum casts. Fix errors rather than adding to the baseline; when you do fix one,
   regenerate with `vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon` so the
   count only ever falls. Model scopes marked `#[Scope]` must be `protected` — Larastan only reads
   the attribute on non-public methods, and Laravel's own convention agrees.

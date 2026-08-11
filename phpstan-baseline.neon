@@ -151,18 +151,6 @@ parameters:
 			path: app/Http/Controllers/PageController.php
 
 		-
-			message: '#^Call to function is_array\(\) with array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 2
-			path: app/Http/Requests/Wizard/WizardSkillsRequest.php
-
-		-
-			message: '#^Call to function is_string\(\) with array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: app/Http/Requests/Wizard/WizardSkillsRequest.php
-
-		-
 			message: '#^Offset ''type'' on array\{type\: string, skill\?\: string, count\?\: int, options\?\: array\<int, string\>, label\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
@@ -173,30 +161,6 @@ parameters:
 			identifier: property.notFound
 			count: 5
 			path: app/Misc/CharacterSheet.php
-
-		-
-			message: '#^Static property App\\Misc\\Roll\:\:\$added \(int\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Misc/Roll.php
-
-		-
-			message: '#^Static property App\\Misc\\Roll\:\:\$eyes \(int\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Misc/Roll.php
-
-		-
-			message: '#^Static property App\\Misc\\Roll\:\:\$multiplier \(int\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Misc/Roll.php
-
-		-
-			message: '#^Static property App\\Misc\\Roll\:\:\$rolls \(int\) does not accept string\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Misc/Roll.php
 
 		-
 			message: '#^Match expression does not handle remaining value\: string$#'

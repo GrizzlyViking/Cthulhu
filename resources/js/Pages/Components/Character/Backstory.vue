@@ -78,8 +78,13 @@ const renameCharacter = (event) => {
                         :disabled="!prop.editable"
                         @focusout="renameCharacter"
                     />
+                    <!-- The Keeper's own cast has no player, and only ever
+                         reaches this sheet in the Keeper's own hands. -->
                     <p class="mt-2 text-sm text-cthulhu-green-200">
-                        Played by {{ prop.character.player.name }}
+                        <template v-if="prop.character.player">
+                            Played by {{ prop.character.player.name }}
+                        </template>
+                        <template v-else> Nobody's investigator — one of the Keeper's own. </template>
                     </p>
                 </div>
 

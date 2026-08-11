@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property int                                                                                                        $id
- * @property string                                                                                                     $name
- * @property string                                                                                                     $description
- * @property array<int, string>                                                                                         $eras
- * @property array<int, array{multiplier: int, options: array<int, string>}>                                            $skill_points_formula
- * @property int                                                                                                        $credit_rating_min
- * @property int                                                                                                        $credit_rating_max
- * @property array<int, array{type: string, skill?: string, count?: int, options?: array<int, string>, label?: string}> $skills
+ * @property int                                                                                                               $id
+ * @property string                                                                                                            $name
+ * @property string                                                                                                            $description
+ * @property array<int, string>                                                                                                $eras
+ * @property array<int, array{multiplier: int, options: array<int, string>}>                                                   $skill_points_formula
+ * @property int                                                                                                               $credit_rating_min
+ * @property int                                                                                                               $credit_rating_max
+ * @property array<int, string|array{type: string, skill?: string, count?: int, options?: array<int, string>, label?: string}> $skills               a plain slug, or a choice the player (or the generator) settles
  */
 class Occupation extends Model
 {

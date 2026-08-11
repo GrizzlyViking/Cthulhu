@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Archetype;
+use App\Enums\CharacterKind;
 use App\Enums\CharacterStatus;
 use App\Enums\Era;
 use App\Misc\CharacterCreation;
@@ -14,32 +16,38 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
- * @property int    $id
- * @property string $slug
- * @property int    $strength
- * @property int    $dexterity
- * @property int    $intelligence
- * @property int    $constitution
- * @property int    $appearance
- * @property int    $power
- * @property int    $size
- * @property int    $education
- * @property int    $move_rate
- * @property int    $hit_points
- * @property int    $sanity
- * @property int    $luck
- * @property int    $magic_points
- * @property int    $dodge
- * @property int    $build
- * @property string $damage_bonus
- * @property string $avatar
- * @property bool   $temporary_insanity
- * @property bool   $indefinite_insanity
- * @property bool   $major_wound
- * @property bool   $unconscious
- * @property bool   $dying
+ * @property int           $id
+ * @property string        $slug
+ * @property int           $strength
+ * @property int           $dexterity
+ * @property int           $intelligence
+ * @property int           $constitution
+ * @property int           $appearance
+ * @property int           $power
+ * @property int           $size
+ * @property int           $education
+ * @property int           $move_rate
+ * @property int           $hit_points
+ * @property int           $sanity
+ * @property int           $luck
+ * @property int           $magic_points
+ * @property int           $dodge
+ * @property int           $build
+ * @property string        $damage_bonus
+ * @property string        $avatar
+ * @property bool          $temporary_insanity
+ * @property bool          $indefinite_insanity
+ * @property bool          $major_wound
+ * @property bool          $unconscious
+ * @property bool          $dying
+ * @property CharacterKind $kind
+ * @property ?Archetype    $archetype
+ * @property ?int          $keeper_id
+ * @property ?int          $user_id
+ * @property ?int          $group_id
  */
 class Character extends Model
 {
@@ -82,6 +90,9 @@ class Character extends Model
         'occupation_id',
         'wizard_step',
         'group_id',
+        'kind',
+        'archetype',
+        'keeper_id',
     ];
 
     /*
@@ -119,6 +130,8 @@ class Character extends Model
             'dodge'               => 'integer',
             'build'               => 'integer',
             'status'              => CharacterStatus::class,
+            'kind'                => CharacterKind::class,
+            'archetype'           => Archetype::class,
             'backstory'           => 'array',
             'wizard_step'         => 'integer',
         ];
@@ -169,6 +182,26 @@ class Character extends Model
         $query->where('user_id', '!=', auth()->id());
     }
 
+    /**
+     * Sheets a player owns and plays. Every list a player is shown asks for this:
+     * the Keeper's own cast lives in the same table and is nobody else's business.
+     */
+    #[Scope]
+    protected function investigators(Builder $query): void
+    {
+        $query->where('kind', CharacterKind::Investigator);
+    }
+
+    /**
+     * The cast one Keeper has conjured up — theirs alone, whichever games they
+     * are in.
+     */
+    #[Scope]
+    protected function castOf(Builder $query, User $keeper): void
+    {
+        $query->where('kind', CharacterKind::NonPlayer)->where('keeper_id', $keeper->id);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -201,6 +234,61 @@ class Character extends Model
     public function player(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The Keeper this sheet belongs to, on a sheet nobody plays. Null on an
+     * investigator, who has a `player` instead.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function keeper(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'keeper_id');
+    }
+
+    /**
+     * Whether this is one of a Keeper's own, rather than somebody's investigator.
+     */
+    public function isNpc(): bool
+    {
+        return $this->kind === CharacterKind::NonPlayer;
+    }
+
+    /**
+     * Delete a sheet and everything hanging off it, for good — no soft delete, no
+     * pivot rows left behind.
+     *
+     * What the Keeper's cast needs: a cultist conjured up for one scene should
+     * leave nothing at all when the scene ends, and `equipables` has no cascade to
+     * do it for us. A player's investigator is retired with an ordinary
+     * `delete()` instead, so it can come back.
+     */
+    public function purge(): void
+    {
+        $this->skills()->detach();
+        $this->weapons()->detach();
+        $this->equipment()->detach();
+        $this->games()->detach();
+
+        $this->forceDelete();
+    }
+
+    /**
+     * A slug nobody has taken, retired sheets included — the column is unique and
+     * the Keeper's cast is generated from a short list of names, so two Silas
+     * Thornes on one server are a matter of time.
+     */
+    public static function uniqueSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'character';
+        $slug = $base;
+
+        for ($suffix = 2; static::withTrashed()->where('slug', $slug)->exists(); $suffix++) {
+            $slug = $base.'-'.$suffix;
+        }
+
+        return $slug;
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterWizardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExperienceController;
+use App\Http\Controllers\Keeper;
 use App\Http\Controllers\KeeperController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
@@ -31,6 +32,13 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::middleware('keeper')->prefix('keeper')->name('keeper.')->group(function () {
         Route::get('/', [KeeperController::class, 'index'])->name('index');
         Route::post('/roll', [KeeperController::class, 'roll'])->name('roll');
+
+        /*
+         * The Keeper's own cast — conjured up whole, deleted for good. Only the
+         * Keeper who made one may touch it, which the policy enforces.
+         */
+        Route::post('/npcs', [Keeper\NpcController::class, 'store'])->name('npcs.store');
+        Route::delete('/npcs/{character}', [Keeper\NpcController::class, 'destroy'])->name('npcs.destroy');
     });
 
     Route::get('/calendar/{calendar}', [SchedulingController::class, 'calendar'])->name('calendar');

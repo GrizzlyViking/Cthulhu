@@ -28,8 +28,10 @@ class DashboardController extends AdminController
                 'era'  => $group->era->value,
             ],
             'counts' => [
-                'members'     => $group === null ? 0 : User::query()->where('group_id', $group->id)->count(),
-                'characters'  => $group === null ? 0 : Character::query()->where('group_id', $group->id)->count(),
+                'members' => $group === null ? 0 : User::query()->where('group_id', $group->id)->count(),
+                // Investigators. A Keeper's cast sits in the same table and is
+                // theirs alone, so it is not the group's to count.
+                'characters'  => $group === null ? 0 : Character::query()->investigators()->where('group_id', $group->id)->count(),
                 'invitations' => $group === null ? 0 : $group->pendingInvitations()->count(),
                 'skills'      => Skill::query()->count(),
                 'weapons'     => Weapon::query()->count(),

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\CharacterKind;
 use App\Enums\Era;
+use App\Models\Character;
 use App\Models\Game;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -78,6 +80,10 @@ class GameController extends AdminController
      * Deleting a game only takes the investigators out of it — their sheets
      * are untouched. The active game cannot go, or the group would be left
      * playing nothing: make another one active first, or rename this one.
+     *
+     * The Keeper's cast is the exception: a cultist exists for the game they were
+     * conjured up for, is listed nowhere else, and would otherwise sit in the
+     * table forever unreachable. Those go with it.
      */
     public function destroy(Request $request, Game $game): RedirectResponse
     {
@@ -88,6 +94,11 @@ class GameController extends AdminController
         }
 
         $name = $game->name;
+
+        $game->characters()
+            ->where('kind', CharacterKind::NonPlayer)
+            ->get()
+            ->each(fn (Character $character) => $character->purge());
 
         $game->delete();
 

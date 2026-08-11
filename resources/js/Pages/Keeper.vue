@@ -1,16 +1,30 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import PartyTable from '@/Pages/Components/Keeper/PartyTable.vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
-import { EyeSlashIcon } from '@heroicons/vue/20/solid';
+import {
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+    EyeSlashIcon,
+    SparklesIcon,
+    TrashIcon,
+} from '@heroicons/vue/20/solid';
 
 const props = defineProps({
     /** The campaign being played, or null while the group has none. */
     game: Object,
     party: { type: Array, default: () => [] },
     passiveSkills: { type: Array, default: () => [] },
+    /** This Keeper's own non-player characters in that campaign. */
+    cast: { type: Array, default: () => [] },
+    archetypes: { type: Array, default: () => [] },
+    occupations: { type: Array, default: () => [] },
 });
+
+const page = usePage();
+const flash = computed(() => page.props.flash ?? {});
 
 /*
  * Who is at the table tonight. Seven players are on the books and it is rare
@@ -88,8 +102,48 @@ const resultFor = (character) => (isHere(character) ? results.value[character.id
 
 const outcomeClass = (result) => (result.success ? 'chip-brass' : 'chip-blood');
 
-/* A figure at zero or below is the one the Keeper should notice first. */
-const figureClass = (value) => (Number(value) <= 0 ? 'text-cthulhu-blood-500' : 'text-cthulhu-green-900');
+/*
+ * Conjuring one up: press what they are, say what they do for a living if it
+ * matters, create. Everything else — characteristics, skills, a weapon with
+ * rounds in it, the three things in their pockets — is rolled on the server.
+ */
+const archetype = ref(props.archetypes[0]?.value ?? null);
+const occupationId = ref('');
+const creating = ref(false);
+
+const chosenArchetype = computed(() => props.archetypes.find((option) => option.value === archetype.value));
+
+const conjure = () => {
+    if (!archetype.value || creating.value) {
+        return;
+    }
+
+    router.post(
+        route('keeper.npcs.store'),
+        { archetype: archetype.value, occupation_id: occupationId.value === '' ? null : occupationId.value },
+        {
+            preserveScroll: true,
+            onStart: () => (creating.value = true),
+            onFinish: () => (creating.value = false),
+        },
+    );
+};
+
+/* Deleting is for good, so it asks once — inline, without a dialog in the way. */
+const confirmingId = ref(null);
+
+const dismiss = (character) => {
+    if (confirmingId.value !== character.id) {
+        confirmingId.value = character.id;
+
+        return;
+    }
+
+    router.delete(route('keeper.npcs.destroy', { character: character.slug }), {
+        preserveScroll: true,
+        onFinish: () => (confirmingId.value = null),
+    });
+};
 </script>
 
 <template>
@@ -111,171 +165,171 @@ const figureClass = (value) => (Number(value) <= 0 ? 'text-cthulhu-blood-500' : 
                 </p>
             </section>
 
-            <section v-else-if="party.length === 0" class="panel p-5 sm:p-6">
-                <h2 class="display text-lg text-cthulhu-green-900">Nobody has joined {{ game.name }} yet</h2>
-                <p class="field-hint mt-1">
-                    Investigators appear here once their players put them in this game, from the Manage sheet panel on
-                    their own sheet.
-                </p>
-            </section>
-
             <template v-else>
-                <!-- Secret rolls -->
-                <section class="panel p-4 sm:p-5">
-                    <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <h2 class="text-base font-semibold text-cthulhu-green-900">Secret roll</h2>
-                        <p class="field-hint">
-                            Rolled against everyone at the table without telling them. Only the latest roll is kept.
-                        </p>
-                    </div>
+                <!-- Result of the last thing conjured up or dismissed -->
+                <div v-if="flash.success" class="card-marked flex items-start gap-2">
+                    <CheckCircleIcon class="size-5 shrink-0 text-cthulhu-green-800" aria-hidden="true" />
+                    <p class="text-sm font-medium text-cthulhu-green-900">{{ flash.success }}</p>
+                </div>
 
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        <button
-                            v-for="skill in passiveSkills"
-                            :key="skill.slug"
-                            type="button"
-                            class="btn-primary"
-                            :disabled="rolling || present.length === 0"
-                            @click="rollFor(skill)"
-                        >
-                            <EyeSlashIcon class="size-4" aria-hidden="true" />
-                            {{ skill.name }}
-                        </button>
+                <div
+                    v-if="flash.error"
+                    class="flex items-start gap-2 rounded-xl bg-cthulhu-blood-400/15 p-4 ring-1 ring-cthulhu-blood-400/50"
+                >
+                    <ExclamationTriangleIcon class="size-5 shrink-0 text-cthulhu-blood-300" aria-hidden="true" />
+                    <p class="text-sm font-medium text-parchment-100">{{ flash.error }}</p>
+                </div>
 
-                        <span v-if="present.length === 0" class="text-sm text-cthulhu-blood-500">
-                            Nobody is marked as here.
-                        </span>
-                        <span v-else class="text-sm text-cthulhu-green-500">
-                            for {{ present.length }} of {{ party.length }} at the table
-                        </span>
-                    </div>
-
-                    <p v-if="rolledSkill" class="mt-3 text-sm text-cthulhu-green-700">
-                        Last rolled: <span class="font-semibold">{{ rolledSkill }}</span>. The outcomes are in the
-                        table below.
+                <section v-if="party.length === 0" class="panel p-5 sm:p-6">
+                    <h2 class="display text-lg text-cthulhu-green-900">Nobody has joined {{ game.name }} yet</h2>
+                    <p class="field-hint mt-1">
+                        Investigators appear here once their players put them in this game, from the Manage sheet panel
+                        on their own sheet.
                     </p>
                 </section>
 
-                <!-- The party -->
+                <template v-else>
+                    <!-- Secret rolls -->
+                    <section class="panel p-4 sm:p-5">
+                        <div class="flex flex-wrap items-baseline justify-between gap-2">
+                            <h2 class="text-base font-semibold text-cthulhu-green-900">Secret roll</h2>
+                            <p class="field-hint">
+                                Rolled against everyone at the table without telling them. Only the latest roll is kept.
+                            </p>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <button
+                                v-for="skill in passiveSkills"
+                                :key="skill.slug"
+                                type="button"
+                                class="btn-primary"
+                                :disabled="rolling || present.length === 0"
+                                @click="rollFor(skill)"
+                            >
+                                <EyeSlashIcon class="size-4" aria-hidden="true" />
+                                {{ skill.name }}
+                            </button>
+
+                            <span v-if="present.length === 0" class="text-sm text-cthulhu-blood-500">
+                                Nobody is marked as here.
+                            </span>
+                            <span v-else class="text-sm text-cthulhu-green-500">
+                                for {{ present.length }} of {{ party.length }} at the table
+                            </span>
+                        </div>
+
+                        <p v-if="rolledSkill" class="mt-3 text-sm text-cthulhu-green-700">
+                            Last rolled: <span class="font-semibold">{{ rolledSkill }}</span
+                            >. The outcomes are in the table below.
+                        </p>
+                    </section>
+
+                    <!-- The party -->
+                    <section class="panel p-4 sm:p-5">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <h2 class="text-base font-semibold text-cthulhu-green-900">The party</h2>
+                            <button v-if="absent.length" type="button" class="btn-ghost btn-sm" @click="everyoneIsHere">
+                                Everyone's here
+                            </button>
+                        </div>
+
+                        <PartyTable class="mt-3" :characters="party" :passive-skills="passiveSkills" :dimmed="(character) => !isHere(character)">
+                            <template #lead-heading>Here</template>
+
+                            <template #lead="{ character }">
+                                <input
+                                    type="checkbox"
+                                    class="size-4 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
+                                    :checked="isHere(character)"
+                                    :aria-label="`${character.name} is at the table`"
+                                    @change="toggleAttendance(character)"
+                                />
+                            </template>
+
+                            <template #trail-heading>Last roll</template>
+
+                            <template #trail="{ character }">
+                                <template v-if="resultFor(character)">
+                                    <span class="tabular block whitespace-nowrap text-xs text-cthulhu-green-500">
+                                        {{ resultFor(character).roll }} vs {{ resultFor(character).value }}
+                                    </span>
+                                    <span :class="outcomeClass(resultFor(character))" class="mt-1 inline-block">
+                                        {{ resultFor(character).outcome }}
+                                    </span>
+                                </template>
+                                <span v-else class="text-cthulhu-green-500">—</span>
+                            </template>
+                        </PartyTable>
+                    </section>
+                </template>
+
+                <!-- The Keeper's own cast -->
                 <section class="panel p-4 sm:p-5">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <h2 class="text-base font-semibold text-cthulhu-green-900">The party</h2>
-                        <button
-                            v-if="absent.length"
-                            type="button"
-                            class="btn-ghost btn-sm"
-                            @click="everyoneIsHere"
-                        >
-                            Everyone's here
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 class="text-base font-semibold text-cthulhu-green-900">Your cast</h2>
+                        <p class="field-hint">Conjured up whole, in this game, and visible to nobody but you.</p>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap items-end gap-2">
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                v-for="option in archetypes"
+                                :key="option.value"
+                                type="button"
+                                :class="option.value === archetype ? 'btn-primary' : 'btn-secondary'"
+                                :title="option.description"
+                                @click="archetype = option.value"
+                            >
+                                {{ option.label }}
+                            </button>
+                        </div>
+
+                        <div>
+                            <label for="npc-occupation" class="sr-only">Occupation</label>
+                            <select id="npc-occupation" v-model="occupationId" class="field w-auto">
+                                <option value="">Whatever suits them</option>
+                                <option v-for="occupation in occupations" :key="occupation.id" :value="occupation.id">
+                                    {{ occupation.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn-primary" :disabled="creating || !archetype" @click="conjure">
+                            <SparklesIcon class="size-4" aria-hidden="true" />
+                            Create
                         </button>
                     </div>
 
-                    <!-- Wide by nature: it scrolls itself rather than the page. -->
-                    <div class="mt-3 overflow-x-auto">
-                        <table class="w-full min-w-[54rem] border-collapse text-sm">
-                            <thead>
-                                <tr class="border-b border-parchment-300 text-left">
-                                    <th scope="col" class="px-2 py-2 eyebrow">Here</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">Investigator</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">HP</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">SAN</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">MP</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">Luck</th>
-                                    <th
-                                        v-for="skill in passiveSkills"
-                                        :key="skill.slug"
-                                        scope="col"
-                                        class="px-2 py-2 eyebrow"
-                                    >
-                                        {{ skill.name }}
-                                    </th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">Loaded</th>
-                                    <th scope="col" class="px-2 py-2 eyebrow">Last roll</th>
-                                </tr>
-                            </thead>
+                    <p v-if="chosenArchetype" class="field-hint mt-2">{{ chosenArchetype.description }}</p>
 
-                            <tbody>
-                                <tr
-                                    v-for="character in party"
-                                    :key="character.id"
-                                    class="border-b border-parchment-200 align-top transition"
-                                    :class="{ 'opacity-40': !isHere(character) }"
-                                >
-                                    <td class="px-2 py-3">
-                                        <input
-                                            type="checkbox"
-                                            class="size-4 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
-                                            :checked="isHere(character)"
-                                            :aria-label="`${character.name} is at the table`"
-                                            @change="toggleAttendance(character)"
-                                        />
-                                    </td>
+                    <p v-if="cast.length === 0" class="field-hint mt-4">
+                        Nobody yet. Whoever you make lands in {{ game.name }} with their skills rolled, something to
+                        fight with and the essentials in their pockets — and can be deleted the moment the scene is
+                        over.
+                    </p>
 
-                                    <td class="px-2 py-3">
-                                        <Link
-                                            :href="route('character.show', { character: character.slug })"
-                                            class="font-semibold text-cthulhu-green-900 hover:text-cthulhu-green-600"
-                                        >
-                                            {{ character.name }}
-                                        </Link>
-                                        <span class="block text-xs text-cthulhu-green-500">{{ character.player }}</span>
+                    <PartyTable v-else class="mt-3" :characters="cast" :passive-skills="passiveSkills">
+                        <template #name-heading>Character</template>
 
-                                        <span
-                                            v-for="condition in character.conditions"
-                                            :key="condition"
-                                            class="chip-blood mr-1 mt-1 inline-block"
-                                        >
-                                            {{ condition }}
-                                        </span>
-                                    </td>
+                        <template #subtitle="{ character }">
+                            {{ [character.archetype, character.occupation].filter(Boolean).join(' · ') }}
+                        </template>
 
-                                    <td class="tabular px-2 py-3 text-lg font-semibold" :class="figureClass(character.hitPoints)">
-                                        {{ character.hitPoints }}
-                                    </td>
-                                    <td class="tabular px-2 py-3 text-lg font-semibold" :class="figureClass(character.sanity)">
-                                        {{ character.sanity }}
-                                    </td>
-                                    <td class="tabular px-2 py-3 text-cthulhu-green-800">{{ character.magicPoints }}</td>
-                                    <td class="tabular px-2 py-3 text-cthulhu-green-800">{{ character.luck }}</td>
+                        <template #trail-heading>Done with</template>
 
-                                    <td
-                                        v-for="skill in passiveSkills"
-                                        :key="skill.slug"
-                                        class="tabular px-2 py-3 text-cthulhu-green-800"
-                                    >
-                                        {{ character.skills[skill.slug] }}
-                                    </td>
-
-                                    <td class="px-2 py-3">
-                                        <span v-if="!character.firearms.length" class="text-cthulhu-green-500">—</span>
-                                        <span
-                                            v-for="firearm in character.firearms"
-                                            :key="firearm.name"
-                                            class="block whitespace-nowrap text-xs text-cthulhu-green-700"
-                                        >
-                                            {{ firearm.name }}
-                                            <span class="tabular font-semibold">{{ firearm.ammo }}</span>
-                                            <span v-if="firearm.reserve" class="text-cthulhu-green-500">
-                                                (+{{ firearm.reserve }})
-                                            </span>
-                                        </span>
-                                    </td>
-
-                                    <td class="px-2 py-3">
-                                        <template v-if="resultFor(character)">
-                                            <span class="tabular block whitespace-nowrap text-xs text-cthulhu-green-500">
-                                                {{ resultFor(character).roll }} vs {{ resultFor(character).value }}
-                                            </span>
-                                            <span :class="outcomeClass(resultFor(character))" class="mt-1 inline-block">
-                                                {{ resultFor(character).outcome }}
-                                            </span>
-                                        </template>
-                                        <span v-else class="text-cthulhu-green-500">—</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                        <template #trail="{ character }">
+                            <button
+                                type="button"
+                                class="btn-sm whitespace-nowrap"
+                                :class="confirmingId === character.id ? 'btn-danger' : 'btn-ghost'"
+                                @click="dismiss(character)"
+                            >
+                                <TrashIcon class="size-4" aria-hidden="true" />
+                                {{ confirmingId === character.id ? 'For good?' : 'Delete' }}
+                            </button>
+                        </template>
+                    </PartyTable>
                 </section>
             </template>
         </div>
