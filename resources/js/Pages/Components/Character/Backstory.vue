@@ -20,7 +20,9 @@ const avatarImg = computed(() => {
  */
 const identity = computed(() => [
     { key: 'age', label: 'Age', type: 'number' },
-    { key: 'gender', label: 'Gender', type: 'text' },
+    // Gender is an enum with a check constraint behind it, so it is picked
+    // rather than typed — anything else is refused by the database.
+    { key: 'gender', label: 'Gender', type: 'text', options: ['Male', 'Female', 'Other'] },
 ]);
 
 /**
@@ -101,7 +103,20 @@ const renameCharacter = (event) => {
                         <div v-for="row in identity" :key="row.key" class="grid grid-cols-[7rem_1fr] items-center gap-2">
                             <dt class="text-sm text-cthulhu-green-200">{{ row.label }}</dt>
                             <dd>
+                                <select
+                                    v-if="row.options"
+                                    v-model="prop.character[row.key]"
+                                    :aria-label="row.label"
+                                    class="field-inline w-full text-sm text-parchment-100"
+                                    :disabled="!prop.editable"
+                                    @change="updateAttribute(row.key, $event)"
+                                >
+                                    <option v-for="option in row.options" :key="option" :value="option" class="text-cthulhu-green-900">
+                                        {{ option }}
+                                    </option>
+                                </select>
                                 <input
+                                    v-else
                                     v-model="prop.character[row.key]"
                                     :type="row.type"
                                     :aria-label="row.label"

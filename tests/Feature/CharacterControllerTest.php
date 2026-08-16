@@ -71,3 +71,57 @@ test('can delete own character', function () {
     $response->assertRedirect(route('dashboard'));
     $this->assertSoftDeleted($character);
 });
+
+/*
+ * The Background panel edits in place through the same route as the vitals, but
+ * none of its five fields were on the allow-list, so every one of them answered
+ * 422 and the sheet — which never looks at the response — showed nothing.
+ */
+test('the background fields save', function (string $attribute, mixed $value) {
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+
+    $this->put(route('attribute.update', $character->slug), [
+        'attribute' => $attribute,
+        'value'     => $value,
+    ])->assertRedirect(route('character.show', $character->slug));
+
+    expect($character->refresh()->{$attribute})->toBe($value);
+})->with([
+    'age'        => ['age', 42],
+    'gender'     => ['gender', 'Other'],
+    'occupation' => ['occupation', 'Antiquarian'],
+    'residence'  => ['residence', 'Arkham, Massachusetts'],
+    'birthplace' => ['birthplace', 'Boston, Massachusetts'],
+]);
+
+test('an age outside the range the book plays in is refused', function () {
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+
+    $this->put(route('attribute.update', $character->slug), [
+        'attribute' => 'age',
+        'value'     => 7,
+    ])->assertSessionHasErrors('value');
+});
+
+/*
+ * The column is an enum with a check constraint behind it, so anything but a
+ * case name has to be turned away here — the database would refuse it anyway,
+ * but as a 500 rather than a validation error.
+ */
+test('a gender the enum does not have is refused', function () {
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+
+    $this->put(route('attribute.update', $character->slug), [
+        'attribute' => 'gender',
+        'value'     => 'Wensleydale',
+    ])->assertSessionHasErrors('value');
+});
+
+test('an attribute nobody may set this way is still refused', function () {
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+
+    $this->put(route('attribute.update', $character->slug), [
+        'attribute' => 'user_id',
+        'value'     => 999,
+    ])->assertSessionHasErrors('attribute');
+});
