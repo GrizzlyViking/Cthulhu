@@ -1,12 +1,9 @@
 <script setup>
-import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
     BookOpenIcon,
     BriefcaseIcon,
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
     IdentificationIcon,
     UserGroupIcon,
     UsersIcon,
@@ -18,8 +15,6 @@ defineProps({
     description: { type: String, default: '' },
 });
 
-const page = usePage();
-
 const sections = [
     { name: 'Overview', route: 'admin.index', pattern: 'admin.index', icon: WrenchScrewdriverIcon },
     { name: 'Group', route: 'admin.group.edit', pattern: 'admin.group.*', icon: UserGroupIcon },
@@ -29,8 +24,6 @@ const sections = [
     { name: 'Weapons', route: 'admin.weapons.index', pattern: 'admin.weapons.*', icon: BookOpenIcon },
     { name: 'Equipment', route: 'admin.equipment.index', pattern: 'admin.equipment.*', icon: BriefcaseIcon },
 ];
-
-const flash = computed(() => page.props.flash ?? {});
 
 const linkClass = (pattern) => [
     'inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition',
@@ -68,20 +61,7 @@ const linkClass = (pattern) => [
 
             <p v-if="description" class="text-sm text-cthulhu-green-200">{{ description }}</p>
 
-            <!-- Result of the last action -->
-            <div v-if="flash.success" class="card-marked flex items-start gap-2">
-                <CheckCircleIcon class="size-5 shrink-0 text-cthulhu-green-800" aria-hidden="true" />
-                <p class="text-sm font-medium text-cthulhu-green-900">{{ flash.success }}</p>
-            </div>
-
-            <div
-                v-if="flash.error"
-                class="flex items-start gap-2 rounded-xl bg-cthulhu-blood-400/15 p-4 ring-1 ring-cthulhu-blood-400/50"
-            >
-                <ExclamationTriangleIcon class="size-5 shrink-0 text-cthulhu-blood-300" aria-hidden="true" />
-                <p class="text-sm font-medium text-parchment-100">{{ flash.error }}</p>
-            </div>
-
+            <!-- The result of the last action comes from AuthenticatedLayout. -->
             <slot />
         </div>
     </AuthenticatedLayout>

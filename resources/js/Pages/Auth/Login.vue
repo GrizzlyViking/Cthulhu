@@ -16,10 +16,13 @@ defineProps({
     },
 });
 
+// Remembered by default. A game evening outlasts any session, and a player
+// whose session lapses mid-sheet is carried over by the remember-me cookie
+// rather than being dropped at the login page holding a stale CSRF token.
 const form = useForm({
     email: '',
     password: '',
-    remember: false,
+    remember: true,
 });
 
 const submit = () => {

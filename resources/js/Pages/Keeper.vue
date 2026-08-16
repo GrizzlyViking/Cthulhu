@@ -1,12 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PartyTable from '@/Pages/Components/Keeper/PartyTable.vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 import {
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
     EyeSlashIcon,
     SparklesIcon,
     TrashIcon,
@@ -22,9 +20,6 @@ const props = defineProps({
     archetypes: { type: Array, default: () => [] },
     occupations: { type: Array, default: () => [] },
 });
-
-const page = usePage();
-const flash = computed(() => page.props.flash ?? {});
 
 /*
  * Who is at the table tonight. Seven players are on the books and it is rare
@@ -166,20 +161,8 @@ const dismiss = (character) => {
             </section>
 
             <template v-else>
-                <!-- Result of the last thing conjured up or dismissed -->
-                <div v-if="flash.success" class="card-marked flex items-start gap-2">
-                    <CheckCircleIcon class="size-5 shrink-0 text-cthulhu-green-800" aria-hidden="true" />
-                    <p class="text-sm font-medium text-cthulhu-green-900">{{ flash.success }}</p>
-                </div>
-
-                <div
-                    v-if="flash.error"
-                    class="flex items-start gap-2 rounded-xl bg-cthulhu-blood-400/15 p-4 ring-1 ring-cthulhu-blood-400/50"
-                >
-                    <ExclamationTriangleIcon class="size-5 shrink-0 text-cthulhu-blood-300" aria-hidden="true" />
-                    <p class="text-sm font-medium text-parchment-100">{{ flash.error }}</p>
-                </div>
-
+                <!-- The result of the last thing conjured up or dismissed comes
+                     from AuthenticatedLayout. -->
                 <section v-if="party.length === 0" class="panel p-5 sm:p-6">
                     <h2 class="display text-lg text-cthulhu-green-900">Nobody has joined {{ game.name }} yet</h2>
                     <p class="field-hint mt-1">

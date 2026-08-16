@@ -379,6 +379,34 @@ removed along with the whole Reverb/Echo/Pusher stack; the `messages` table is l
 nothing reads or writes it. The Keeper's secret roll is a plain `axios.post` to `keeper.roll` that
 answers with the outcomes — it never needed a socket.
 
+### Sessions, and pages left open
+A sheet lives on a phone for a whole game evening, so `session.lifetime` is **two weeks** and
+`expire_on_close` is **false** — Laravel's two hours ran out mid-play and every save from the
+still-open page came back 419, which is what 14 players hit in August 2026. *Remember me* is ticked
+by default on the login form for the same reason. `TokenMismatchException` extends `HttpException`,
+so **none of this ever reaches `storage/logs`** — that is Laravel's behaviour, not a hole to plug.
+
+A 419 is still possible, and `withExceptions` in `bootstrap/app.php` answers it **two different ways,
+because the sheet saves two different ways**:
+
+- An **Inertia** visit (`X-Inertia`) is sent `back(303)` with the message flashed. It must be 303 and
+  not 302: a 302 is re-issued with the original method, straight back into the same 419, until the
+  browser dies with `ERR_TOO_MANY_REDIRECTS`.
+- **Everything else XHR** gets a real `419` JSON. Most of the sheet does *not* save through Inertia —
+  a characteristic, a skill value, a round fired are plain `axios` calls (`useAdjustAttribute`,
+  `Vitals`, `Weapons`, `Skills`). Redirecting those is worse than useless: the browser follows the
+  303 itself, the page that comes back is dropped by the `.then()`, and **the flash is spent on a
+  render nobody sees**, so the next real visit has nothing left to show either.
+
+The message is flashed in both cases, and the axios interceptor in `resources/js/bootstrap.js` turns
+a 419 into `router.reload()` — which fetches the page carrying the flash, so `FlashMessages.vue`
+shows the same banner whichever way the save went, and, being a GET that passes the CSRF check,
+leaves a **fresh token** in the tab so trying again actually works.
+
+`FlashMessages.vue` is rendered once by `AuthenticatedLayout` and once by `GuestLayout`. Do not add a
+banner to a page nested inside them — it would double up, which is why `AdminLayout` and `Keeper.vue`
+no longer have their own.
+
 ### Deploying
 Production is a plain git checkout at `/var/www/cthulhu` on the host reachable as `ssh cthulhu`
 (Ubuntu, **UTC**, so its timestamps read two hours behind Danish local time). Deploying is

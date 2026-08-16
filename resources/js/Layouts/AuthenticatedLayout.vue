@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+import FlashMessages from '@/Components/FlashMessages.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -256,6 +257,11 @@ const lastGameName = (character) =>
                     <slot name="header" />
                 </div>
             </header>
+
+            <!-- Result of the last action, wherever the player lands -->
+            <div class="mx-auto max-w-7xl px-4 empty:hidden sm:px-6 lg:px-8 [&>*]:mt-5">
+                <FlashMessages />
+            </div>
 
             <!-- Page content. Pages own their own container width. -->
             <main>

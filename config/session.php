@@ -32,9 +32,12 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    // Two weeks. A game evening runs four or five hours and the sheet sits open
+    // on a phone throughout, so Laravel's two hours expired mid-play and every
+    // save from the stale page came back 419.
+    'lifetime' => env('SESSION_LIFETIME', 20160),
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
     |--------------------------------------------------------------------------
