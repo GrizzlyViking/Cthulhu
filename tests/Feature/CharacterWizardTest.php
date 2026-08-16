@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\Occupation;
 use App\Models\Skill;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -129,6 +130,7 @@ test('happy path walks the full wizard from profile to completion', function () 
         ->and($draft->dodge)->toBe(35)       // DEX / 2
         ->and($draft->damage_bonus)->toBe('none') // STR + SIZ = 100 → Table I
         ->and($draft->build)->toBe(0)
+        ->and($draft->move_rate)->toBe(7)    // mixed against SIZ → 8, less 1 for being 42
         ->and($draft->wizard_step)->toBe(2);
 
     // Step 2 — occupation.
@@ -230,6 +232,19 @@ test('characteristics rejects out of range values', function (string $field, int
     ['size', 100],
     ['luck', 91],
 ]);
+
+test('characteristics store the move rate with the age deduction already taken off', function () {
+    $draft = wizardDraft($this->user, ['wizard_step' => 1, 'age' => 45]);
+
+    $this->put(route('character.wizard.characteristics', $draft->slug), validCharacteristics())
+        ->assertRedirect(route('character.create'));
+
+    // The column itself, not the accessor: what the wizard showed is what the
+    // sheet is written with. STR 40 / DEX 70 against SIZ 60 → 8, less 1 for
+    // the forties.
+    expect(DB::table('characters')->where('id', $draft->id)->value('move_rate'))->toBe(7)
+        ->and($draft->refresh()->move_rate)->toBe(7);
+});
 
 test('skills rejects overspending the occupation pool', function () {
     $draft = journalistDraft($this->user);
@@ -468,5 +483,71 @@ test('every skill slug referenced by the occupation seeder exists', function () 
             $missing->values()->all(),
             "Occupation [{$occupation->name}] references unknown skill slugs: {$missing->implode(', ')}"
         );
+    });
+});
+
+describe('resuming a draft', function () {
+    beforeEach(function () {
+        $this->group  = Group::factory()->create();
+        $this->active = $this->group->startGame('The Haunting');
+        $this->past   = $this->group->startGame('The Lightless Beacon');
+
+        $this->user->update(['group_id' => $this->group->id]);
+    });
+
+    test('a draft in the game being played is resumed', function () {
+        $draft = wizardDraft($this->user, ['group_id' => $this->group->id]);
+        $draft->games()->sync([$this->active->id]);
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft.id', $draft->id));
+    });
+
+    test('a draft left in a finished campaign starts the wizard over', function () {
+        $draft = wizardDraft($this->user, ['group_id' => $this->group->id]);
+        $draft->games()->sync([$this->past->id]);
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft', null));
+    });
+
+    test('a draft in no game at all starts the wizard over', function () {
+        wizardDraft($this->user, ['group_id' => $this->group->id]);
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft', null));
+    });
+
+    test('the most recent draft in the game being played wins', function () {
+        $older = wizardDraft($this->user, ['group_id' => $this->group->id]);
+        $older->games()->sync([$this->active->id]);
+
+        $newer = wizardDraft($this->user, ['group_id' => $this->group->id]);
+        $newer->games()->sync([$this->active->id]);
+
+        DB::table('characters')->where('id', $older->id)->update(['updated_at' => '2026-06-01 00:00:00']);
+        DB::table('characters')->where('id', $newer->id)->update(['updated_at' => '2026-07-01 00:00:00']);
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft.id', $newer->id));
+    });
+
+    test('a group playing nothing still resumes its latest draft', function () {
+        $draft = wizardDraft($this->user, ['group_id' => $this->group->id]);
+        $draft->games()->sync([$this->past->id]);
+
+        $this->group->update(['active_game_id' => null]);
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft.id', $draft->id));
+    });
+
+    test('a draft begun here is resumed rather than duplicated', function () {
+        $this->post(route('character.wizard.store'), validProfile());
+
+        $draft = Character::where('name', 'Harvey Walters')->firstOrFail();
+
+        $this->get(route('character.create'))
+            ->assertInertia(fn (Assert $page) => $page->where('draft.id', $draft->id));
     });
 });

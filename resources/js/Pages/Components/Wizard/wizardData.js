@@ -172,6 +172,20 @@ export const LUCK = {
 };
 
 /**
+ * Point Buy (Investigator Handbook, "Option 4"): a pool shared among the eight
+ * characteristics instead of dice. The minimum for INT and SIZ is a
+ * recommendation the Keeper may waive, so it warns rather than blocks.
+ */
+export const POINT_BUY = {
+    pool: 460,
+    min: 15,
+    max: 90,
+    step: 5,
+    recommendedMinimum: 40,
+    recommendedFor: ['intelligence', 'size'],
+};
+
+/**
  * Age modifiers table (Investigator Handbook p.45 & p.48).
  * Modifiers are for the chosen age bracket only — they are not cumulative.
  */
@@ -210,7 +224,9 @@ export function ageModifiers(age) {
         7: { label: '70s', checks: 4, deduct: 40, app: 20, move: 4 },
         8: { label: '80s', checks: 4, deduct: 80, app: 25, move: 5 },
     };
-    const b = brackets[Math.floor(a / 10)];
+    // Ninety is allowed on the profile step and has no bracket of its own, so
+    // it stays on the eighties' row rather than falling off the table.
+    const b = brackets[Math.min(Math.floor(a / 10), 8)];
     return {
         bracket: b.label,
         summary: `Make ${b.checks} improvement checks for EDU, deduct ${b.deduct} points among STR, CON or DEX, and reduce APP by ${b.app}.`,

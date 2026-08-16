@@ -53,6 +53,10 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/wizard/{character}/profile', [CharacterWizardController::class, 'profile'])->name('character.wizard.profile');
     Route::put('/character/wizard/{character}/characteristics', [CharacterWizardController::class, 'characteristics'])->name('character.wizard.characteristics');
     Route::put('/character/wizard/{character}/occupation', [CharacterWizardController::class, 'occupation'])->name('character.wizard.occupation');
+    // A player writing an occupation the book lacks. It joins the shared list,
+    // so this is deliberately outside the `reference-data` gate — the same way
+    // a player adding a skill or a piece of equipment is.
+    Route::post('/character/wizard/{character}/occupations', [CharacterWizardController::class, 'storeOccupation'])->name('character.wizard.occupation.store');
     Route::put('/character/wizard/{character}/skills', [CharacterWizardController::class, 'skills'])->name('character.wizard.skills');
     Route::put('/character/wizard/{character}/backstory', [CharacterWizardController::class, 'backstory'])->name('character.wizard.backstory');
     Route::put('/character/wizard/{character}/complete', [CharacterWizardController::class, 'complete'])->name('character.wizard.complete');
@@ -128,6 +132,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::delete('/invitations/{invitation}', [Admin\InvitationController::class, 'destroy'])->name('invitations.destroy');
 
     Route::get('/skills', [Admin\SkillController::class, 'index'])->name('skills.index');
+    Route::get('/occupations', [Admin\OccupationController::class, 'index'])->name('occupations.index');
     Route::get('/weapons', [Admin\WeaponController::class, 'index'])->name('weapons.index');
     Route::get('/equipment', [Admin\EquipmentController::class, 'index'])->name('equipment.index');
 
@@ -141,6 +146,11 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::put('/skills/{skill}', [Admin\SkillController::class, 'update'])->name('skills.update');
         Route::delete('/skills/{skill}', [Admin\SkillController::class, 'destroy'])->name('skills.destroy');
         Route::put('/skills/{slug}/restore', [Admin\SkillController::class, 'restore'])->name('skills.restore');
+
+        Route::post('/occupations', [Admin\OccupationController::class, 'store'])->name('occupations.store');
+        Route::put('/occupations/{occupation}', [Admin\OccupationController::class, 'update'])->name('occupations.update');
+        Route::delete('/occupations/{occupation}', [Admin\OccupationController::class, 'destroy'])->name('occupations.destroy');
+        Route::put('/occupations/{id}/restore', [Admin\OccupationController::class, 'restore'])->name('occupations.restore');
 
         Route::post('/weapons', [Admin\WeaponController::class, 'store'])->name('weapons.store');
         Route::put('/weapons/{weapon}', [Admin\WeaponController::class, 'update'])->name('weapons.update');

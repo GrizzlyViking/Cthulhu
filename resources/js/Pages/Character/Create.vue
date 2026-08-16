@@ -15,6 +15,9 @@ const props = defineProps({
     draft: { type: Object, default: null },
     occupations: { type: Array, default: () => [] },
     era: { type: String, default: '1920s' },
+    eras: { type: Array, default: () => [] },
+    skillOptions: { type: Array, default: () => [] },
+    characteristics: { type: Object, default: () => ({}) },
     occupationPoints: { type: Number, default: null },
     personalPoints: { type: Number, default: null },
     wealth: { type: Object, default: null },
@@ -85,6 +88,9 @@ const advance = () => {
                     v-else-if="currentStep === 2 && draft"
                     :draft="draft"
                     :occupations="occupations"
+                    :eras="eras"
+                    :skill-options="skillOptions"
+                    :characteristics="characteristics"
                     @advance="advance"
                 />
 

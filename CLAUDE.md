@@ -55,6 +55,8 @@ cd /var/www/cthulhu && ./deploy.sh                  # pull, install, build, migr
 
 `app/Misc/CharacterCreation.php` contains pure static helpers for derived stats (dodge, sanity, hit points, move rate, damage bonus, build) — these are not stored but computed from the core attributes.
 
+`moveRate()` takes the **age deduction** off (a point per decade from the forties, capped at the eighties' five); `baseMoveRate()` is the 7/8/9 rule on its own. The rule lives there and nowhere else: `Character::move_rate` is an accessor over it, so the sheet follows an edit to STR, DEX, SIZ or age, and the wizard writes the same figure it showed. `wizardData.js`'s `ageModifiers()` mirrors the deduction on the client — change both together.
+
 ### Weapons & ammunition
 `app/Misc/WeaponTable.php` is the canonical transcription of the Investigator
 Handbook weapons table (pp. 250–254) — 104 weapons with `category`, `era`,
@@ -104,7 +106,7 @@ Authorization is enforced via `CharacterPolicy` and the `admin` middleware alias
 ### Admin section
 Native Inertia pages under `/admin`, controllers in `app/Http/Controllers/Admin/` extending
 `AdminController`, Vue pages in `resources/js/Pages/Admin/` wrapped in `AdminLayout`. Pages: Group,
-Users, Skills, Weapons, Equipment.
+Users, Skills, Occupations, Weapons, Equipment.
 
 **Admin authority is per-group.** An admin manages the group they belong to and nothing else:
 `AdminController::requireGroup()` supplies the group, and `memberOfCurrentGroup()` 404s on anyone
@@ -174,17 +176,53 @@ investigators keep their sheets, as they always have.
 policy, the purge and the cast query need nothing new — they ask `kind`, not what the thing is. Nothing
 has been written for them because there is no monster manual to transcribe yet.
 
-### Reference data: skills, weapons and equipment
+### Reference data: skills, weapons, equipment and occupations
 These tables are shared by every group on the server, so editing them is not group-scoped and sits
 behind `cthulhu.admin.edit_reference_data` (`config/cthulhu.php`, env
 `CTHULHU_ADMIN_EDIT_REFERENCE_DATA`, default on). It is on while one group plays here; **turn it off
 once a second group exists** and the lists go back to being console-only (`SkillSeeder`,
-`App\Misc\WeaponTable`, `App\Misc\EquipmentTable` and the migrations reading from them).
+`OccupationSeeder`, `App\Misc\WeaponTable`, `App\Misc\EquipmentTable` and the migrations reading from
+them).
 
 The toggle is enforced by the `reference-data` middleware alias on the write routes, not just hidden
 in the UI. Reading and searching are never gated. Pages get an `editable` prop to decide what to
 offer. It does **not** gate players adding equipment to their own sheets — that goes through
-`EquipmentController`, authorized by `CharacterPolicy`.
+`EquipmentController`, authorized by `CharacterPolicy` — nor a player writing an occupation in the
+wizard, which goes through `CharacterWizardController` on the same terms (see **Occupations**).
+
+### Occupations
+`occupations` is the list the wizard's third step picks from — 28 from the Investigator Handbook
+(`OccupationSeeder`) plus whatever the players have written. An occupation is a name, a description,
+the eras it belongs to, the formula for its skill point pool, a Credit Rating range and the skills it
+trains.
+
+`skill_points_formula` is a list of components summed together, each `{multiplier, options}` where
+`options` is one or more characteristics and the **highest** of them counts — which is how the book
+writes "EDU × 2 + STR or DEX × 2". `Occupation::CHARACTERISTICS` is the set a component may draw on;
+`skillPointsFor()` does the sum and `formulaLabel()` spells it out.
+
+`skills` is **one column holding three kinds of entry**: a plain slug, a `choice`
+(`{type, count, options, label}` — "one interpersonal skill"), and an `any`
+(`{type, count, label}` — free slots outside the list). `WizardSkillsRequest` enforces all three when
+the points are spent. The forms send the three apart (`skills`, `choices`, `any_count`/`any_label`)
+and `App\Http\Requests\OccupationRequest::occupationAttributes()` folds them back into the column —
+so validation stays flat, and nothing seeded is lost when an admin edits a row.
+
+**Players contribute to the list.** *Custom occupation* on the wizard's Occupation step opens the
+same form the admin page uses (`resources/js/Components/OccupationFields.vue`) and posts to
+`character.wizard.occupation.store`. What is written joins the shared list marked `is_custom` with
+`created_by`, and is chosen for the draft straight away — the step is **not** advanced, so the player
+still presses *Save occupation* and the flow reads the same either way. This reaches every group on
+the server, which is the point: the lists grow from play, as with player-created skills.
+
+Managed at `/admin/occupations` (`Admin\OccupationController`), which filters by era, by retired, and
+by **player-written** — that last is how an admin finds contributions to tidy or prune. Editing never
+clears `is_custom` or `created_by`: where a row came from is a fact, not something an edit changes.
+
+`Occupation` uses `SoftDeletes` and `HasEras` like the rest of the reference data. A retired
+occupation keeps its id, so the investigators who trained as it still read as what they are; it
+simply stops being offered. Names are unique **including retired ones**, so validation tells the
+admin to restore rather than dying on the constraint.
 
 ### Games
 A **game** is a campaign — the thing a group actually plays, and what the era belongs to. Characters
@@ -223,8 +261,13 @@ wins, so a deep link chased before logging in is unaffected.
 
 It hands back the character the user edited most recently **that is in the group's active game** —
 `in_active_game`, so a sheet left in a finished campaign is not somewhere to land. A draft goes to
-the wizard instead of a sheet, since it has none yet; the wizard resumes it rather than starting
-over.
+the wizard instead of a sheet, since it has none yet.
+
+The wizard resumes a draft rather than starting over, but only one that is **in the active game**
+(`CharacterWizardController::resumableDraft`) — a draft left half-built in a finished campaign is
+not picked up again, so whoever arrives starts from the profile step. While a group plays no game at
+all there is no campaign to be outside of, and the latest draft is resumed as before; without that
+fallback a fresh draft would be stranded the moment the page reloaded.
 
 With nothing to land on, the split is by role, and roles are cumulative so it asks for the player's
 hat specifically (`User::isPlayer()`, **not** `! isKeeper()`): someone who plays goes to the wizard
@@ -264,9 +307,9 @@ does mean Chrome will not raise the automatic install banner — players install
 
 ### Eras
 `groups.era` is the era a **new game** is born with — the default, not the thing anything queries;
-what a sheet actually plays in comes from its game (see **Games** above). `Skill`, `Weapon` and
-`EquipmentItem` each carry an **`eras` JSON list** saying which eras they belong to — a list, because
-most things belong to both. It is **never empty**: something available throughout carries every era,
+what a sheet actually plays in comes from its game (see **Games** above). `Skill`, `Weapon`,
+`EquipmentItem` and `Occupation` each carry an **`eras` JSON list** saying which eras they belong to
+— a list, because most things belong to both. It is **never empty**: something available throughout carries every era,
 and the `HasEras` trait (`app/Models/Concerns/HasEras.php`) normalises an empty list back to all of
 them on save. Use its `inEra(?Era)` scope and `availableIn(?Era)` helper; passing `null` means "every
 era", so callers without one need not branch.
@@ -283,7 +326,8 @@ with a "show every era" tick, out-of-era skills stay off the sheet until they ha
 their starting one, and anything already owned is shown with an era chip rather than hidden. A
 Keeper handing a 1920s table a Garand is a legitimate move.
 
-`Skill`, `Weapon`, `EquipmentItem` and `StorageLocation` all use `SoftDeletes` ("retire" in the UI).
+`Skill`, `Weapon`, `EquipmentItem`, `Occupation` and `StorageLocation` all use `SoftDeletes`
+("retire" in the UI).
 A retired row keeps its id, so:
 - it drops out of `$character->skills`, `$character->weapons` and the shared armoury automatically —
   the relations apply the soft-delete scope;
@@ -295,8 +339,22 @@ A retired row keeps its id, so:
 ### Vue page structure
 - `resources/js/Pages/` — Inertia page components (one per route)
 - `resources/js/Pages/Components/Character/` — the character sheet tab components (Characteristics, Skills, Vitals, Equipment, Backstory). `Equipment.vue` composes `Weapons.vue` (stats and ammunition) over `EquipmentList.vue` (everything owned, grouped by where it is kept)
+- `resources/js/Pages/Components/Wizard/` — the create-investigator wizard, one component per step
 - `resources/js/Pages/Composables/` — shared Vue composables
 - `resources/js/Components/` — generic UI primitives (buttons, inputs, modal, tabs)
+
+### The characteristics step
+`StepCharacteristics.vue` is a chooser between three interchangeable ways to reach the same eight
+numbers — `CharacteristicsBasic` (type the finished values), `CharacteristicsRoll` (dice totals,
+multiplied by five) and `CharacteristicsPointBuy` (share `POINT_BUY.pool` points, 15–90 each). Each
+hands the finished nine values back through `v-model:finals` / `v-model:ready`; the derived table and
+the save live in the step itself, so the server contract is the same whichever is chosen. Switching
+method remounts, and so clears what was typed.
+
+**Only the dice method applies the age modifiers.** Under the other two the player is doing their own
+arithmetic, so the age panel is a reminder and nothing is adjusted for them. Point Buy's recommended
+floor of 40 for INT and SIZ warns rather than blocks (the Keeper may waive it), and only once every
+characteristic has been filled in — half-typed numbers are not a choice worth warning about.
 
 ### Design system
 The visual language is a dark green frame holding parchment-coloured panels, with brass

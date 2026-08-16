@@ -23,7 +23,9 @@ trait HasEras
     public static function bootHasEras(): void
     {
         static::saving(function (Model $model): void {
-            $model->eras = EraTable::normalise($model->eras);
+            // Through the attribute bag rather than the property: `eras` is
+            // declared on each model using this, not on Model itself.
+            $model->setAttribute('eras', EraTable::normalise($model->getAttribute('eras')));
         });
     }
 

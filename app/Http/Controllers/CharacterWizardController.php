@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\CharacterStatus;
 use App\Enums\Era;
+use App\Http\Requests\OccupationRequest;
 use App\Http\Requests\Wizard\WizardBackstoryRequest;
 use App\Http\Requests\Wizard\WizardCharacteristicsRequest;
 use App\Http\Requests\Wizard\WizardOccupationRequest;
@@ -28,7 +29,7 @@ class CharacterWizardController extends Controller
 
     /**
      * The create character page. Serves both a fresh wizard (no draft) and
-     * resumption of the user's most recent draft.
+     * resumption of the user's most recent draft in the game being played.
      */
     public function create(Request $request): Response
     {
@@ -36,18 +37,13 @@ class CharacterWizardController extends Controller
 
         $era = $this->resolveEra($request->user());
 
-        $draft = Character::query()
-            ->where('user_id', $request->user()->id)
-            ->where('status', CharacterStatus::Draft)
-            ->latest('updated_at')
-            ->first();
+        $draft = $this->resumableDraft($request->user());
 
-        $occupations = Occupation::all()
-            ->filter(fn (Occupation $occupation): bool => in_array($era->value, $occupation->eras, true))
-            ->map(fn (Occupation $occupation): array => [
-                ...$occupation->toArray(),
-                'formula_label' => $occupation->formulaLabel(),
-            ])
+        $occupations = Occupation::query()
+            ->inEra($era)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Occupation $occupation): array => $occupation->toWizardArray())
             ->values();
 
         $occupationPoints = null;
@@ -64,9 +60,22 @@ class CharacterWizardController extends Controller
         }
 
         return Inertia::render('Character/Create', [
-            'draft'            => $draft,
-            'occupations'      => $occupations,
-            'era'              => $era->value,
+            'draft'       => $draft,
+            'occupations' => $occupations,
+            'era'         => $era->value,
+            'eras'        => Era::options(),
+            // For the custom occupation form. Deliberately not narrowed to the
+            // era: the occupation being written is shared reference data of its
+            // own, and may be marked for an era the group is not playing.
+            'skillOptions' => Skill::query()
+                ->whereNotIn('slug', Occupation::UNSELECTABLE_SKILLS)
+                ->orderBy('display_name')
+                ->get(['slug', 'display_name'])
+                ->map(fn (Skill $skill): array => [
+                    'slug'  => $skill->slug,
+                    'label' => $skill->display_name,
+                ]),
+            'characteristics'  => Occupation::CHARACTERISTICS,
             'occupationPoints' => $occupationPoints,
             'personalPoints'   => $personalPoints,
             'wealth'           => $wealth,
@@ -162,6 +171,37 @@ class CharacterWizardController extends Controller
     }
 
     /**
+     * Step 2 (aside) — a player writing an occupation the book does not have.
+     *
+     * It joins the shared list rather than living on this one sheet, the same
+     * way a skill a player adds does: the next investigator to reach this step
+     * can pick it, and an admin can tidy or retire it afterwards. That reaches
+     * every group on the server, which is the point — the lists grow from play.
+     *
+     * The new occupation is chosen for the draft straight away, since writing
+     * one is how this player says what they are. The step is not advanced: they
+     * still press "Save occupation", so the flow reads the same either way.
+     */
+    public function storeOccupation(OccupationRequest $request, Character $character): RedirectResponse
+    {
+        $this->authorizeDraft($request, $character);
+
+        $occupation = Occupation::create([
+            ...$request->occupationAttributes(),
+            'is_custom'  => true,
+            'created_by' => $request->user()->id,
+        ]);
+
+        $character->occupation_id = $occupation->id;
+        $character->occupation    = $occupation->name;
+        $character->wizard_step   = max($character->wizard_step, 3);
+        $character->save();
+
+        return to_route('character.create')
+            ->with('success', "“{$occupation->name}” has been added to the occupations everyone can choose from.");
+    }
+
+    /**
      * Step 3 — skill point allocation across the occupation and personal pools.
      */
     public function skills(WizardSkillsRequest $request, Character $character): RedirectResponse
@@ -239,6 +279,36 @@ class CharacterWizardController extends Controller
      * group is playing, falling back to the group's default while it has none
      * and to the Twenties while they are ungrouped.
      */
+    /**
+     * The draft the wizard carries on with — the most recent one that is in
+     * the campaign the group is playing.
+     *
+     * A draft left half-built in a finished campaign is not something to pick
+     * up again: whoever arrives at the wizard is here to make someone for the
+     * game that is on, and starts them from the profile step. While the group
+     * plays nothing at all there is no campaign to be outside of, so the most
+     * recent draft is resumed as it always was — otherwise a fresh draft would
+     * be stranded the moment the page reloaded.
+     */
+    private function resumableDraft(User $user): ?Character
+    {
+        $drafts = Character::query()
+            ->where('user_id', $user->id)
+            ->where('status', CharacterStatus::Draft)
+            // `in_active_game` reads both of these, and filtering happens in
+            // PHP because it is an appended attribute rather than a column.
+            ->with(['group', 'games'])
+            ->latest('updated_at')
+            ->orderByDesc('id')
+            ->get();
+
+        if ($user->group?->active_game_id === null) {
+            return $drafts->first();
+        }
+
+        return $drafts->first(fn (Character $draft): bool => $draft->in_active_game);
+    }
+
     private function resolveEra(User $user): Era
     {
         return $user->group?->activeGame?->era ?? $user->group?->era ?? Era::Twenties;

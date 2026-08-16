@@ -181,22 +181,10 @@ parameters:
 			path: app/Models/Character.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/EquipmentItem.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:pending\(\)\.$#'
 			identifier: method.notFound
 			count: 1
 			path: app/Models/Group.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Skill.php
 
 		-
 			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\User\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
@@ -215,12 +203,6 @@ parameters:
 			identifier: rules.modelAppends
 			count: 1
 			path: app/Models/User.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$eras\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Weapon.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'

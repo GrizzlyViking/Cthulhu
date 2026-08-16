@@ -137,30 +137,14 @@ class Character extends Model
         ];
     }
 
+    /**
+     * Read from the characteristics rather than the column, so editing STR,
+     * DEX, SIZ or age on the sheet moves it straight away.
+     */
     public function moveRate(): Attribute
     {
         return Attribute::make(
-            get: function () {
-                $move = CharacterCreation::moveRate($this);
-
-                if ($this->age > 40 && $this->age < 51) {
-                    return $move - 1;
-                }
-                if ($this->age > 50 && $this->age < 61) {
-                    return $move - 2;
-                }
-                if ($this->age > 60 && $this->age < 71) {
-                    return $move - 3;
-                }
-                if ($this->age > 70 && $this->age < 81) {
-                    return $move - 4;
-                }
-                if ($this->age > 80 && $this->age < 91) {
-                    return $move - 5;
-                }
-
-                return $move;
-            }
+            get: fn (): int => CharacterCreation::moveRate($this)
         );
     }
 

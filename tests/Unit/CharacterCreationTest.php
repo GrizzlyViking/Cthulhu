@@ -44,7 +44,7 @@ test('build follows Table I', function (int $str, int $siz, int $expected) {
 ]);
 
 test('move rate depends on STR and DEX relative to SIZ', function (int $str, int $dex, int $siz, int $expected) {
-    expect(CharacterCreation::moveRate(makeCharacter(['strength' => $str, 'dexterity' => $dex, 'size' => $siz])))->toBe($expected);
+    expect(CharacterCreation::baseMoveRate(makeCharacter(['strength' => $str, 'dexterity' => $dex, 'size' => $siz])))->toBe($expected);
 })->with([
     'both under SIZ gives 7'        => [50, 50, 65, 7],
     'both over SIZ gives 9'         => [70, 70, 65, 9],
@@ -52,6 +52,24 @@ test('move rate depends on STR and DEX relative to SIZ', function (int $str, int
     'all equal gives 8'             => [65, 65, 65, 8],
     'one equal to SIZ gives 8'      => [65, 50, 65, 8],
     'Harvey (STR 20 DEX 55 SIZ 80)' => [20, 55, 80, 7],
+]);
+
+test('move rate loses a point per decade from the forties', function (?int $age, int $expected) {
+    // STR 70 / DEX 70 against SIZ 65 is a base of 9.
+    $character = makeCharacter(['strength' => 70, 'dexterity' => 70, 'size' => 65, 'age' => $age]);
+
+    expect(CharacterCreation::moveRate($character))->toBe($expected);
+})->with([
+    'no age given'                    => [null, 9],
+    '25 is untouched'                 => [25, 9],
+    '39 is untouched'                 => [39, 9],
+    'forty is already in the forties' => [40, 8],
+    '49 is in the forties'            => [49, 8],
+    'fifty is in the fifties'         => [50, 7],
+    '60s lose three'                  => [65, 6],
+    '70s lose four'                   => [70, 5],
+    '80s lose five'                   => [89, 4],
+    'ninety stays on the eighties'    => [90, 4],
 ]);
 
 test('derived pools come from the correct characteristics', function () {

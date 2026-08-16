@@ -26,7 +26,22 @@ class CharacterCreation
         return intdiv($character->constitution + $character->size, 10);
     }
 
+    /**
+     * How far the investigator moves, age already taken off.
+     *
+     * The wizard shows the deduction as it is applied, so the figure stored on
+     * the sheet has to be the same one — this is the only place it is worked
+     * out, and everything else asks here.
+     */
     public static function moveRate(Character $character): int
+    {
+        return self::baseMoveRate($character) - self::ageMoveDeduction($character->age);
+    }
+
+    /**
+     * The 7/8/9 rule on STR and DEX against SIZ, before age is counted.
+     */
+    public static function baseMoveRate(Character $character): int
     {
         if ($character->strength < $character->size && $character->dexterity < $character->size) {
             return 7;
@@ -37,6 +52,20 @@ class CharacterCreation
         }
 
         return 8;
+    }
+
+    /**
+     * MOV lost to age (Investigator Handbook p.31): one point per decade from
+     * the forties on. The band is the decade itself, so forty is already in the
+     * forties; anything past the eighties stays at the eighties' five.
+     */
+    public static function ageMoveDeduction(?int $age): int
+    {
+        if ($age === null || $age < 40) {
+            return 0;
+        }
+
+        return min(intdiv($age, 10) - 3, 5);
     }
 
     public static function damageBonus(Character $character): string

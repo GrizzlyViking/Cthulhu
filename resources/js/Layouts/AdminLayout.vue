@@ -7,6 +7,7 @@ import {
     BriefcaseIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
+    IdentificationIcon,
     UserGroupIcon,
     UsersIcon,
     WrenchScrewdriverIcon,
@@ -24,6 +25,7 @@ const sections = [
     { name: 'Group', route: 'admin.group.edit', pattern: 'admin.group.*', icon: UserGroupIcon },
     { name: 'Users', route: 'admin.users.index', pattern: 'admin.users.*', icon: UsersIcon },
     { name: 'Skills', route: 'admin.skills.index', pattern: 'admin.skills.*', icon: BookOpenIcon },
+    { name: 'Occupations', route: 'admin.occupations.index', pattern: 'admin.occupations.*', icon: IdentificationIcon },
     { name: 'Weapons', route: 'admin.weapons.index', pattern: 'admin.weapons.*', icon: BookOpenIcon },
     { name: 'Equipment', route: 'admin.equipment.index', pattern: 'admin.equipment.*', icon: BriefcaseIcon },
 ];
