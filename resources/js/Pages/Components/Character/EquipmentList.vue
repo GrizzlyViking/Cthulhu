@@ -12,6 +12,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import EraChips from '@/Components/EraChips.vue';
 import CollapsibleSection from '@/Components/CollapsibleSection.vue';
+import PurchaseFields from '@/Pages/Components/Character/PurchaseFields.vue';
 import { belongsToEra } from '@/Pages/Composables/useEra.js';
 import { useFoldedSections } from '@/Pages/Composables/useFoldedSections.js';
 
@@ -92,6 +93,20 @@ const chosen = ref(null);
 const quantity = ref(1);
 const locationId = ref(prop.storageLocations[0]?.id ?? null);
 const addError = ref('');
+
+/*
+ * What it costs. The catalogue's figure arrives filled in — for as many as are
+ * being bought — and is then the player's to change: haggled down, given as a
+ * gift, or picked up off the ground for nothing at all.
+ */
+const price = ref(0);
+const paidFrom = ref('cash');
+
+const suggestedPrice = computed(() =>
+    chosen.value?.price ? Number((chosen.value.price * Math.max(1, quantity.value)).toFixed(2)) : 0
+);
+
+watch([chosen, quantity], () => (price.value = suggestedPrice.value));
 
 /*
  * The catalogue covers both eras, so the search is narrowed to this one and the
@@ -186,6 +201,8 @@ const openAdd = () => {
     results.value = [];
     chosen.value = null;
     quantity.value = 1;
+    price.value = 0;
+    paidFrom.value = 'cash';
     addError.value = '';
     allEras.value = false;
     folded.closeAll();
@@ -219,6 +236,8 @@ const submit = () => {
             name: chosen.value ? null : query.value.trim(),
             storage_location_id: locationId.value,
             quantity: quantity.value,
+            price: price.value,
+            paid_from: paidFrom.value,
         },
         { preserveScroll: true, onSuccess: () => (isAddOpen.value = false) }
     );
@@ -486,8 +505,8 @@ const addLocation = () => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-end justify-between gap-3 border-t border-parchment-300 p-5">
-                    <div class="flex items-end gap-3">
+                <div class="flex flex-col gap-3 border-t border-parchment-300 p-5">
+                    <div class="flex flex-wrap items-end gap-3">
                         <div>
                             <label for="add-qty" class="field-label text-xs">How many</label>
                             <input id="add-qty" v-model.number="quantity" type="number" min="1" class="field tabular mt-1 w-20" />
@@ -504,13 +523,30 @@ const addLocation = () => {
                                 </option>
                             </select>
                         </div>
+
+                        <PurchaseFields
+                            v-model:price="price"
+                            v-model:paid-from="paidFrom"
+                            :wealth="character.wealth"
+                            id-prefix="add-equipment"
+                        />
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <button type="button" class="btn-ghost" @click="isAddOpen = false">Cancel</button>
-                        <button type="button" class="btn-primary" @click="submit">
-                            {{ chosen ? `Add ${chosen.name}` : 'Add' }}
-                        </button>
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <p class="field-hint">
+                            <template v-if="chosen?.cost">
+                                The book asks {{ chosen.cost }}<template v-if="quantity > 1"> each</template>. Change
+                                it to whatever you actually paid.
+                            </template>
+                            <template v-else>Change the price to whatever you actually paid.</template>
+                        </p>
+
+                        <div class="flex items-center gap-2 ms-auto">
+                            <button type="button" class="btn-ghost" @click="isAddOpen = false">Cancel</button>
+                            <button type="button" class="btn-primary" @click="submit">
+                                {{ chosen ? `Add ${chosen.name}` : 'Add' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

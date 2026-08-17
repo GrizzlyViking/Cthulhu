@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Misc\EquipmentTable;
+use App\Misc\Money;
 use App\Models\Concerns\HasEras;
 use Database\Factories\EquipmentItemFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -27,6 +30,8 @@ use Illuminate\Support\Str;
  * @property bool          $is_custom
  * @property ?int          $created_by
  * @property ?Carbon       $deleted_at
+ * @property-read ?float     $price the cost cell as a number
+ * @property-read MorphPivot $pivot the `equipables` row, when read off a character
  */
 class EquipmentItem extends Model
 {
@@ -43,12 +48,26 @@ class EquipmentItem extends Model
         'created_by',
     ];
 
+    /** @var list<string> */
+    protected $appends = ['price'];
+
     protected function casts(): array
     {
         return [
             'is_custom' => 'boolean',
             'eras'      => 'array',
         ];
+    }
+
+    /**
+     * The price cell read as a number, so the sheet can fill it in when the
+     * thing is bought. `cost` stays exactly as the book prints it — "5¢-20¢",
+     * "9¢/lb." — and this is the cheap end of it in dollars, or null where the
+     * book gives no figure at all.
+     */
+    protected function price(): Attribute
+    {
+        return Attribute::get(fn (): ?float => Money::fromCostCell($this->cost));
     }
 
     public function getRouteKeyName(): string

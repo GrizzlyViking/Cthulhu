@@ -6,7 +6,9 @@ use App\Enums\Archetype;
 use App\Enums\CharacterKind;
 use App\Enums\CharacterStatus;
 use App\Enums\Era;
+use App\Enums\Purse;
 use App\Misc\CharacterCreation;
+use App\Misc\Wealth;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -33,11 +35,13 @@ use Illuminate\Support\Str;
  * @property int           $hit_points
  * @property int           $sanity
  * @property int           $luck
+ * @property ?float        $cash
+ * @property ?float        $assets
  * @property int           $magic_points
  * @property int           $dodge
  * @property int           $build
  * @property string        $damage_bonus
- * @property string        $avatar
+ * @property ?string       $avatar              the stored path, which may outlive the file
  * @property bool          $temporary_insanity
  * @property bool          $indefinite_insanity
  * @property bool          $major_wound
@@ -74,6 +78,8 @@ class Character extends Model
         'hit_points',
         'sanity',
         'luck',
+        'cash',
+        'assets',
         'magic_points',
         'dodge',
         'build',
@@ -104,7 +110,7 @@ class Character extends Model
     protected $with = ['skills', 'player', 'weapons', 'games', 'group'];
 
     /** @var list<string> */
-    protected $appends = ['in_active_game'];
+    protected $appends = ['in_active_game', 'wealth'];
 
     protected function casts(): array
     {
@@ -126,6 +132,8 @@ class Character extends Model
             'hit_points'          => 'integer',
             'sanity'              => 'integer',
             'luck'                => 'integer',
+            'cash'                => 'float',
+            'assets'              => 'float',
             'magic_points'        => 'integer',
             'dodge'               => 'integer',
             'build'               => 'integer',
@@ -286,6 +294,67 @@ class Character extends Model
     public function creditRating(): int
     {
         return (int) $this->skills->firstWhere('slug', 'credit_rating')?->pivot->value;
+    }
+
+    /**
+     * What the investigator has to spend, and what they are worth besides.
+     *
+     * Cash and assets follow the Credit Rating band out of Table II until
+     * something is actually bought or a figure typed over — so a sheet fresh
+     * out of the wizard needs no bookkeeping at all, and raising Credit Rating
+     * raises the money with it. The first purchase settles both columns and
+     * they stop following the band; `settled` is which of the two is happening,
+     * and is what lets the sheet say so.
+     *
+     * The living standard and the spending level always come from the band:
+     * they are a rating, not a balance, and no amount of spending changes what
+     * an investigator can buy without counting.
+     *
+     * @return Attribute<array{living_standard: string, description: string, spending_level: float, cash: float, assets: float, settled: bool}, never>
+     */
+    protected function wealth(): Attribute
+    {
+        return Attribute::make(
+            get: function (): array {
+                $band = Wealth::for($this->creditRating(), $this->era());
+
+                return [
+                    'living_standard' => $band['living_standard'],
+                    'description'     => $band['description'],
+                    'spending_level'  => $band['spending_level'],
+                    'cash'            => $this->cash ?? $band['cash'],
+                    'assets'          => $this->assets ?? $band['assets'],
+                    'settled'         => $this->cash !== null || $this->assets !== null,
+                ];
+            }
+        );
+    }
+
+    /**
+     * Take the price of something out of one of the two purses.
+     *
+     * Both columns are written, not just the one being spent from: the moment a
+     * player starts counting their money, the other figure has to stop drifting
+     * with their Credit Rating or the sheet would contradict itself.
+     *
+     * A balance is allowed to go past zero. The player chose the price and the
+     * purse, and an investigator who has overspent is a fact of play, not an
+     * error to refuse.
+     */
+    public function pay(float $amount, Purse $purse): void
+    {
+        $column = $purse->column();
+
+        if ($column === null || $amount <= 0.0) {
+            return;
+        }
+
+        $wealth = $this->wealth;
+
+        $this->update([
+            'cash'   => round($column === 'cash' ? $wealth['cash'] - $amount : $wealth['cash'], 2),
+            'assets' => round($column === 'assets' ? $wealth['assets'] - $amount : $wealth['assets'], 2),
+        ]);
     }
 
     /**

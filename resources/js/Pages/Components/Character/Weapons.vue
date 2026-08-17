@@ -8,8 +8,10 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import axios from 'axios';
 import EraChips from '@/Components/EraChips.vue';
 import CollapsibleSection from '@/Components/CollapsibleSection.vue';
+import PurchaseFields from '@/Pages/Components/Character/PurchaseFields.vue';
 import { belongsToEra } from '@/Pages/Composables/useEra.js';
 import { useFoldedSections } from '@/Pages/Composables/useFoldedSections.js';
+import { formatMoney } from '@/Pages/Composables/useMoney.js';
 import {
     ArrowPathIcon,
     EllipsisVerticalIcon,
@@ -51,9 +53,28 @@ const notices = ref({});
  */
 const folded = useFoldedSections();
 
+/*
+ * Buying it. A weapon is chosen first and armed second, so there is somewhere
+ * to say what it cost: the handbook's price for this era arrives filled in, and
+ * the player changes it, or pays out of nothing at all.
+ */
+const chosen = ref(null);
+const price = ref(0);
+const paidFrom = ref('cash');
+
+const priceOf = (weapon) => weapon?.prices?.[prop.era] ?? null;
+
+const choose = (weapon) => {
+    chosen.value = weapon;
+    price.value = priceOf(weapon) ?? 0;
+};
+
 const openModal = () => {
     weaponQuery.value = '';
     allEras.value = false;
+    chosen.value = null;
+    price.value = 0;
+    paidFrom.value = 'cash';
     folded.closeAll();
     isWeaponModalOpen.value = true;
 };
@@ -62,9 +83,13 @@ const closeModal = () => {
     isWeaponModalOpen.value = false;
 };
 
-const addWeapon = (weapon_id) => {
+const addWeapon = () => {
+    if (chosen.value === null) return;
+
     router.post(route('equip.weapon', { character: prop.character.slug }), {
-        weapon_id: weapon_id,
+        weapon_id: chosen.value.id,
+        price: price.value,
+        paid_from: paidFrom.value,
     }, {
         preserveScroll: true,
         onSuccess: () => closeModal(),
@@ -500,8 +525,11 @@ const previewOf = (weapons) =>
                                 <li v-for="w in group.weapons" :key="w.id">
                                     <button
                                         type="button"
-                                        class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-parchment-50 px-3 py-2.5 text-left ring-1 ring-parchment-300 transition hover:bg-parchment-200"
-                                        @click="addWeapon(w.id)"
+                                        class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg px-3 py-2.5 text-left ring-1 transition"
+                                        :class="chosen?.id === w.id
+                                            ? 'bg-cthulhu-yellow-200/50 ring-cthulhu-yellow-500'
+                                            : 'bg-parchment-50 ring-parchment-300 hover:bg-parchment-200'"
+                                        @click="choose(w)"
                                     >
                                         <span class="flex flex-wrap items-center gap-2">
                                             <span class="text-sm font-semibold text-cthulhu-green-900">{{ w.name }}</span>
@@ -510,6 +538,9 @@ const previewOf = (weapons) =>
                                         <span class="tabular text-xs text-cthulhu-green-500">
                                             {{ w.damage }} · {{ w.base_range }}
                                             <template v-if="w.magazine_capacity"> · mag {{ w.magazine_capacity }}</template>
+                                            <!-- The price is only ever shown while choosing.
+                                                 Once it is theirs, what it cost stops mattering. -->
+                                            <template v-if="priceOf(w)"> · {{ formatMoney(priceOf(w)) }}</template>
                                         </span>
                                     </button>
                                 </li>
@@ -526,8 +557,30 @@ const previewOf = (weapons) =>
                     </p>
                 </div>
 
-                <div class="flex justify-end border-t border-parchment-300 p-5">
-                    <button type="button" class="btn-secondary" @click="closeModal">Finished</button>
+                <div class="flex flex-col gap-3 border-t border-parchment-300 p-5">
+                    <PurchaseFields
+                        v-model:price="price"
+                        v-model:paid-from="paidFrom"
+                        :wealth="prop.character.wealth"
+                        id-prefix="add-weapon"
+                    />
+
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <p class="field-hint">
+                            <template v-if="chosen">
+                                Change the price to whatever you actually paid — or to nothing, if it
+                                was handed to you.
+                            </template>
+                            <template v-else>Choose a weapon from the armoury.</template>
+                        </p>
+
+                        <div class="flex items-center gap-2 ms-auto">
+                            <button type="button" class="btn-ghost" @click="closeModal">Cancel</button>
+                            <button type="button" class="btn-primary" :disabled="!chosen" @click="addWeapon">
+                                {{ chosen ? `Add ${chosen.name}` : 'Add' }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Modal>

@@ -274,15 +274,9 @@ export function occupationPool(occupation, stats) {
     }, 0);
 }
 
-export function formatMoney(value, era) {
-    const amount = Number(value) || 0;
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-    }).format(amount);
-}
+/* The wizard and the sheet print money the same way; it lives with the sheet's
+   other money helpers, and is re-exported here so the steps need not know. */
+export { formatMoney } from '@/Pages/Composables/useMoney.js';
 
 export const eraLabel = (era) => (era === 'modern' ? 'Modern Day' : '1920s');
 

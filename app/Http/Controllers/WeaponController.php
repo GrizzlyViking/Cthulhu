@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Misc\Purchase;
 use App\Models\Character;
 use App\Models\Weapon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -15,12 +16,18 @@ class WeaponController extends Controller
 {
     use AuthorizesRequests;
 
+    /**
+     * Arm the investigator, and pay for it — the price arrives filled in from
+     * the handbook's cost cell and is the player's to change, or to waive
+     * altogether. See `App\Misc\Purchase`.
+     */
     public function addWeapon(Character $character, Request $request): RedirectResponse
     {
         $this->authorize('update', $character);
 
         $validated = $request->validate([
             'weapon_id' => ['required', 'integer', 'exists:weapons,id'],
+            ...Purchase::rules(),
         ]);
 
         $weapon = Weapon::findOrFail($validated['weapon_id']);
@@ -31,7 +38,10 @@ class WeaponController extends Controller
             'ammo_reserve' => 0,
         ]);
 
-        return to_route('character.show', $character->slug);
+        $paid = Purchase::settle($character, $validated);
+
+        return to_route('character.show', $character->slug)
+            ->with('success', trim("{$weapon->name} added. {$paid}"));
     }
 
     public function removeWeapon(Character $character, int $equipable): RedirectResponse

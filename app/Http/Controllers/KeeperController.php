@@ -239,8 +239,8 @@ class KeeperController extends Controller
             ->filter(fn (Weapon $weapon): bool => $weapon->magazine_capacity !== null)
             ->map(fn (Weapon $weapon): array => [
                 'name'    => $weapon->name,
-                'ammo'    => (int) $weapon->pivot->ammo,
-                'reserve' => (int) $weapon->pivot->ammo_reserve,
+                'ammo'    => (int) $weapon->pivot->getAttribute('ammo'),
+                'reserve' => (int) $weapon->pivot->getAttribute('ammo_reserve'),
             ])
             ->values()
             ->all();

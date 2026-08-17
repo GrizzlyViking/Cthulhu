@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Era;
 use App\Misc\EquipmentTable;
+use App\Misc\Purchase;
 use App\Models\Character;
 use App\Models\EquipmentItem;
 use App\Models\StorageLocation;
@@ -70,6 +71,9 @@ class EquipmentController extends Controller
      * Add something to the sheet. Either an existing catalogue row, or a name
      * the player typed that the catalogue did not have — in which case it joins
      * the catalogue flagged as custom, so the typeahead offers it next time.
+     *
+     * What it cost comes along with it: the price is taken out of whichever
+     * purse the player named, or out of neither. See `App\Misc\Purchase`.
      */
     public function store(Request $request, Character $character): RedirectResponse
     {
@@ -81,6 +85,7 @@ class EquipmentController extends Controller
             'storage_location_id' => ['nullable', 'integer', Rule::exists(StorageLocation::class, 'id')->withoutTrashed()],
             'quantity'            => ['nullable', 'integer', 'min:1', 'max:9999'],
             'notes'               => ['nullable', 'string', 'max:255'],
+            ...Purchase::rules(),
         ]);
 
         $item = $this->resolveItem($request, $validated);
@@ -95,7 +100,9 @@ class EquipmentController extends Controller
             'notes'               => $validated['notes'] ?? null,
         ]);
 
-        return back()->with('success', "{$item->name} added.");
+        $paid = Purchase::settle($character, $validated);
+
+        return back()->with('success', trim("{$item->name} added. {$paid}"));
     }
 
     /**

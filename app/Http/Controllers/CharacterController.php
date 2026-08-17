@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -108,6 +109,34 @@ class CharacterController extends Controller
     }
 
     /**
+     * Set what the investigator is carrying and what they are worth.
+     *
+     * Both figures are typed straight over: a player is trusted with their own
+     * money, and half of what happens to it at a table happens off the sheet —
+     * a wallet lifted, a fee collected, a horse sold. Writing either settles
+     * both columns, so the numbers stop following the Credit Rating band; see
+     * `Character::wealth`.
+     */
+    public function updateWealth(Character $character, Request $request): RedirectResponse
+    {
+        $this->authorize('update', $character);
+
+        $validated = $request->validate([
+            'cash'   => ['nullable', 'numeric', 'min:-99999999', 'max:99999999'],
+            'assets' => ['nullable', 'numeric', 'min:-99999999', 'max:99999999'],
+        ]);
+
+        $wealth = $character->wealth;
+
+        $character->update([
+            'cash'   => round((float) ($validated['cash'] ?? $wealth['cash']), 2),
+            'assets' => round((float) ($validated['assets'] ?? $wealth['assets']), 2),
+        ]);
+
+        return back()->with('success', 'Wealth updated.');
+    }
+
+    /**
      * The printable sheet.
      *
      * This is the one page in the player-facing app that is plain Blade rather
@@ -118,16 +147,25 @@ class CharacterController extends Controller
     {
         $this->authorize('view', $character);
 
-        $character->loadMissing('skills', 'weapons', 'player');
+        $character->loadMissing('skills', 'weapons', 'equipment', 'player');
 
         return view('character.sheet', [
-            'character'       => $character,
+            'character' => $character,
+            // A sheet may carry an avatar whose file has since gone — a restored
+            // database, a cleared disk. Printing a broken image on a document
+            // somebody is about to take to a table is worse than printing the
+            // empty frame, so the file is checked rather than assumed.
+            'portrait' => $character->avatar !== null && Storage::disk('public')->exists($character->avatar)
+                ? Storage::disk('public')->url($character->avatar)
+                : null,
             'characteristics' => CharacterSheet::characteristics($character),
             'skillColumns'    => CharacterSheet::skillColumns($character),
-            'wealth'          => CharacterSheet::wealth($character->creditRating()),
+            'wealth'          => $character->wealth,
+            'possessions'     => CharacterSheet::possessions($character),
             'fellows'         => $character->group_id === null
                 ? new EloquentCollection()
                 : Character::with('player')
+                    ->investigators()
                     ->where('id', '!=', $character->id)
                     ->where('group_id', $character->group_id)
                     ->whereNull('deleted_at')

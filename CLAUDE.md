@@ -90,6 +90,34 @@ A name a player types that the catalogue lacks becomes an `EquipmentItem` with `
 the typeahead offers it next time; the admin Equipment page filters to those for pruning. Prices are
 only ever shown while choosing — never against something already owned.
 
+### Money
+`characters.cash` and `characters.assets` are what an investigator has. Both are **nullable, and that
+is the design**: while they are null the sheet shows the Credit Rating band straight out of Table II
+(`App\Misc\Wealth`), so a fresh investigator needs no bookkeeping and raising Credit Rating raises the
+money with it. The first purchase — or the first figure typed — settles **both** columns and they stop
+following the band, because one figure counted and the other drifting would contradict itself.
+
+`Character::wealth` is the appended attribute the whole app reads (living standard, description,
+spending level, cash, assets, and `settled` saying which of the two is happening). The living standard
+and the spending level always come from the band: they are a rating, not a balance. `Character::pay()`
+is the only thing that spends.
+
+Buying goes through `App\Misc\Purchase` — the validation rules and the arithmetic in one place,
+because weapons and equipment are added by two controllers and bought the same way. The picker fills
+the price in from the catalogue and the player is free to type over it, or to pay out of `nothing`:
+they may have haggled, been given it, or taken it off a body. **A balance is allowed to go past
+zero.** Overspending is a fact of play, not an error to refuse; the sheet marks it in blood and says
+nothing else.
+
+`App\Misc\Money` reads the book's price cells, which are free text rather than numbers: "$18.50",
+"5¢-20¢", "9¢/lb.", and — for weapons only — "$7/$75", the 1920s price and the modern one with a
+slash between them. A range answers its cheap end. `Weapon::$prices` is that cell as one figure per
+era and `EquipmentItem::$price` is the single figure; the catalogue columns themselves stay verbatim.
+
+Money that moves for any reason but shopping — a wallet lifted, a fee collected, a horse sold — is
+typed straight over on the sheet's Wealth panel (`character.wealth.update`). There is no ledger and no
+transaction log; nobody would keep one at a table.
+
 ### Roles
 Three roles (see `RoleEnum`): `player`, `keeper` (= GM), `admin`. **Roles are cumulative** — a user
 may hold any combination of the three, so always ask `hasRole()` / `isAdmin()` / `isKeeper()`, never
@@ -296,6 +324,29 @@ to make an investigator for the game that is on, and a Keeper or admin who only 
 the dashboard. This gates the redirect only — `CharacterPolicy::create` still lets anyone create.
 
 The dashboard keeps its own route and its place in the nav.
+
+### The printed sheet
+`resources/views/character/sheet.blade.php` is the one player-facing page that is plain Blade rather
+than Inertia: it has to be a self-contained document the browser can send to a printer or "Save as
+PDF" with no app chrome around it. Its CSS is hand-written in millimetres against a fixed A4 page —
+deliberately not the Tailwind build, which is a phone-first problem — but the palette and the
+typography are the design system's.
+
+**Four pages, always**: the investigator (characteristics, vitals, conditions, wealth, combat), the
+skills, the belongings and backstory, and a journal. `CharacterSheet::possessions()` buckets weapons
+and equipment together by where they are kept, the same way the Equipment tab does.
+
+Two rules the screen does not have to keep:
+
+- **It has to survive a greyscale printer.** Colour is welcome — half a table prints in colour — but
+  nothing may depend on it. Brass is a *light* tone, so it is used for hairlines, small caps, rings
+  and outlines, and **never as a fill behind a figure that has to be read**. Anything that must stand
+  out is filled dark green with pale lettering (a skill bought above its base, for one), and anything
+  ticked carries a glyph as well as a colour.
+- **No page is allowed to trail off.** Each page ends in a `.rules` block — writing lines drawn with
+  a repeating gradient — that takes whatever height is left. Leftover space becomes somewhere to
+  write rather than a gap, which is why the section is always labelled ("Notes", "Acquired at the
+  table", "What happened, and to whom").
 
 ### Installing to a phone
 The sheet is meant to be added to a player's home screen and run without browser chrome — on

@@ -69,6 +69,9 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
     // Which of the group's campaigns this investigator is played in.
     Route::put('/character/{character}/games', [CharacterController::class, 'updateGames'])->name('character.games.update');
+    // What they are carrying and what they are worth. Buying something spends
+    // it; this is for everything that happens to money away from the shops.
+    Route::put('/character/{character}/wealth', [CharacterController::class, 'updateWealth'])->name('character.wealth.update');
     Route::post('/character/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
     Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
     Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');

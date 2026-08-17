@@ -3,7 +3,10 @@
 namespace App\Misc;
 
 use App\Models\Character;
+use App\Models\EquipmentItem;
 use App\Models\Skill;
+use App\Models\StorageLocation;
+use App\Models\Weapon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -114,24 +117,120 @@ class CharacterSheet
     }
 
     /**
-     * The 1920s Credit Rating wealth bands (CoC 7e).
+     * A weapon's damage with the investigator's own damage bonus worked into
+     * it: "1D3+DB" becomes "1D3 + 1D4", and "1D3+half DB" becomes
+     * "1D3 + half 1D4". The screen resolves it the same way — at a table, "DB"
+     * is one more thing to go and look up mid-round.
      *
-     * @return array{level: string, spending: string, cash: string, assets: string}
+     * A bonus of "none" takes the clause out altogether rather than printing a
+     * plus with nothing after it.
      */
-    public static function wealth(int $creditRating): array
+    public static function damage(string $printed, string $damageBonus): string
     {
-        return match (true) {
-            $creditRating <= 0 => ['level' => 'Penniless', 'spending' => '$0.50', 'cash' => '$0.50', 'assets' => 'None'],
-            $creditRating < 10 => ['level' => 'Poor', 'spending' => '$2', 'cash' => self::money($creditRating), 'assets' => self::money($creditRating * 10)],
-            $creditRating < 50 => ['level' => 'Average', 'spending' => '$10', 'cash' => self::money($creditRating * 2), 'assets' => self::money($creditRating * 50)],
-            $creditRating < 90 => ['level' => 'Wealthy', 'spending' => '$50', 'cash' => self::money($creditRating * 5), 'assets' => self::money($creditRating * 500)],
-            $creditRating < 99 => ['level' => 'Rich', 'spending' => '$250', 'cash' => self::money($creditRating * 20), 'assets' => self::money($creditRating * 2000)],
-            default            => ['level' => 'Super Rich', 'spending' => '$5,000', 'cash' => '$50,000', 'assets' => '$5M+'],
-        };
+        $bonus = $damageBonus === 'none' ? null : $damageBonus;
+
+        // Half first: "+half DB" ends in "DB" and would otherwise be caught by
+        // the second pattern with the word "half" left stranded in front of it.
+        $printed = (string) preg_replace(
+            '/\s*\+?\s*half DB$/',
+            $bonus === null ? '' : ' + half '.ltrim($bonus, '+'),
+            $printed,
+        );
+
+        return (string) preg_replace(
+            '/\s*\+?\s*DB$/',
+            match (true) {
+                $bonus === null              => '',
+                str_starts_with($bonus, '-') => ' '.$bonus,
+                default                      => ' + '.ltrim($bonus, '+'),
+            },
+            $printed,
+        );
     }
 
-    private static function money(int|float $amount): string
+    /**
+     * Whether the investigator already carries something for fighting with
+     * their hands.
+     *
+     * The printed combat table opens with an unarmed row, because everybody can
+     * punch — but the armoury carries Brawl (Unarmed) as a weapon in its own
+     * right, and a sheet that has it does not want the line twice.
+     */
+    public static function carriesUnarmed(Character $character): bool
     {
-        return '$'.number_format($amount, $amount < 10 && $amount != (int) $amount ? 2 : 0);
+        return $character->weapons->contains(
+            fn (Weapon $weapon): bool => Str::contains(Str::lower($weapon->name), ['unarmed', 'brawl'])
+        );
+    }
+
+    /**
+     * Everything the investigator owns, bucketed by where it is kept.
+     *
+     * Weapons and equipment are rows in the same pivot, and the printed sheet
+     * lists them together for the same reason the screen does: what matters at
+     * a table is that the revolver is on the person while the spare box of
+     * rounds is in the travel chest. Locations keep their own order, and
+     * anything stored nowhere falls in at the end.
+     *
+     * @return list<array{location: string, items: list<array{name: string, detail: ?string, quantity: int, notes: ?string, weapon: bool}>}>
+     */
+    public static function possessions(Character $character): array
+    {
+        /** @var array<int|string, list<array{name: string, detail: ?string, quantity: int, notes: ?string, weapon: bool}>> $owned */
+        $owned = [];
+
+        foreach ($character->weapons as $weapon) {
+            $owned[self::locationKey($weapon)][] = self::possession($weapon->name, $weapon->category, true, $weapon);
+        }
+
+        foreach ($character->equipment as $item) {
+            $owned[self::locationKey($item)][] = self::possession($item->name, $item->section, false, $item);
+        }
+
+        if ($owned === []) {
+            return [];
+        }
+
+        $buckets = [];
+
+        foreach (StorageLocation::query()->orderBy('order_by')->orderBy('name')->get() as $location) {
+            if (isset($owned[$location->id])) {
+                $buckets[] = ['location' => $location->name, 'items' => $owned[$location->id]];
+
+                unset($owned[$location->id]);
+            }
+        }
+
+        // Whatever is left is kept nowhere in particular, or in a place that has
+        // since been retired — either way it is still owned, and still printed.
+        $loose = array_merge(...array_values($owned));
+
+        if ($loose !== []) {
+            $buckets[] = ['location' => 'Not stored anywhere', 'items' => $loose];
+        }
+
+        return $buckets;
+    }
+
+    /**
+     * The `equipables` row's storage location, or a key for having none.
+     */
+    private static function locationKey(Weapon|EquipmentItem $thing): int|string
+    {
+        return $thing->pivot->getAttribute('storage_location_id') ?? 'loose';
+    }
+
+    /**
+     * @return array{name: string, detail: ?string, quantity: int, notes: ?string, weapon: bool}
+     */
+    private static function possession(string $name, ?string $detail, bool $isWeapon, Weapon|EquipmentItem $thing): array
+    {
+        return [
+            'name'     => $name,
+            'detail'   => $detail,
+            'quantity' => (int) ($thing->pivot->getAttribute('quantity') ?? 1),
+            'notes'    => $thing->pivot->getAttribute('notes'),
+            'weapon'   => $isWeapon,
+        ];
     }
 }
