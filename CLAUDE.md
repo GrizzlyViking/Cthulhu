@@ -190,6 +190,27 @@ offer. It does **not** gate players adding equipment to their own sheets — tha
 `EquipmentController`, authorized by `CharacterPolicy` — nor a player writing an occupation in the
 wizard, which goes through `CharacterWizardController` on the same terms (see **Occupations**).
 
+`skills.description` is what a player reads in the box that opens on a skill, and it is the
+handbook's own words: `App\Misc\SkillDescriptions` is chapter 5 (pp. 95–121) transcribed and keyed by
+slug, minus the pushing material and the era sidebars, which are the Keeper's. `SkillSeeder` and the
+backfill migration both read from it, so **edit the description there, not in the seeder**. Skills the
+players wrote themselves are deliberately absent — the book has nothing to say about them and their
+descriptions are somebody's own words.
+
+`skills.starting_value` is the book's printed base chance, corrected on 2026-08-17 for the fourteen
+that were wrong. Seven of those were combat skills, where `App\Misc\WeaponTable::skills()` had the
+book's figure all along and `SkillSeeder` disagreed — whichever ran last won. `SkillBaseChanceTest`
+now asserts the two lists match, so keep them together when adding a weapon skill.
+
+Three values are **deliberately not** the book's, because the book prints no number for them: `dodge`
+and `language_own` are seeded at 0 and derived per investigator (half DEX, and EDU), and the generic
+`fighting` cannot be purchased at all.
+
+Raising a base lifts the sheets sitting under it — the book's base is what every investigator gets for
+free, so nobody should be below it — while anything a player spent points to reach is left alone.
+Lowering one takes nothing off anybody. The 2026-08-17 migration does exactly that, and is the shape
+to copy if a base ever changes again.
+
 ### Occupations
 `occupations` is the list the wizard's third step picks from — 28 from the Investigator Handbook
 (`OccupationSeeder`) plus whatever the players have written. An occupation is a name, a description,
@@ -372,6 +393,11 @@ utility strings**:
 Palette families are `cthulhu-green` (canvas and ink, 50–950), `parchment` (card surfaces),
 `cthulhu-yellow` (brass accents) and `cthulhu-blood` (danger). Do not reach for Tailwind's
 default `gray-*`, `indigo-*` or `bg-white` — nothing in the app uses them.
+
+The full house style — page anatomy, the heading registers, tables, empty states, phone-first
+rules, and the voice the copy and comments are written in — is the **`cthulhu-style` skill**
+(`.claude/skills/cthulhu-style/`). Load it before writing or reviewing any Vue page, component,
+Blade view, CSS, or user-facing text.
 
 ### No broadcasting
 There is none. Player-to-player messaging was a proof of concept that never took off and was

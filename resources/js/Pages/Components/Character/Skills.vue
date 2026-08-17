@@ -383,7 +383,9 @@ const submitAddSkill = () => {
         </div>
 
         <Modal :show="showModal" max-width="md" @close="closeEditModal">
-            <div class="bg-parchment-100 p-6">
+            <!-- The handbook's description is a paragraph, so on a phone this panel scrolls
+                 rather than pushing the value and the checks off the screen. -->
+            <div class="max-h-[85vh] overflow-y-auto bg-parchment-100 p-6">
                 <label for="skill_value" class="field-label">{{ skillForm.display_name }}</label>
 
                 <p v-if="editingSkill && !inEra(editingSkill)" class="field-hint">

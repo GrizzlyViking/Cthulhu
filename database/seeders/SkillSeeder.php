@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Misc\EraTable;
+use App\Misc\SkillDescriptions;
 use App\Models\Skill;
 use Illuminate\Database\Seeder;
 
@@ -27,20 +28,20 @@ class SkillSeeder extends Seeder
             ['slug' => 'dodge', 'display_name' => 'Dodge', 'starting_value' => 0],
             ['slug' => 'drive_auto', 'display_name' => 'Drive Auto', 'starting_value' => 20],
             ['slug' => 'electric_repair', 'display_name' => 'Electric Repair', 'starting_value' => 10],
-            ['slug' => 'fast_talking', 'display_name' => 'Fast Talking', 'starting_value' => 20],
+            ['slug' => 'fast_talking', 'display_name' => 'Fast Talking', 'starting_value' => 5],
             ['slug' => 'fighting', 'display_name' => 'Fighting', 'starting_value' => 25],
             ['slug' => 'firearms-handgun', 'display_name' => 'Firearms (Handgun)', 'starting_value' => 20],
-            ['slug' => 'firearms-rifle', 'display_name' => 'Firearms (Rifle)', 'starting_value' => 20],
+            ['slug' => 'firearms-rifle', 'display_name' => 'Firearms (Rifle)', 'starting_value' => 25],
 
-            ['slug' => 'firearms-shotgun', 'display_name' => 'Firearms (Shotgun)', 'starting_value' => 20],
-            ['slug' => 'firearms-bow', 'display_name' => 'Firearms (Bow)', 'starting_value' => 20],
-            ['slug' => 'fighting-whip', 'display_name' => 'Fighting (Whip)', 'starting_value' => 20],
-            ['slug' => 'fighting-brawl', 'display_name' => 'Fighting (Brawl)', 'starting_value' => 20],
-            ['slug' => 'firearms-mg', 'display_name' => 'Firearms (MG)', 'starting_value' => 20],
-            ['slug' => 'fighting-axe', 'display_name' => 'Fighting (Axe)', 'starting_value' => 20],
-            ['slug' => 'fighting-garrote', 'display_name' => 'Fighting (Garrote)', 'starting_value' => 20],
-            ['slug' => 'firearms-smg', 'display_name' => 'Firearms (SMG)', 'starting_value' => 20],
-            ['slug' => 'fighting-flail', 'display_name' => 'Fighting (Flail)', 'starting_value' => 20],
+            ['slug' => 'firearms-shotgun', 'display_name' => 'Firearms (Shotgun)', 'starting_value' => 25],
+            ['slug' => 'firearms-bow', 'display_name' => 'Firearms (Bow)', 'starting_value' => 15],
+            ['slug' => 'fighting-whip', 'display_name' => 'Fighting (Whip)', 'starting_value' => 5],
+            ['slug' => 'fighting-brawl', 'display_name' => 'Fighting (Brawl)', 'starting_value' => 25],
+            ['slug' => 'firearms-mg', 'display_name' => 'Firearms (MG)', 'starting_value' => 10],
+            ['slug' => 'fighting-axe', 'display_name' => 'Fighting (Axe)', 'starting_value' => 15],
+            ['slug' => 'fighting-garrote', 'display_name' => 'Fighting (Garrote)', 'starting_value' => 15],
+            ['slug' => 'firearms-smg', 'display_name' => 'Firearms (SMG)', 'starting_value' => 15],
+            ['slug' => 'fighting-flail', 'display_name' => 'Fighting (Flail)', 'starting_value' => 10],
             ['slug' => 'fighting-spear', 'display_name' => 'Fighting (Spear)', 'starting_value' => 20],
             ['slug' => 'fighting-sword', 'display_name' => 'Fighting (Sword)', 'starting_value' => 20],
             ['slug' => 'fighting-chainsaw', 'display_name' => 'Fighting (Chainsaw)', 'starting_value' => 10],
@@ -59,11 +60,11 @@ class SkillSeeder extends Seeder
             ['slug' => 'library_use', 'display_name' => 'Library_use', 'starting_value' => 20],
             ['slug' => 'listen', 'display_name' => 'Listen', 'starting_value' => 20],
             ['slug' => 'locksmith', 'display_name' => 'Locksmith', 'starting_value' => 1],
-            ['slug' => 'mech_repair', 'display_name' => 'Mech. Repair', 'starting_value' => 1],
+            ['slug' => 'mech_repair', 'display_name' => 'Mech. Repair', 'starting_value' => 10],
             ['slug' => 'medicine', 'display_name' => 'Medicine', 'starting_value' => 1],
             ['slug' => 'natural_world', 'display_name' => 'Natural_world', 'starting_value' => 10],
             ['slug' => 'navigate', 'display_name' => 'Navigate', 'starting_value' => 10],
-            ['slug' => 'occult', 'display_name' => 'Occult', 'starting_value' => 10],
+            ['slug' => 'occult', 'display_name' => 'Occult', 'starting_value' => 5],
             ['slug' => 'op_hv_machine', 'display_name' => 'Operate heavy machine', 'starting_value' => 1],
             ['slug' => 'persuade', 'display_name' => 'Persuade', 'starting_value' => 10],
             ['slug' => 'pilot', 'display_name' => 'Pilot', 'starting_value' => 1],
@@ -75,7 +76,7 @@ class SkillSeeder extends Seeder
             ['slug' => 'spot-hidden', 'display_name' => 'Spot Hidden', 'starting_value' => 25],
             ['slug' => 'stealth', 'display_name' => 'Stealth', 'starting_value' => 20],
             ['slug' => 'survival', 'display_name' => 'Survival', 'starting_value' => 10],
-            ['slug' => 'swim', 'display_name' => 'Swim', 'starting_value' => 10],
+            ['slug' => 'swim', 'display_name' => 'Swim', 'starting_value' => 20],
             ['slug' => 'throw', 'display_name' => 'Throw', 'starting_value' => 20],
             ['slug' => 'track', 'display_name' => 'Track', 'starting_value' => 10],
         ];
@@ -83,6 +84,11 @@ class SkillSeeder extends Seeder
         collect($skills)->each(function (array $item, int $index): void {
             $item['order_by'] = $index;
             $item['eras']     = EraTable::forSkill($item['slug']);
+
+            /* The handbook's own words, from SkillDescriptions — not the seeder's. */
+            if ($description = SkillDescriptions::for($item['slug'])) {
+                $item['description'] = $description;
+            }
 
             Skill::updateOrCreate(['slug' => $item['slug']], $item);
         });

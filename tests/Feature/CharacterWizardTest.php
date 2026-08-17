@@ -168,7 +168,7 @@ test('happy path walks the full wizard from profile to completion', function () 
         ->and(pivotValue($draft, 'history'))->toBe(35)       // base 5 + 30
         ->and(pivotValue($draft, 'psychology'))->toBe(40)    // base 10 + 30
         ->and(pivotValue($draft, 'charm'))->toBe(45)         // base 15 + 30
-        ->and(pivotValue($draft, 'occult'))->toBe(30)        // base 10 + 20
+        ->and(pivotValue($draft, 'occult'))->toBe(25)        // base 5 + 20
         ->and(pivotValue($draft, 'drive_auto'))->toBe(40)    // base 20 + 20
         ->and(pivotValue($draft, 'credit_rating'))->toBe(20)
         ->and(pivotValue($draft, 'language_own'))->toBe(90)  // EDU 70 + 20
@@ -176,7 +176,7 @@ test('happy path walks the full wizard from profile to completion', function () 
         ->and(pivotValue($draft, 'listen'))->toBe(50)        // base 20 + 30
         ->and(pivotValue($draft, 'spot-hidden'))->toBe(50)   // base 25 + 25
         ->and(pivotValue($draft, 'first_aid'))->toBe(50)     // base 30 + 20
-        ->and(pivotValue($draft, 'swim'))->toBe(10);         // untouched
+        ->and(pivotValue($draft, 'swim'))->toBe(20);         // untouched, so the base
 
     // Step 4 — backstory.
     $this->put(route('character.wizard.backstory', $draft->slug), [

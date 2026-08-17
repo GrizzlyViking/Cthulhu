@@ -198,7 +198,11 @@ const restore = (skill) => {
                             <td class="py-2.5 pr-3 text-right tabular text-cthulhu-green-700">
                                 {{ skill.characters_count }}
                             </td>
-                            <td class="py-2.5 pr-3 text-cthulhu-green-700">{{ skill.description }}</td>
+                            <!-- The handbook's descriptions run to a paragraph, so the row shows
+                                 the opening of one; Edit has the whole of it. -->
+                            <td class="py-2.5 pr-3 align-top text-cthulhu-green-700">
+                                <p class="line-clamp-2 max-w-sm">{{ skill.description }}</p>
+                            </td>
                             <td v-if="editable" class="py-2.5 text-right">
                                 <div class="flex justify-end gap-1.5">
                                     <button
