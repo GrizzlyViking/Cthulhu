@@ -131,6 +131,13 @@ when listing them or it costs a query per row.
 Authorization is enforced via `CharacterPolicy` and the `admin` middleware alias
 (`EnsureUserIsAdmin`). Players may only view/edit their own characters.
 
+Invitations carry the roles granted when they are accepted. An admin chooses any non-empty
+combination on the Group page; `player` is the default. Anyone already in a group may invite another
+player from the Dashboard, but that route always writes only `player` and never trusts roles from the
+request. It also refuses an address with a pending invitation, so a player cannot overwrite roles an
+admin has already chosen. Admin invitations replace an earlier pending invitation for the same
+address, so an admin may deliberately resend one with revised roles.
+
 ### Admin section
 Native Inertia pages under `/admin`, controllers in `app/Http/Controllers/Admin/` extending
 `AdminController`, Vue pages in `resources/js/Pages/Admin/` wrapped in `AdminLayout`. Pages: Group,

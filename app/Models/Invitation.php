@@ -11,15 +11,16 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * @property int     $id
- * @property string  $email
- * @property string  $token
- * @property int     $group_id
- * @property ?int    $invited_by
- * @property Carbon  $expires_at
- * @property ?Carbon $accepted_at
- * @property Group   $group
- * @property ?User   $inviter
+ * @property int      $id
+ * @property string   $email
+ * @property string   $token
+ * @property int      $group_id
+ * @property ?int     $invited_by
+ * @property string[] $roles
+ * @property Carbon   $expires_at
+ * @property ?Carbon  $accepted_at
+ * @property Group    $group
+ * @property ?User    $inviter
  */
 class Invitation extends Model
 {
@@ -31,6 +32,7 @@ class Invitation extends Model
         'token',
         'group_id',
         'invited_by',
+        'roles',
         'expires_at',
         'accepted_at',
     ];
@@ -40,6 +42,7 @@ class Invitation extends Model
         return [
             'expires_at'  => 'datetime',
             'accepted_at' => 'datetime',
+            'roles'       => 'array',
         ];
     }
 

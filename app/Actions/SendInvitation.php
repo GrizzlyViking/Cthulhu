@@ -2,12 +2,14 @@
 
 namespace App\Actions;
 
+use App\Enums\RoleEnum;
 use App\Exceptions\UserAlreadyExistsException;
 use App\Mail\InvitationMail;
 use App\Models\Group;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 /**
  * Invite an email address to a group: replaces any previous unaccepted
@@ -19,8 +21,10 @@ class SendInvitation
     /**
      * @throws UserAlreadyExistsException when the email already belongs to a user
      */
-    public function send(string $email, Group $group, ?User $inviter): Invitation
+    public function send(string $email, Group $group, ?User $inviter, ?array $roles = null): Invitation
     {
+        $email = Str::lower($email);
+
         if (User::withTrashed()->where('email', $email)->exists()) {
             throw new UserAlreadyExistsException("A user with the email [{$email}] already exists.");
         }
@@ -35,6 +39,7 @@ class SendInvitation
             'token'      => Invitation::generateToken(),
             'group_id'   => $group->id,
             'invited_by' => $inviter?->id,
+            'roles'      => array_values(array_unique($roles ?? [RoleEnum::PLAYER->value])),
             'expires_at' => now()->addDays(7),
         ]);
 

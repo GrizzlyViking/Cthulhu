@@ -36,8 +36,8 @@ class InvitationController extends Controller
     }
 
     /**
-     * Accept the invitation: create the player account in the invitation's
-     * group, mark the invitation accepted and log the new user in.
+     * Accept the invitation: create the account in the invitation's group,
+     * grant the roles chosen by its admin, mark it accepted and log the user in.
      */
     public function store(Request $request, string $token): RedirectResponse
     {
@@ -59,7 +59,7 @@ class InvitationController extends Controller
             'group_id' => $invitation->group_id,
         ]);
         $user->forceFill(['email_verified_at' => now()])->save();
-        $user->assignRole(RoleEnum::PLAYER->value);
+        $user->assignRole($invitation->roles ?? [RoleEnum::PLAYER->value]);
 
         $invitation->update(['accepted_at' => now()]);
 

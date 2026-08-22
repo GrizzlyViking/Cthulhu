@@ -19,6 +19,7 @@ test('creates a 7-day invitation and sends the mail synchronously', function () 
     expect($invitation->email)->toBe('fresh@example.com')
         ->and($invitation->group_id)->toBe($group->id)
         ->and($invitation->invited_by)->toBe($inviter->id)
+        ->and($invitation->roles)->toBe(['player'])
         ->and(mb_strlen($invitation->token))->toBe(64)
         ->and($invitation->expires_at->timestamp)->toBe(now()->addDays(7)->timestamp);
 
@@ -26,6 +27,31 @@ test('creates a 7-day invitation and sends the mail synchronously', function () 
         return $mail->invitation->is($invitation) && $mail->hasTo('fresh@example.com');
     });
     Mail::assertNotQueued(InvitationMail::class);
+});
+
+test('stores the roles chosen for the invitation without duplicates', function () {
+    Mail::fake();
+
+    $invitation = app(SendInvitation::class)->send(
+        'keeper@example.com',
+        Group::factory()->create(),
+        User::factory()->create(),
+        ['player', 'keeper', 'keeper', 'admin'],
+    );
+
+    expect($invitation->roles)->toBe(['player', 'keeper', 'admin']);
+});
+
+test('normalizes the invited email before checking and storing it', function () {
+    Mail::fake();
+
+    $invitation = app(SendInvitation::class)->send(
+        'New.Player@Example.COM',
+        Group::factory()->create(),
+        User::factory()->create(),
+    );
+
+    expect($invitation->email)->toBe('new.player@example.com');
 });
 
 test('the mail links to the accept page for the invitation token', function () {

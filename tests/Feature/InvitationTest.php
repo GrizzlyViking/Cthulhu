@@ -9,6 +9,7 @@ it('creates an invitation via factory', function () {
 
     expect($invitation->group)->toBeInstanceOf(Group::class)
         ->and($invitation->inviter)->toBeInstanceOf(User::class)
+        ->and($invitation->roles)->toBe(['player'])
         ->and(strlen($invitation->token))->toBe(64);
 });
 

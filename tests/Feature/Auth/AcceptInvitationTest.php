@@ -56,6 +56,21 @@ test('accepting a valid invitation creates the user in the group with the player
     expect(Auth::id())->toBe($user->id);
 });
 
+test('accepting an invitation grants every role chosen by the admin', function () {
+    $invitation = Invitation::factory()->create([
+        'roles' => ['player', 'keeper', 'admin'],
+    ]);
+
+    $this->post(route('invitation.store', $invitation->token), [
+        'name'                  => 'Armitage',
+        'password'              => 'secret-password',
+        'password_confirmation' => 'secret-password',
+    ])->assertRedirect(route('home', absolute: false));
+
+    expect(User::where('email', $invitation->email)->firstOrFail()->roleNames())
+        ->toEqualCanonicalizing(['player', 'keeper', 'admin']);
+});
+
 test('the email is taken from the invitation, not the request', function () {
     $invitation = Invitation::factory()->create(['email' => 'invited@example.com']);
 

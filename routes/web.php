@@ -8,6 +8,7 @@ use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\Keeper;
 use App\Http\Controllers\KeeperController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PlayerInvitationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchedulingController;
 use App\Http\Controllers\SkillController;
@@ -99,6 +100,7 @@ Route::middleware('auth', 'verified')->group(function () {
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/online', [UserController::class, 'online'])->name('users.online');
+    Route::post('/invitations', [PlayerInvitationController::class, 'store'])->name('invitations.store');
 
     // Rolling lives on the Keeper's screen (keeper.roll), against characters
     // rather than users — a player may have more than one investigator.

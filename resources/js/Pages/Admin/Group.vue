@@ -7,6 +7,7 @@ import { TrashIcon } from '@heroicons/vue/20/solid';
 const props = defineProps({
     group: { type: Object, required: true },
     eras: { type: Array, required: true },
+    roles: { type: Array, required: true },
     games: { type: Array, required: true },
     members: { type: Array, required: true },
     invitations: { type: Array, required: true },
@@ -19,6 +20,7 @@ const settings = useForm({
 
 const invite = useForm({
     email: '',
+    roles: ['player'],
 });
 
 /* Games — the group's campaigns. Exactly one is played at a time. */
@@ -69,6 +71,8 @@ const sendInvitation = () =>
         preserveScroll: true,
         onSuccess: () => invite.reset('email'),
     });
+
+const roleLabel = (value) => props.roles.find((role) => role.value === value)?.label ?? value;
 
 const revokeInvitation = (invitation) => {
     if (confirm(`Revoke the invitation to ${invitation.email}?`)) {
@@ -241,23 +245,50 @@ const revokeInvitation = (invitation) => {
         <section class="panel p-5 sm:p-6">
             <h2 class="display text-lg text-cthulhu-green-900">Invitations</h2>
             <p class="field-hint">
-                An invitation creates an account in this group when accepted. It expires after seven days.
+                An invitation creates an account in this group with the roles you choose. It expires after seven days.
             </p>
 
-            <form class="mt-4 flex flex-wrap items-start gap-3" @submit.prevent="sendInvitation">
-                <div class="min-w-0 flex-auto">
-                    <label for="invite-email" class="sr-only">Email address</label>
+            <form class="mt-4 flex flex-col gap-4" @submit.prevent="sendInvitation">
+                <div>
+                    <label for="invite-email" class="field-label">Email address</label>
                     <input
                         id="invite-email"
                         v-model="invite.email"
                         type="email"
-                        class="field"
+                        class="field mt-1"
                         placeholder="new.player@example.com"
                         required
                     />
                     <p v-if="invite.errors.email" class="field-error">{{ invite.errors.email }}</p>
                 </div>
-                <button type="submit" class="btn-primary" :disabled="invite.processing">Send invitation</button>
+
+                <fieldset>
+                    <legend class="field-label">Roles</legend>
+                    <p class="field-hint">Roles are cumulative. Player is selected for a new investigator by default.</p>
+                    <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                        <label
+                            v-for="role in roles"
+                            :key="role.value"
+                            class="card flex cursor-pointer items-start gap-2.5"
+                        >
+                            <input
+                                v-model="invite.roles"
+                                type="checkbox"
+                                :value="role.value"
+                                class="mt-0.5 size-4 shrink-0 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
+                            />
+                            <span class="min-w-0">
+                                <span class="block text-sm font-medium text-cthulhu-green-900">{{ role.label }}</span>
+                                <span class="block text-xs text-cthulhu-green-500">{{ role.description }}</span>
+                            </span>
+                        </label>
+                    </div>
+                    <p v-if="invite.errors.roles" class="field-error">{{ invite.errors.roles }}</p>
+                </fieldset>
+
+                <div>
+                    <button type="submit" class="btn-primary" :disabled="invite.processing">Send invitation</button>
+                </div>
             </form>
 
             <ul v-if="invitations.length" role="list" class="mt-4 flex flex-col gap-2">
@@ -268,7 +299,11 @@ const revokeInvitation = (invitation) => {
                 >
                     <div class="min-w-0 flex-auto">
                         <p class="text-sm font-semibold text-cthulhu-green-900">{{ invitation.email }}</p>
-                        <p class="text-xs text-cthulhu-green-500">Expires {{ invitation.expiresAt }}</p>
+                        <p class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-cthulhu-green-500">
+                            <span>Expires {{ invitation.expiresAt }}</span>
+                            <span aria-hidden="true">·</span>
+                            <span v-for="role in invitation.roles" :key="role" class="chip">{{ roleLabel(role) }}</span>
+                        </p>
                     </div>
                     <button type="button" class="btn-danger btn-sm" @click="revokeInvitation(invitation)">
                         <TrashIcon class="size-4" aria-hidden="true" />

@@ -69,7 +69,10 @@ class PageController extends Controller
             }])
             ->get();
 
-        return Inertia::render('Dashboard', compact('users'));
+        return Inertia::render('Dashboard', [
+            'users'     => $users,
+            'canInvite' => $request->user()->group_id !== null,
+        ]);
     }
 
     public function welcome(): Response

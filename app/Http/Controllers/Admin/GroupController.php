@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\CharacterKind;
 use App\Enums\Era;
+use App\Enums\RoleEnum;
 use App\Models\Game;
 use App\Models\Group;
 use App\Models\Invitation;
@@ -31,6 +32,7 @@ class GroupController extends AdminController
                 'era'  => $group->era->value,
             ],
             'eras'  => $this->eraOptions(),
+            'roles' => RoleEnum::options(),
             'games' => $group->games()
                 // Investigators: a Keeper's cast is in these games too, and is
                 // not the admin's business.
@@ -64,6 +66,7 @@ class GroupController extends AdminController
                 ->map(fn (Invitation $invitation): array => [
                     'id'        => $invitation->id,
                     'email'     => $invitation->email,
+                    'roles'     => $invitation->roles,
                     'expiresAt' => $invitation->expires_at->toDateString(),
                 ]),
         ]);

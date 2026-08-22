@@ -27,8 +27,10 @@ test('the page shows the admins own group with its roster and invitations', func
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Group')
             ->where('group.name', 'Dunwich Circle')
+            ->has('roles', 3)
             ->has('members', 2)
-            ->has('invitations', 1));
+            ->has('invitations', 1)
+            ->where('invitations.0.roles', ['player']));
 });
 
 test('an admin can rename their group', function () {
@@ -90,7 +92,42 @@ test('an admin invites into their own group, never another', function () {
     $invitation = Invitation::where('email', 'newcomer@example.com')->firstOrFail();
 
     expect($invitation->group_id)->toBe($this->group->id)
-        ->and($invitation->invited_by)->toBe($this->admin->id);
+        ->and($invitation->invited_by)->toBe($this->admin->id)
+        ->and($invitation->roles)->toBe(['player']);
+});
+
+test('an admin may choose several roles for an invitation', function () {
+    Mail::fake();
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.invitations.store'), [
+            'email' => 'keeper@example.com',
+            'roles' => ['player', 'keeper', 'admin'],
+        ])
+        ->assertRedirect();
+
+    expect(Invitation::where('email', 'keeper@example.com')->firstOrFail()->roles)
+        ->toBe(['player', 'keeper', 'admin']);
+});
+
+test('an admin invitation rejects an empty or unknown role set', function () {
+    Mail::fake();
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.invitations.store'), [
+            'email' => 'empty@example.com',
+            'roles' => [],
+        ])
+        ->assertSessionHasErrors('roles');
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.invitations.store'), [
+            'email' => 'unknown@example.com',
+            'roles' => ['cultist'],
+        ])
+        ->assertSessionHasErrors('roles.0');
+
+    expect(Invitation::whereIn('email', ['empty@example.com', 'unknown@example.com'])->exists())->toBeFalse();
 });
 
 test('inviting an address that already has an account is refused', function () {
