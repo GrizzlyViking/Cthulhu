@@ -51,6 +51,21 @@ test('a slug given by hand is kept', function () {
     expect(Skill::where('slug', 'oneiromancy')->exists())->toBeTrue();
 });
 
+/**
+ * A capital letter in a slug is invisible to the database, which matches slugs
+ * without regard to case, and plain as day to PHP, which does not. That is how
+ * `Op_hv_machine` came to sit beside `op_hv_machine`: the wizard found the skill
+ * and then refused it as unknown, and nobody training as an Engineer could spend
+ * their occupation points.
+ */
+test('a slug given by hand is lowercased', function () {
+    $this->actingAs($this->admin)
+        ->post(route('admin.skills.store'), skillPayload(['slug' => 'Op_hv_machine']))
+        ->assertRedirect();
+
+    expect(Skill::where('display_name', 'Dream Lore')->firstOrFail()->slug)->toBe('op_hv_machine');
+});
+
 test('a new skill sorts after everything that already exists', function () {
     $highest = Skill::withTrashed()->max('order_by');
 

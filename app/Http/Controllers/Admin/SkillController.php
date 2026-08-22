@@ -105,10 +105,16 @@ class SkillController extends AdminController
         // is derived from the name unless the admin sets one deliberately —
         // and it is filled in before validation so the derived value goes
         // through the same uniqueness check as a hand-written one.
+        //
+        // A hand-written one is lowercased as well. The database matches slugs
+        // without regard to case and PHP does not, so a capital letter makes a
+        // slug the seeders and the wizard can find but cannot recognise.
         $request->merge([
-            'slug' => trim((string) $request->input('slug')) !== ''
-                ? $request->input('slug')
-                : Str::slug((string) $request->input('display_name')),
+            'slug' => Str::lower(
+                trim((string) $request->input('slug')) !== ''
+                    ? (string) $request->input('slug')
+                    : Str::slug((string) $request->input('display_name'))
+            ),
         ]);
 
         return $request->validate([
