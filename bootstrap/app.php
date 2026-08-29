@@ -38,7 +38,26 @@ return Application::configure(basePath: dirname(__DIR__))
         // fresh token; anyone else meets the login page, as they would anyway.
         $stale = 'That page had been open long enough to go stale, so the change was not saved. Please try it again.';
 
-        $exceptions->respond(function (Response $response, Throwable $e, Request $request) use ($stale): Response {
+        // A picture larger than PHP's own post_max_size never reaches the route:
+        // PHP throws the whole body away and Laravel answers 413 before any
+        // validation runs, so the rules in CharacterImage never get a word in.
+        // This was the silent failure players met when they uploaded a photo
+        // straight off a phone — the page simply did nothing.
+        $tooLarge = 'That upload was larger than this server accepts, so nothing was saved. Try a smaller picture.';
+
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) use ($stale, $tooLarge): Response {
+            if ($response->getStatusCode() === 413) {
+                if ($request->header('X-Inertia')) {
+                    return back(303)->with('error', $tooLarge);
+                }
+
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json(['message' => $tooLarge], 413);
+                }
+
+                return back(303)->with('error', $tooLarge);
+            }
+
             if ($response->getStatusCode() !== 419) {
                 return $response;
             }

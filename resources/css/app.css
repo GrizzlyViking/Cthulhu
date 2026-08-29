@@ -92,6 +92,12 @@
                focus-visible:outline-cthulhu-green-800;
     }
 
+    /* The parchment ghost, for the dark page ground the panels sit on. */
+    .btn-ghost-on-dark {
+        @apply btn text-cthulhu-green-200 hover:bg-parchment-100/10 hover:text-parchment-100
+               focus-visible:outline-cthulhu-yellow-500;
+    }
+
     .btn-danger {
         @apply btn bg-cthulhu-blood-400 text-white shadow-sm
                hover:bg-cthulhu-blood-300 active:bg-cthulhu-blood-500

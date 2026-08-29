@@ -19,7 +19,6 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -93,7 +92,7 @@ class CharacterWizardController extends Controller
 
         $character = Character::create([
             ...$validated,
-            'slug'        => Str::slug($validated['name']),
+            'slug'        => Character::uniqueSlug($validated['name']),
             'user_id'     => $request->user()->id,
             'group_id'    => $request->user()->group_id,
             'status'      => CharacterStatus::Draft,
@@ -123,7 +122,7 @@ class CharacterWizardController extends Controller
         $validated = $request->validated();
 
         $character->fill($validated);
-        $character->slug        = Str::slug($validated['name']);
+        $character->slug        = Character::uniqueSlug($validated['name'], $character->id);
         $character->wizard_step = max($character->wizard_step, 1);
         $character->save();
 

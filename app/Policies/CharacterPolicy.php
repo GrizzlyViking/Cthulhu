@@ -50,6 +50,21 @@ class CharacterPolicy
         return $user->id === $character->user_id || $user->hasRole('admin');
     }
 
+    /**
+     * Bringing a deleted sheet back, and finishing one off for good, answer to
+     * whoever could delete it in the first place — there is no third party with
+     * a claim on either. The Keeper's cast is its own Keeper's business as ever.
+     */
+    public function restore(User $user, Character $character): bool
+    {
+        return $this->delete($user, $character);
+    }
+
+    public function forceDelete(User $user, Character $character): bool
+    {
+        return $this->delete($user, $character);
+    }
+
     public function assignUser(User $user, Character $character): bool
     {
         return $user->hasRole('admin');

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import CharacterName from '@/Components/CharacterName.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
@@ -88,7 +89,7 @@ const lastGameName = (character) =>
                                             :key="character.slug"
                                             :href="route('character.show', { character: character.slug })"
                                         >
-                                            {{ character.name }}
+                                            <CharacterName :character="character" />
                                         </DropdownLink>
 
                                         <template v-if="characters.others.length">
@@ -98,7 +99,7 @@ const lastGameName = (character) =>
                                                 :key="character.slug"
                                                 :href="route('character.show', { character: character.slug })"
                                             >
-                                                {{ character.name }}
+                                                <CharacterName :character="character" />
                                                 <span class="text-cthulhu-green-500">— {{ character.player.name }}</span>
                                             </DropdownLink>
                                         </template>
@@ -125,7 +126,7 @@ const lastGameName = (character) =>
                                                 :key="character.slug"
                                                 :href="route('character.show', { character: character.slug })"
                                             >
-                                                {{ character.name }}
+                                                <CharacterName :character="character" />
                                                 <span class="text-cthulhu-green-500">— {{ lastGameName(character) }}</span>
                                             </DropdownLink>
                                         </template>
@@ -137,7 +138,7 @@ const lastGameName = (character) =>
                                                 :key="character.slug"
                                                 :href="route('character.show', { character: character.slug })"
                                             >
-                                                {{ character.name }}
+                                                <CharacterName :character="character" />
                                             </DropdownLink>
                                         </template>
                                     </template>
@@ -201,14 +202,14 @@ const lastGameName = (character) =>
                                 :key="character.slug"
                                 :href="route('character.show', { character: character.slug })"
                             >
-                                {{ character.name }}
+                                <CharacterName :character="character" />
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 v-for="character in characters.others"
                                 :key="character.slug"
                                 :href="route('character.show', { character: character.slug })"
                             >
-                                {{ character.name }}
+                                <CharacterName :character="character" />
                                 <span class="text-cthulhu-green-400">— {{ character.player.name }}</span>
                             </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('character.create')">+ Create character</ResponsiveNavLink>
@@ -222,7 +223,7 @@ const lastGameName = (character) =>
                                     :key="character.slug"
                                     :href="route('character.show', { character: character.slug })"
                                 >
-                                    {{ character.name }}
+                                    <CharacterName :character="character" />
                                     <span class="text-cthulhu-green-400">— {{ lastGameName(character) }}</span>
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
@@ -230,7 +231,7 @@ const lastGameName = (character) =>
                                     :key="character.slug"
                                     :href="route('character.show', { character: character.slug })"
                                 >
-                                    {{ character.name }}
+                                    <CharacterName :character="character" />
                                     <span class="text-cthulhu-green-400">— not in a game</span>
                                 </ResponsiveNavLink>
                             </div>

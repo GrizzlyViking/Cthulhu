@@ -1,48 +1,100 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { useAdjustAttribute } from '@/Pages/Composables/useAdjustAttribute.js';
-import { BookOpenIcon, UserCircleIcon } from '@heroicons/vue/24/solid/index.js';
-
-const { updateAttribute } = useAdjustAttribute('character');
 
 const prop = defineProps({ character: Object, editable: Boolean });
 
-const avatarImg = computed(() => {
-    if (prop.character.avatar) {
-        return '/storage/' + prop.character.avatar;
+/**
+ * The likeness, shown whole in its own frame. Null when the player has not put
+ * one on the sheet yet — the masthead is then the backdrop and the name alone,
+ * as it was before there were two pictures.
+ */
+const portraitImg = computed(() =>
+    prop.character.avatar ? '/storage/' + prop.character.avatar : null
+);
+
+/**
+ * The scene behind the name, cropped to whatever room the masthead has.
+ *
+ * With none uploaded this is the house picture — which is what *Use the default*
+ * on the sheet's Backdrop card puts a player back to.
+ */
+const bannerImg = computed(() =>
+    prop.character.banner ? '/storage/' + prop.character.banner : '/images/cthulhu_man_reading.jpeg'
+);
+
+/*
+ * The line above the name says what this investigator does, because on a sheet
+ * full of investigators that is the useful half. Only when there is no
+ * occupation yet does it fall back to saying what they are.
+ */
+const eyebrow = computed(() => prop.character.occupation?.trim() || 'Investigator');
+
+/*
+ * The name is a textarea rather than an input so that a long one wraps instead
+ * of scrolling out of sight — "Bartholomew Ashcroft-Winterbourne" is a name a
+ * player will pick, and half of it disappearing off the side is no good. It is
+ * still one line of text: Return leaves the field rather than adding a line.
+ *
+ * It starts a step smaller than the rest of the display type. Beside the
+ * portrait a phone leaves the name about two hundred pixels, and at `text-3xl`
+ * a word like "Bartholomew" does not fit on a line of its own — so the browser
+ * breaks it in the middle, which looks like a fault. A step down and it wraps
+ * at the spaces, where a name is meant to break.
+ */
+const nameField = ref(null);
+
+const fitName = () => {
+    const field = nameField.value;
+
+    if (! field) {
+        return;
     }
-    return '/images/cthulhu_man_reading.jpeg';
+
+    field.style.height = 'auto';
+    field.style.height = `${field.scrollHeight}px`;
+};
+
+let watcher = null;
+
+onMounted(() => {
+    fitName();
+
+    /*
+     * The name re-wraps whenever the column it sits in changes width — a phone
+     * turned on its side, the portrait appearing beside it. Only width is worth
+     * reacting to: height is what this callback sets, and following that would
+     * be a loop.
+     */
+    let lastWidth = 0;
+
+    watcher = new ResizeObserver((entries) => {
+        const width = entries[0].contentRect.width;
+
+        if (width !== lastWidth) {
+            lastWidth = width;
+            fitName();
+        }
+    });
+
+    watcher.observe(nameField.value);
 });
 
-/**
- * @type {import('vue').ComputedRef<{key: string, label: string, type: string}[]>}
- */
-const identity = computed(() => [
-    { key: 'age', label: 'Age', type: 'number' },
-    // Gender is an enum with a check constraint behind it, so it is picked
-    // rather than typed — anything else is refused by the database.
-    { key: 'gender', label: 'Gender', type: 'text', options: ['Male', 'Female', 'Other'] },
-]);
+onBeforeUnmount(() => watcher?.disconnect());
 
-/**
- * @type {import('vue').ComputedRef<{key: string, label: string, type: string}[]>}
- */
-const background = computed(() => [
-    { key: 'occupation', label: 'Occupation', type: 'text' },
-    { key: 'residence', label: 'Residence', type: 'text' },
-    { key: 'birthplace', label: 'Birthplace', type: 'text' },
-]);
+watch(() => prop.character.name, () => nextTick(fitName));
 
 /**
  * Renaming re-slugs the character, so this is a full Inertia visit rather than an
  * axios call — the redirect carries the page to the new URL.
  */
 const renameCharacter = (event) => {
-    const name = event.target.value.trim();
+    // A pasted name can carry line breaks the field would keep. It is one line.
+    const name = event.target.value.replace(/\s+/g, ' ').trim();
 
     if (! prop.editable || name === '' || name === prop.character.name) {
         event.target.value = prop.character.name;
+        nextTick(fitName);
 
         return;
     }
@@ -56,101 +108,60 @@ const renameCharacter = (event) => {
 <template>
     <section class="relative isolate overflow-hidden rounded-2xl shadow-raised ring-1 ring-cthulhu-green-900/40">
         <img
-            :src="avatarImg"
+            :src="bannerImg"
             alt=""
             class="absolute inset-0 -z-20 size-full object-cover object-center"
         />
-        <!-- Scrim keeps the type legible whatever portrait the player uploads. -->
+        <!-- Scrim keeps the type legible whatever picture is behind it. -->
         <div
             class="absolute inset-0 -z-10 bg-gradient-to-t from-cthulhu-green-950 via-cthulhu-green-950/85 to-cthulhu-green-950/40"
             aria-hidden="true"
         ></div>
 
-        <div class="flex flex-col gap-8 p-6 pt-24 sm:p-8 sm:pt-32 lg:pt-40">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-                <!-- The name is the widest thing on the sheet: give it the whole row, and the
-                     rest of the row's slack once the actions fit alongside it. -->
-                <div class="w-full min-w-0 grow sm:w-auto">
-                    <p class="eyebrow-on-dark">Investigator</p>
-                    <input
-                        :value="prop.character.name"
-                        aria-label="Character name"
-                        class="display mt-1 w-full min-w-0 border-0 bg-transparent p-0 text-3xl text-parchment-100 sm:text-4xl lg:text-5xl"
-                        :class="prop.editable ? 'field-inline' : 'ring-0 focus:ring-0'"
-                        :disabled="!prop.editable"
-                        @focusout="renameCharacter"
-                    />
-                    <!-- The Keeper's own cast has no player, and only ever
-                         reaches this sheet in the Keeper's own hands. -->
-                    <p class="mt-2 text-sm text-cthulhu-green-200">
-                        <template v-if="prop.character.player">
-                            Played by {{ prop.character.player.name }}
-                        </template>
-                        <template v-else> Nobody's investigator — one of the Keeper's own. </template>
-                    </p>
-                </div>
-
-                <slot name="actions" />
+        <!-- The masthead is the name and the face, and nothing else: everything
+             that was once alongside them reads better on the tabs below. -->
+        <div class="flex items-end gap-4 p-6 pt-20 sm:gap-8 sm:p-8 sm:pt-28 lg:pt-32">
+            <div class="min-w-0 grow">
+                <p class="eyebrow-on-dark">{{ eyebrow }}</p>
+                <textarea
+                    ref="nameField"
+                    :value="prop.character.name"
+                    rows="1"
+                    aria-label="Character name"
+                    class="display mt-1 block w-full min-w-0 resize-none overflow-hidden border-0 bg-transparent p-0 text-2xl leading-tight text-parchment-100 sm:text-4xl lg:text-5xl"
+                    :class="prop.editable ? 'field-inline' : 'ring-0 focus:ring-0'"
+                    :disabled="!prop.editable"
+                    @input="fitName"
+                    @keydown.enter.prevent="$event.target.blur()"
+                    @focusout="renameCharacter"
+                ></textarea>
+                <!-- The Keeper's own cast has no player, and only ever
+                     reaches this sheet in the Keeper's own hands. -->
+                <p class="mt-2 text-sm text-cthulhu-green-200">
+                    <template v-if="prop.character.player">
+                        Played by {{ prop.character.player.name }}
+                    </template>
+                    <template v-else> Nobody's investigator — one of the Keeper's own. </template>
+                </p>
             </div>
 
-            <dl class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="rounded-xl bg-cthulhu-green-900/70 p-5 ring-1 ring-inset ring-parchment-100/10 backdrop-blur-sm">
-                    <div class="flex items-center gap-2">
-                        <UserCircleIcon class="size-5 shrink-0 text-cthulhu-yellow-400" aria-hidden="true" />
-                        <h3 class="text-sm font-semibold text-parchment-100">Character</h3>
-                    </div>
-                    <div class="mt-3 space-y-2">
-                        <div v-for="row in identity" :key="row.key" class="grid grid-cols-[7rem_1fr] items-center gap-2">
-                            <dt class="text-sm text-cthulhu-green-200">{{ row.label }}</dt>
-                            <dd>
-                                <select
-                                    v-if="row.options"
-                                    v-model="prop.character[row.key]"
-                                    :aria-label="row.label"
-                                    class="field-inline w-full text-sm text-parchment-100"
-                                    :disabled="!prop.editable"
-                                    @change="updateAttribute(row.key, $event)"
-                                >
-                                    <option v-for="option in row.options" :key="option" :value="option" class="text-cthulhu-green-900">
-                                        {{ option }}
-                                    </option>
-                                </select>
-                                <input
-                                    v-else
-                                    v-model="prop.character[row.key]"
-                                    :type="row.type"
-                                    :aria-label="row.label"
-                                    class="field-inline text-sm text-parchment-100"
-                                    :disabled="!prop.editable"
-                                    @input="updateAttribute(row.key, $event)"
-                                />
-                            </dd>
-                        </div>
-                    </div>
-                </div>
+            <!--
+                A third of the masthead. The picture fills the frame rather than
+                being mounted inside it, so a likeness that is not quite 3:4 loses
+                a little off its edges instead of sitting in bars — and it is
+                cropped from the bottom (`object-top`), because a face is at the
+                top of a portrait and the coat is what can be spared.
 
-                <div class="rounded-xl bg-cthulhu-green-900/70 p-5 ring-1 ring-inset ring-parchment-100/10 backdrop-blur-sm">
-                    <div class="flex items-center gap-2">
-                        <BookOpenIcon class="size-5 shrink-0 text-cthulhu-yellow-400" aria-hidden="true" />
-                        <h3 class="text-sm font-semibold text-parchment-100">Background</h3>
-                    </div>
-                    <div class="mt-3 space-y-2">
-                        <div v-for="row in background" :key="row.key" class="grid grid-cols-[7rem_1fr] items-center gap-2">
-                            <dt class="text-sm text-cthulhu-green-200">{{ row.label }}</dt>
-                            <dd>
-                                <input
-                                    v-model="prop.character[row.key]"
-                                    :type="row.type"
-                                    :aria-label="row.label"
-                                    class="field-inline text-sm text-parchment-100"
-                                    :disabled="!prop.editable"
-                                    @input="updateAttribute(row.key, $event)"
-                                />
-                            </dd>
-                        </div>
-                    </div>
-                </div>
-            </dl>
+                The brass ring is deliberately *not* `ring-inset`: an inset ring
+                is painted with the frame's own box decorations, which puts it
+                under the picture rather than around it.
+            -->
+            <div
+                v-if="portraitImg"
+                class="aspect-[3/4] w-1/3 shrink-0 overflow-hidden rounded-xl bg-cthulhu-green-900/70 shadow-raised ring-1 ring-cthulhu-yellow-600/60 backdrop-blur-sm"
+            >
+                <img :src="portraitImg" :alt="prop.character.name" class="size-full object-cover object-top" />
+            </div>
         </div>
     </section>
 </template>

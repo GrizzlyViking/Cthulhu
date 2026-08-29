@@ -41,7 +41,8 @@ use Illuminate\Support\Str;
  * @property int           $dodge
  * @property int           $build
  * @property string        $damage_bonus
- * @property ?string       $avatar              the stored path, which may outlive the file
+ * @property ?string       $avatar              the likeness: a stored path, which may outlive the file
+ * @property ?string       $banner              the scene behind the name, likewise
  * @property bool          $temporary_insanity
  * @property bool          $indefinite_insanity
  * @property bool          $major_wound
@@ -85,6 +86,7 @@ class Character extends Model
         'build',
         'damage_bonus',
         'avatar',
+        'banner',
         'temporary_insanity',
         'indefinite_insanity',
         'major_wound',
@@ -110,7 +112,7 @@ class Character extends Model
     protected $with = ['skills', 'player', 'weapons', 'games', 'group'];
 
     /** @var list<string> */
-    protected $appends = ['in_active_game', 'wealth'];
+    protected $appends = ['in_active_game', 'is_deleted', 'wealth'];
 
     protected function casts(): array
     {
@@ -252,9 +254,15 @@ class Character extends Model
      * pivot rows left behind.
      *
      * What the Keeper's cast needs: a cultist conjured up for one scene should
-     * leave nothing at all when the scene ends, and `equipables` has no cascade to
-     * do it for us. A player's investigator is retired with an ordinary
-     * `delete()` instead, so it can come back.
+     * leave nothing at all when the scene ends. It is also where a player's
+     * investigator ends up once they choose to finish off a sheet they had only
+     * deleted; an ordinary `delete()` keeps it, struck through in the list, until
+     * then.
+     *
+     * All three pivots cascade in the database now, so the detaching here is
+     * belt and braces rather than the only thing standing between us and a table
+     * full of orphans — but it is what makes the deletion legible in one place,
+     * and it costs three statements.
      */
     public function purge(): void
     {
@@ -267,20 +275,46 @@ class Character extends Model
     }
 
     /**
-     * A slug nobody has taken, retired sheets included — the column is unique and
-     * the Keeper's cast is generated from a short list of names, so two Silas
-     * Thornes on one server are a matter of time.
+     * A slug nobody has taken, deleted sheets included — the column is unique
+     * in the database and a deleted row keeps its own, so that a restored sheet
+     * comes back at the address it always had. Two Silas Thornes on one server
+     * are a matter of time either way: the Keeper's cast is generated from a
+     * short list of names, and a player is free to name a new investigator
+     * after one they have buried.
+     *
+     * `$ignore` is the sheet being renamed, so that saving a name unchanged
+     * does not walk it to `-2`.
      */
-    public static function uniqueSlug(string $name): string
+    public static function uniqueSlug(string $name, ?int $ignore = null): string
     {
         $base = Str::slug($name) ?: 'character';
         $slug = $base;
 
-        for ($suffix = 2; static::withTrashed()->where('slug', $slug)->exists(); $suffix++) {
+        $taken = fn (string $candidate): bool => static::withTrashed()
+            ->where('slug', $candidate)
+            ->when($ignore !== null, fn (Builder $query) => $query->whereKeyNot($ignore))
+            ->exists();
+
+        for ($suffix = 2; $taken($slug); $suffix++) {
             $slug = $base.'-'.$suffix;
         }
 
         return $slug;
+    }
+
+    /**
+     * Whether this sheet has been deleted and is waiting to be restored or
+     * finished off. Appended, because the nav strikes the name through and the
+     * sheet hangs a stamp across itself, and both are handed serialised
+     * characters rather than models.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function isDeleted(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool => $this->trashed()
+        );
     }
 
     /**

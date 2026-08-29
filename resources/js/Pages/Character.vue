@@ -12,8 +12,9 @@ import BackstoryTab from '@/Pages/Components/Character/BackstoryTab.vue';
 import Dropdown from '@/Pages/Components/Dropdown.vue';
 import Tabs from '@/Components/Tabs.vue';
 import Modal from '@/Components/Modal.vue';
-import { BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, UserIcon } from '@heroicons/vue/20/solid';
+import { ArrowUturnLeftIcon, BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, TrashIcon, UserIcon } from '@heroicons/vue/20/solid';
 import { useRoles } from '@/Pages/Composables/useRoles.js';
+import { useCharacterImage } from '@/Pages/Composables/useCharacterImage.js';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
 const { isKeeper } = useRoles();
@@ -45,11 +46,47 @@ const tabs = [
 ];
 const page = usePage();
 
+/*
+ * Deleting an investigator keeps them. The sheet can still be opened — stamped
+ * across, frozen, and carrying the two ways out of it — and every route that
+ * would change one refuses a deleted sheet outright, so the editing affordances
+ * come off with `canEdit` rather than being left to fail one at a time.
+ */
+const deleted = computed(() => prop.character.is_deleted === true);
+
+const deletedOn = computed(() =>
+    prop.character.deleted_at
+        ? new Date(prop.character.deleted_at).toLocaleDateString(undefined, {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        })
+        : null
+);
+
 const deleteCharacter = () => {
-    if (confirm(`Permanently delete ${prop.character.name}? This cannot be undone.`)) {
+    const kept =
+        `Delete ${prop.character.name}? The sheet is kept — struck through in the list — with every ` +
+        'skill, belonging and campaign intact, and can be restored from it.';
+
+    if (confirm(kept)) {
         router.delete(route('character.destroy', {
             character: prop.character.slug,
         }));
+    }
+};
+
+const restoreCharacter = () => {
+    router.put(route('character.restore', { character: prop.character.slug }));
+};
+
+const purgeCharacter = () => {
+    const forGood =
+        `Delete ${prop.character.name} completely? The sheet goes, and their skills, everything they ` +
+        'carried and every campaign they were in go with it. This cannot be undone.';
+
+    if (confirm(forGood)) {
+        router.delete(route('character.purge', { character: prop.character.slug }));
     }
 };
 
@@ -83,10 +120,6 @@ const createSkill = () => {
     });
 };
 
-const form = useForm({
-    avatar: null,
-});
-
 const notesForm = useForm({
     notes: prop.character.notes,
 });
@@ -113,17 +146,57 @@ const toggleGame = (gameId) => {
     });
 };
 
-const handleFileUpload = () => {
-    form.post(route('upload.avatar', { character: prop.character.slug }), { preserveScroll: true });
-};
-
 const canEdit = computed(() => {
+    if (deleted.value) {
+        return false;
+    }
+
     return page.props.auth.user.id === prop.character.user_id || isKeeper.value;
 });
 
-const avatarThumb = computed(() =>
-    prop.character.avatar ? '/storage/' + prop.character.avatar : '/images/cthulhu_man_reading.jpeg'
-);
+/*
+ * The two pictures the sheet carries. Both are shrunk in the browser before they
+ * are sent — see the composable — so a photograph straight off a phone no longer
+ * meets the server's upload limit and vanishes without a word.
+ */
+const {
+    uploading: uploadingImage,
+    errors: imageErrors,
+    upload: uploadImage,
+    clear: clearImage,
+} = useCharacterImage(computed(() => prop.character.slug));
+
+/**
+ * The two cards under Manage sheet. The hint says what each picture is *for*,
+ * because that is the whole reason there are two of them.
+ */
+const pictures = [
+    {
+        shape: 'portrait',
+        label: 'Portrait',
+        hint: 'The investigator themselves. It fills the frame at the top of the sheet, cropped from the bottom.',
+        column: 'avatar',
+        frame: 'aspect-[3/4] w-12',
+        // Taking the likeness off leaves the masthead with no frame at all,
+        // which is a fine way for a sheet to look.
+        revert: 'Remove',
+    },
+    {
+        shape: 'banner',
+        label: 'Backdrop',
+        hint: 'The scene behind the name. A landscape picture suits the shape of it best.',
+        column: 'banner',
+        frame: 'aspect-[16/9] w-20',
+        revert: 'Use the default',
+    },
+];
+
+const thumbnail = (column) => (prop.character[column] ? '/storage/' + prop.character[column] : null);
+
+/* The backdrop card shows the house picture when no other has been uploaded,
+   so *Use the default* has something to point at. */
+const preview = (picture) =>
+    thumbnail(picture.column) ?? (picture.shape === 'banner' ? '/images/cthulhu_man_reading.jpeg' : null);
 
 const updateUser = (event) => {
     router.put(route('character.update', { character: prop.character.slug }), {
@@ -143,184 +216,272 @@ const saveNotes = () => {
 
     <AuthenticatedLayout>
         <div class="page">
-            <Backstory :character="prop.character" :editable="editable">
-                <template #actions>
-                    <div class="flex flex-wrap items-center gap-4">
-                    <!--
-                        The printable sheet is a plain Blade document, not an Inertia page,
-                        so it has to be a real link rather than <Link>/router.visit().
-                    -->
-                    <a
-                        :href="route('character.sheet', { character: prop.character.slug })"
-                        target="_blank"
-                        rel="noopener"
-                        class="btn-secondary btn-sm"
-                    >
-                        <PrinterIcon class="size-4" aria-hidden="true" />
-                        Print sheet
-                    </a>
+            <div class="relative">
+                <div class="space-y-5" :class="{ 'opacity-60': deleted }">
+                    <Backstory :character="prop.character" :editable="editable" />
 
-                    <SwitchGroup v-if="canEdit" as="div" class="flex items-center gap-3">
-                        <SwitchLabel class="text-sm font-medium text-cthulhu-green-200">Edit sheet</SwitchLabel>
-                        <Switch
-                            v-model="editable"
-                            :class="[
-                                editable ? 'bg-cthulhu-yellow-500' : 'bg-cthulhu-green-800',
-                                'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent ring-1 ring-inset ring-parchment-100/20 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-yellow-500',
-                            ]"
-                        >
-                            <span
-                                aria-hidden="true"
-                                :class="[
-                                    editable ? 'translate-x-5' : 'translate-x-0',
-                                    'pointer-events-none inline-block size-5 transform rounded-full bg-parchment-50 shadow transition',
-                                ]"
+                    <Vitals :character="prop.character" :can-edit="canEdit" />
+
+                    <Characteristics :character="prop.character" :editable="editable" :can-edit="canEdit" />
+
+                    <Tabs :tabs="tabs">
+                        <template #Skills>
+                            <Skills
+                                :character="prop.character"
+                                :can-edit="canEdit"
+                                :editable="editable"
+                                :available-skills="prop.availableSkills ?? []"
+                                :always-relevant-skills="prop.alwaysRelevantSkills ?? []"
+                                :era="prop.era"
+                                :eras="prop.eras ?? []"
                             />
-                        </Switch>
-                    </SwitchGroup>
+                        </template>
+
+                        <template #Equipment>
+                            <Equipment
+                                :character="prop.character"
+                                :editable="editable"
+                                :can-edit="canEdit"
+                                :storage-locations="prop.storageLocations ?? []"
+                                :era="prop.era"
+                                :eras="prop.eras ?? []"
+                            />
+                        </template>
+
+                        <template #Backstory>
+                            <BackstoryTab :character="prop.character" :can-edit="canEdit" />
+                        </template>
+
+                        <template #Notepad>
+                            <section class="panel flex flex-col gap-3 p-4 sm:p-5">
+                                <h2 class="text-base font-semibold text-cthulhu-green-900">Notepad</h2>
+                                <quill-editor
+                                    v-model:content="notesForm.notes"
+                                    theme="snow"
+                                    content-type="html"
+                                    class="notepad"
+                                />
+                                <div class="flex justify-end">
+                                    <button type="button" class="btn-primary" :disabled="notesForm.processing" @click="saveNotes">
+                                        {{ notesForm.processing ? 'Saving…' : 'Save notes' }}
+                                    </button>
+                                </div>
+                            </section>
+                        </template>
+                    </Tabs>
+
+                    <!--
+                        Printing and the edit switch are about the sheet rather than
+                        part of it, so they sit under everything, quiet, on the page's
+                        own ground. The switch is last because what it reveals — Manage
+                        sheet — opens directly beneath it.
+                    -->
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <!--
+                            The printable sheet is a plain Blade document, not an Inertia page,
+                            so it has to be a real link rather than <Link>/router.visit().
+                        -->
+                        <a
+                            :href="route('character.sheet', { character: prop.character.slug })"
+                            target="_blank"
+                            rel="noopener"
+                            class="btn-ghost-on-dark btn-sm"
+                        >
+                            <PrinterIcon class="size-4" aria-hidden="true" />
+                            Print sheet
+                        </a>
+
+                        <SwitchGroup v-if="canEdit" as="div" class="flex items-center gap-3">
+                            <SwitchLabel class="text-sm font-medium text-cthulhu-green-200">Edit sheet</SwitchLabel>
+                            <Switch
+                                v-model="editable"
+                                :class="[
+                                    editable ? 'bg-cthulhu-yellow-500' : 'bg-cthulhu-green-800',
+                                    'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent ring-1 ring-inset ring-parchment-100/20 transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-yellow-500',
+                                ]"
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    :class="[
+                                        editable ? 'translate-x-5' : 'translate-x-0',
+                                        'pointer-events-none inline-block size-5 transform rounded-full bg-parchment-50 shadow transition',
+                                    ]"
+                                />
+                            </Switch>
+                        </SwitchGroup>
                     </div>
-                </template>
-            </Backstory>
 
-            <Vitals :character="prop.character" :can-edit="canEdit" />
+                    <!-- Sheet management, only while editing -->
+                    <section v-if="editable" class="panel p-4 sm:p-5">
+                        <h2 class="mb-4 text-base font-semibold text-cthulhu-green-900">Manage sheet</h2>
 
-            <Characteristics :character="prop.character" :editable="editable" :can-edit="canEdit" />
+                        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div v-for="picture in pictures" :key="picture.shape" class="card flex flex-col gap-2">
+                                <div>
+                                    <p class="eyebrow">{{ picture.label }}</p>
+                                    <p class="field-hint">{{ picture.hint }}</p>
+                                </div>
 
-            <Tabs :tabs="tabs">
-                <template #Skills>
-                    <Skills
-                        :character="prop.character"
-                        :can-edit="canEdit"
-                        :editable="editable"
-                        :available-skills="prop.availableSkills ?? []"
-                        :always-relevant-skills="prop.alwaysRelevantSkills ?? []"
-                        :era="prop.era"
-                        :eras="prop.eras ?? []"
-                    />
-                </template>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="shrink-0 overflow-hidden rounded-md bg-cthulhu-green-900 ring-1 ring-parchment-400"
+                                        :class="picture.frame"
+                                    >
+                                        <img
+                                            v-if="preview(picture)"
+                                            :src="preview(picture)"
+                                            alt=""
+                                            class="size-full object-cover object-top"
+                                        />
+                                    </div>
 
-                <template #Equipment>
-                    <Equipment
-                        :character="prop.character"
-                        :editable="editable"
-                        :can-edit="canEdit"
-                        :storage-locations="prop.storageLocations ?? []"
-                        :era="prop.era"
-                        :eras="prop.eras ?? []"
-                    />
-                </template>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <label :for="`upload_${picture.shape}`" class="btn-secondary btn-sm cursor-pointer">
+                                            {{ uploadingImage === picture.shape ? 'Uploading…' : (thumbnail(picture.column) ? 'Change' : 'Upload') }}
+                                        </label>
+                                        <input
+                                            :id="`upload_${picture.shape}`"
+                                            type="file"
+                                            accept="image/*"
+                                            class="hidden"
+                                            :disabled="uploadingImage !== null"
+                                            @change="uploadImage(picture.shape, $event.target.files[0]); $event.target.value = ''"
+                                        />
 
-                <template #Backstory>
-                    <BackstoryTab :character="prop.character" :can-edit="canEdit" />
-                </template>
+                                        <!-- Nothing is lost that cannot be uploaded again, so this
+                                             takes the picture off without a dialog in the way. -->
+                                        <button
+                                            v-if="thumbnail(picture.column)"
+                                            type="button"
+                                            class="btn-ghost btn-sm"
+                                            :disabled="uploadingImage !== null"
+                                            @click="clearImage(picture.shape)"
+                                        >
+                                            {{ picture.revert }}
+                                        </button>
+                                    </div>
+                                </div>
 
-                <template #Notepad>
-                    <section class="panel flex flex-col gap-3 p-4 sm:p-5">
-                        <h2 class="text-base font-semibold text-cthulhu-green-900">Notepad</h2>
-                        <quill-editor
-                            v-model:content="notesForm.notes"
-                            theme="snow"
-                            content-type="html"
-                            class="notepad"
-                        />
-                        <div class="flex justify-end">
-                            <button type="button" class="btn-primary" :disabled="notesForm.processing" @click="saveNotes">
-                                {{ notesForm.processing ? 'Saving…' : 'Save notes' }}
-                            </button>
+                                <p v-if="imageErrors[picture.shape]" class="field-error">{{ imageErrors[picture.shape] }}</p>
+                            </div>
+
+                            <div class="card">
+                                <p class="eyebrow">Player</p>
+                                <div class="mt-2">
+                                    <Dropdown
+                                        :value="prop.character.user_id"
+                                        :list="page.props.auth.users"
+                                        :open="editable"
+                                        :initially-selected="prop.character.user_id"
+                                        @update:model-value="updateUser"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="card flex flex-col justify-between gap-2">
+                                <div>
+                                    <p class="eyebrow">Skills</p>
+                                    <p class="field-hint">Create a skill the handbook list lacks.</p>
+                                </div>
+                                <button type="button" class="btn-secondary btn-sm self-start" @click="openSkillModal">
+                                    Create skill
+                                </button>
+                            </div>
+
+                            <div v-if="prop.games?.length" class="card flex flex-col gap-2">
+                                <div>
+                                    <p class="eyebrow">Games</p>
+                                    <p class="field-hint">The campaigns this investigator is played in.</p>
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+                                    <label
+                                        v-for="game in prop.games"
+                                        :key="game.id"
+                                        class="flex cursor-pointer items-start gap-2.5"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            class="mt-0.5 size-4 shrink-0 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
+                                            :checked="gamesForm.games.includes(game.id)"
+                                            :disabled="gamesForm.processing"
+                                            @change="toggleGame(game.id)"
+                                        />
+                                        <span class="min-w-0">
+                                            <span class="block text-sm font-medium text-cthulhu-green-900">
+                                                {{ game.name }}
+                                                <span v-if="game.active" class="chip-brass ml-1">Playing now</span>
+                                            </span>
+                                            <span class="block text-xs text-cthulhu-green-500">
+                                                {{ prop.eras.find((era) => era.value === game.era)?.short ?? game.era }}
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <p v-if="gamesForm.errors.games" class="field-error">{{ gamesForm.errors.games }}</p>
+                            </div>
+
+                            <div class="card flex flex-col justify-between gap-2">
+                                <div>
+                                    <p class="eyebrow">Danger zone</p>
+                                    <p class="field-hint">
+                                        The sheet is kept, struck through in the list, and can be restored — or
+                                        deleted for good — from the sheet itself.
+                                    </p>
+                                </div>
+                                <button type="button" class="btn-danger btn-sm self-start" @click="deleteCharacter">
+                                    Delete {{ prop.character.name }}
+                                </button>
+                            </div>
                         </div>
                     </section>
-                </template>
-            </Tabs>
+                </div>
 
-            <!-- Sheet management, only while editing -->
-            <section v-if="editable" class="panel p-4 sm:p-5">
-                <h2 class="mb-4 text-base font-semibold text-cthulhu-green-900">Manage sheet</h2>
-
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="card">
-                        <p class="eyebrow">Portrait</p>
-                        <div class="mt-2 flex items-center gap-3">
-                            <img :src="avatarThumb" alt="" class="size-12 shrink-0 rounded-full object-cover ring-1 ring-parchment-400" />
-                            <label for="avatar_upload" class="btn-secondary btn-sm cursor-pointer">Change</label>
-                            <input
-                                id="avatar_upload"
-                                type="file"
-                                accept="image/*"
-                                class="hidden"
-                                @input="form.avatar = $event.target.files[0]"
-                                @change="handleFileUpload"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <p class="eyebrow">Player</p>
-                        <div class="mt-2">
-                            <Dropdown
-                                :value="prop.character.user_id"
-                                :list="page.props.auth.users"
-                                :open="editable"
-                                :initially-selected="prop.character.user_id"
-                                @update:model-value="updateUser"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="card flex flex-col justify-between gap-2">
-                        <div>
-                            <p class="eyebrow">Skills</p>
-                            <p class="field-hint">Create a skill the handbook list lacks.</p>
-                        </div>
-                        <button type="button" class="btn-secondary btn-sm self-start" @click="openSkillModal">
-                            Create skill
-                        </button>
-                    </div>
-
-                    <div v-if="prop.games?.length" class="card flex flex-col gap-2">
-                        <div>
-                            <p class="eyebrow">Games</p>
-                            <p class="field-hint">The campaigns this investigator is played in.</p>
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <label
-                                v-for="game in prop.games"
-                                :key="game.id"
-                                class="flex cursor-pointer items-start gap-2.5"
+                <!--
+                    Deleting keeps the sheet, so it is shown rather than hidden: the
+                    stamp goes over it and the investigator reads through, dimmed and
+                    frozen. The stamp lets clicks through — there is nothing live
+                    beneath it — and only the card takes them.
+                -->
+                <div v-if="deleted" class="pointer-events-none absolute inset-0 z-20">
+                    <div class="sticky top-0 flex h-screen flex-col items-center justify-center gap-6 px-4">
+                        <!--
+                            Clipped here rather than on the veil: an `overflow` on
+                            the veil would make it the scroll container, and the
+                            sticky block would stop following the page down.
+                        -->
+                        <div class="flex w-full justify-center overflow-hidden py-8">
+                            <p
+                                aria-hidden="true"
+                                class="display -rotate-12 select-none whitespace-nowrap text-[14vw] leading-none text-cthulhu-blood-300/40"
                             >
-                                <input
-                                    type="checkbox"
-                                    class="mt-0.5 size-4 shrink-0 rounded border-parchment-400 bg-parchment-50 text-cthulhu-green-800 focus:ring-cthulhu-green-600"
-                                    :checked="gamesForm.games.includes(game.id)"
-                                    :disabled="gamesForm.processing"
-                                    @change="toggleGame(game.id)"
-                                />
-                                <span class="min-w-0">
-                                    <span class="block text-sm font-medium text-cthulhu-green-900">
-                                        {{ game.name }}
-                                        <span v-if="game.active" class="chip-brass ml-1">Playing now</span>
-                                    </span>
-                                    <span class="block text-xs text-cthulhu-green-500">
-                                        {{ prop.eras.find((era) => era.value === game.era)?.short ?? game.era }}
-                                    </span>
-                                </span>
-                            </label>
+                                Deleted
+                            </p>
                         </div>
 
-                        <p v-if="gamesForm.errors.games" class="field-error">{{ gamesForm.errors.games }}</p>
-                    </div>
+                        <div class="pointer-events-auto panel w-full max-w-md p-5 shadow-raised">
+                            <p class="eyebrow">Deleted<span v-if="deletedOn"> · {{ deletedOn }}</span></p>
+                            <p class="mt-1 text-sm text-cthulhu-green-800">
+                                {{ prop.character.name }} is kept whole — every skill, everything they carried
+                                and every campaign they were played in — until you say otherwise. Nothing on the
+                                sheet can be changed while it is deleted.
+                            </p>
 
-                    <div class="card flex flex-col justify-between gap-2">
-                        <div>
-                            <p class="eyebrow">Danger zone</p>
-                            <p class="field-hint">Deleting an investigator cannot be undone.</p>
+                            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+                                <button type="button" class="btn-primary" @click="restoreCharacter">
+                                    <ArrowUturnLeftIcon class="size-4" aria-hidden="true" />
+                                    Restore
+                                </button>
+                                <button type="button" class="btn-danger" @click="purgeCharacter">
+                                    <TrashIcon class="size-4" aria-hidden="true" />
+                                    Delete completely
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" class="btn-danger btn-sm self-start" @click="deleteCharacter">
-                            Delete {{ prop.character.name }}
-                        </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
             <Modal :show="showSkillModal" max-width="lg" @close="showSkillModal = false">
                 <form class="flex flex-col gap-4 bg-parchment-100 p-6" @submit.prevent="createSkill">

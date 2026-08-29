@@ -50,11 +50,12 @@ describe('Character.vue', () => {
           AuthenticatedLayout: {
             template: '<div><slot name="header" /><slot /></div>',
           },
-          // Render the actions slot so the sheet actions are testable
+          // The masthead is the name and the face; the sheet's own actions
+          // are no longer passed through it, so nothing needs slotting here.
           Backstory: {
             name: 'Backstory',
             props: ['character', 'editable'],
-            template: '<div><slot name="actions" /></div>',
+            template: '<div />',
           },
           Vitals: true,
           Characteristics: true,
@@ -78,7 +79,7 @@ describe('Character.vue', () => {
     expect(head.attributes('data-title')).toBe(sampleCharacter.name)
   })
 
-  it('renders the print sheet link through the Backstory actions slot', () => {
+  it('renders the print sheet link at the foot of the sheet', () => {
     const wrapper = mountComponent()
     const link = wrapper.get('a[target="_blank"]')
     expect(link.attributes('href')).toContain('character.sheet')

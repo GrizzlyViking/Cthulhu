@@ -23,6 +23,8 @@ class CharacterBackstoryUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // The story runs long — it is the one entry a player writes at length.
+            'my_story'              => ['sometimes', 'nullable', 'string', 'max:20000'],
             'personal_description'  => ['sometimes', 'nullable', 'string', 'max:2000'],
             'ideology'              => ['sometimes', 'nullable', 'string', 'max:2000'],
             'significant_people'    => ['sometimes', 'nullable', 'string', 'max:2000'],

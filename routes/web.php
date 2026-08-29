@@ -62,9 +62,19 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::put('/character/wizard/{character}/backstory', [CharacterWizardController::class, 'backstory'])->name('character.wizard.backstory');
     Route::put('/character/wizard/{character}/complete', [CharacterWizardController::class, 'complete'])->name('character.wizard.complete');
 
-    // Using Resource Controller for Character with excepting some methods
-    Route::resource('/character', CharacterController::class)->except(['create']);
-    Route::get('/character/{character}/sheet', [CharacterController::class, 'sheet'])->name('character.sheet');
+    // Using Resource Controller for Character with excepting some methods.
+    //
+    // `show` resolves deleted sheets too: deleting an investigator keeps them,
+    // and their own sheet is where the stamp, the Restore and the delete for
+    // good live. Every other route here refuses one, which is what freezes a
+    // deleted sheet without a single check in a controller.
+    Route::resource('/character', CharacterController::class)->except(['create'])->withTrashed(['show']);
+    Route::put('/character/{character}/restore', [CharacterController::class, 'restore'])
+        ->withTrashed()->name('character.restore');
+    Route::delete('/character/{character}/purge', [CharacterController::class, 'forceDestroy'])
+        ->withTrashed()->name('character.purge');
+    Route::get('/character/{character}/sheet', [CharacterController::class, 'sheet'])
+        ->withTrashed()->name('character.sheet');
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
     Route::put('/character/{character}/backstory', [CharacterController::class, 'updateBackstory'])->name('character.backstory.update');
     Route::put('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
@@ -73,7 +83,12 @@ Route::middleware('auth', 'verified')->group(function () {
     // What they are carrying and what they are worth. Buying something spends
     // it; this is for everything that happens to money away from the shops.
     Route::put('/character/{character}/wealth', [CharacterController::class, 'updateWealth'])->name('character.wealth.update');
-    Route::post('/character/{character}/avatar', [CharacterController::class, 'avatar'])->name('upload.avatar');
+    // The likeness and the scene behind the name. One route: they differ only
+    // in the size each is stored at.
+    Route::post('/character/{character}/image/{shape}', [CharacterController::class, 'image'])
+        ->whereIn('shape', ['portrait', 'banner'])->name('character.image');
+    Route::delete('/character/{character}/image/{shape}', [CharacterController::class, 'destroyImage'])
+        ->whereIn('shape', ['portrait', 'banner'])->name('character.image.destroy');
     Route::put('/character/{character}/{skill}/update', [CharacterController::class, 'updateSkill'])->name('character.skill.update');
     Route::put('/character/{character}/{skill}/add', [CharacterController::class, 'attachSkill'])->name('character.skill.attach');
     Route::put('/character/{character}/{skill}/remove', [CharacterController::class, 'removeSkill'])->name('character.skill.remove');

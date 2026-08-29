@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CharacterStoreRequest extends FormRequest
 {
@@ -22,7 +23,9 @@ class CharacterStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'       => ['required', 'string', 'max:255', 'unique:characters'],
+            // Live investigators only: a deleted sheet keeps its slug but
+            // not its claim on the name. See WizardProfileRequest.
+            'name'       => ['required', 'string', 'max:255', Rule::unique('characters')->whereNull('deleted_at')],
             'user_id'    => ['required', 'exists:users,id'],
             'occupation' => ['required', 'string'],
             'age'        => ['required', 'integer', 'min:16'],

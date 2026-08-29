@@ -309,6 +309,37 @@ one (the first becomes active automatically); `Game::activate()` switches which 
 `php artisan group:create` starts a group off with a campaign, so a new group is playable at once.
 `player:assign` moves characters' game membership along with the group, since games are group-scoped.
 
+### Deleting an investigator, and getting them back
+An investigator is a season's worth of play, so `character.destroy` is a **soft delete and nothing
+more**. Nothing is detached: the skills, the belongings and the campaigns all stay attached to the
+row, which is what makes restoring free.
+
+A deleted sheet is **shown, not hidden**. It stays in the nav with its name struck through
+(`Components/CharacterName.vue`, fed by the appended `is_deleted`), and opening it gives the stamp
+across the page with *Restore* and *Delete completely* in the middle of it. The three routes that go
+with that — `character.show`, `character.restore`, `character.purge` — are the **only** ones declared
+`->withTrashed()`. Every other route taking a `{character}` refuses a deleted one at the binding, and
+that is what freezes the sheet; `Character.vue` turns `canEdit` off to match, so nothing on screen
+offers an edit that would 404. Restoring and finishing off answer to `CharacterPolicy@restore` and
+`@forceDelete`, which both defer to `delete` — nobody new gains a say.
+
+Only **the player's own** deleted sheets are listed (`auth.characters.own`, `withTrashed()`). A
+groupmate's simply leaves the list; a deleted investigator is not the party's business.
+
+*Delete completely* is `Character::purge()`, the same one the Keeper's cast uses.
+
+**A deleted sheet keeps its slug but not its name.** The slug is the address a restore has to come
+back to, so it is held for good and every write goes through `Character::uniqueSlug()` — which is why
+a second Patrick becomes `patrick-2` rather than dying on the unique index. The name is what a player
+types, so the `unique` rules carry `whereNull('deleted_at')`: being told that somebody buried a month
+ago is in the way, with no way to see them, was the bug this replaced.
+
+Every pivot hanging off `characters` cascades in the database: `character_skill` and `character_game`
+always did, and `equipables` was given its foreign key on 2026-08-28 — it had been declared with
+`foreignIdFor()` and never `constrained()`, so anything deleting a character other than `purge()`
+(a player's account going, a `forceDelete()` in a console command) left its weapons and belongings
+behind pointing at nothing.
+
 ### Where a signed-in user lands
 `/home` (`PageController::home`) is a redirect, not a page, and every authenticated entry point
 falls back to it: login, email verification, password confirmation, invitation acceptance, the
@@ -331,6 +362,73 @@ to make an investigator for the game that is on, and a Keeper or admin who only 
 the dashboard. This gates the redirect only — `CharacterPolicy::create` still lets anyone create.
 
 The dashboard keeps its own route and its place in the nav.
+
+### The two pictures a sheet carries
+A sheet has a **portrait** and a **backdrop**, and they are different jobs.
+
+- `characters.avatar` is the investigator's likeness. It is what the printed sheet prints in its
+  30mm frame, and on screen it fills **a third of the masthead** on the right, in a brass-ringed 3:4
+  frame. It is `object-cover object-top`: the picture fills the frame rather than sitting in bars,
+  and what a not-quite-3:4 likeness loses comes off the **bottom**, because a face is at the top of a
+  portrait and the coat is what can be spared. That crop is small — the reason the likeness was split
+  out of the backdrop at all is that the masthead is a letterbox, and a 3:1 crop of a portrait takes
+  the face with it. With none uploaded there is no frame at all, and the masthead is the name over
+  the backdrop.
+
+  The frame's ring is **not** `ring-inset`. An inset ring is painted with the frame's own box
+  decorations, so the picture inside lands on top of it and the border vanishes; a plain `ring-1`
+  draws outside the border box, where nothing can cover it.
+- `characters.banner` is the scene behind the name. It is cropped to whatever room the masthead has,
+  which is what a landscape picture is for. It is **screen only** — the printed sheet never shows it.
+
+**Null means the house picture.** With nothing in `banner` the masthead wears
+`public/images/cthulhu_man_reading.jpeg`, which is what *Use the default* on the Backdrop card puts a
+player back to (`DELETE character.image.destroy`). *Remove* on the Portrait card is the same route,
+and simply leaves the sheet with no frame. Nothing is confirmed first: a picture taken off can be
+uploaded again in two presses.
+
+### The masthead
+`Backstory.vue` — confusingly named, but it is the band at the top of the sheet, not the Backstory
+tab — holds **the name and the face, and nothing else**. Everything that used to sit up there has
+moved to where it reads better:
+
+- The line above the name is the **occupation**, falling back to "Investigator" while there is none.
+  On a screen full of investigators, what this one *does* is the useful half.
+- The name is a **`<textarea>`, not an `<input>`**, so a long one wraps instead of scrolling out of
+  sight. It is still one line of text — Return blurs the field, and a pasted name has its whitespace
+  collapsed on the way to `character.rename`. `fitName()` sets the height from `scrollHeight`, and a
+  `ResizeObserver` re-runs it **on width changes only**: reacting to height would be a loop. It
+  starts at `text-2xl` rather than `text-3xl` because beside the portrait a phone leaves the name
+  about two hundred pixels, and at `text-3xl` a word like "Bartholomew" cannot fit a line of its own
+  — so the browser breaks it mid-word, which reads as a fault.
+- The **Character and Background panels moved to the Backstory tab**, where the rest of who this
+  investigator is already lives. They keep saving as they are typed (`useAdjustAttribute`, debounced)
+  rather than waiting for that tab's *Save backstory* button, which only covers the prose.
+- **Print sheet and the Edit sheet switch moved to the foot of the page**, under the tabs, on the
+  dark ground rather than on a panel — they are about the sheet rather than part of it. The switch is
+  the last thing before Manage sheet, which is what it reveals. `.btn-ghost-on-dark` is the
+  parchment ghost button for that ground, matching `.eyebrow-on-dark`.
+
+`App\Misc\CharacterImage` is the only place an upload is taken in — both shapes, one route
+(`character.image`, `POST /character/{character}/image/{shape}`). It scales down with Intervention
+Image (GD), honours the sideways note a phone camera leaves (`orient()`), and stores JPEG. Nothing is
+refused for being large: `BOXES` is what each shape is scaled down to fit inside, and the only
+refusals left are a file that is not a picture, one over `MAX_KILOBYTES`, and one over `MAX_PIXELS`
+per side — that last is a guard against GD holding a four-byte-per-pixel bitmap of a 100-megapixel
+photograph and dying without a word. All three say why, in `messages()`, and the sheet shows it under
+the card. Replacing a picture deletes the one it replaced.
+
+`useCharacterImage.js` shrinks the picture **in the browser before it is sent**, which is what
+actually fixed the silent failure: PHP's `post_max_size` throws the request body away before any rule
+of ours runs, so the page simply did nothing. A redrawn canvas turns a twelve-megabyte phone
+photograph into a few hundred kilobytes and the limit is never met. Keep `LONGEST_EDGE` in step with
+`CharacterImage::BOXES`. If the browser cannot do it — an animated GIF, a format it will not decode —
+the original is sent and the server scales it instead.
+
+`bootstrap/app.php` answers a **413** the same two ways it answers a 419, for the case where a
+picture still arrives too large for the server: an Inertia visit is sent `back(303)` with the message
+flashed, everything else XHR gets real JSON. Without it, that request never reaches a controller and
+the player is told nothing.
 
 ### The printed sheet
 `resources/views/character/sheet.blade.php` is the one player-facing page that is plain Blade rather

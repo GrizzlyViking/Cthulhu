@@ -49,8 +49,12 @@ class HandleInertiaRequests extends Middleware
                 'characters' => [
                     'all'    => $this->visibleCharacters($user),
                     'others' => $this->otherCharacters($user),
-                    'own'    => Character::query()->investigators()->playersOwn()->get(),
-                    ],
+                    // Deleted sheets come along here alone: the nav strikes
+                    // them through so a player can find one again and restore
+                    // it. Nobody else's business — a groupmate's deleted
+                    // investigator simply leaves the list.
+                    'own' => Character::query()->withTrashed()->investigators()->playersOwn()->get(),
+                ],
                 // The armoury is rulebook data, not group data — it stays global.
                 'equipment' => $this->armoury(),
                 'users'     => $user === null ? new EloquentCollection() : User::query()->inGroupOf($user)->with('roles')->get(),
