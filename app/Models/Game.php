@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * A campaign a group plays.
@@ -49,6 +51,21 @@ class Game extends Model
     public function characters(): BelongsToMany
     {
         return $this->belongsToMany(Character::class)->withTimestamps();
+    }
+
+    /** @return HasMany<GameResource, $this> */
+    public function resources(): HasMany
+    {
+        return $this->hasMany(GameResource::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Game $game): void {
+            foreach ($game->resources()->get() as $resource) {
+                Storage::disk('local')->delete($resource->path);
+            }
+        });
     }
 
     /**

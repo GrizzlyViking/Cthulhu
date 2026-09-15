@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Era;
+use App\Enums\NotesVisibility;
 use App\Http\Requests\CharacterAttributeUpdateRequest;
 use App\Http\Requests\CharacterBackstoryUpdateRequest;
 use App\Http\Requests\CharacterSkillUpdateRequest;
@@ -29,7 +30,7 @@ class CharacterController extends Controller
 {
     use AuthorizesRequests;
 
-    public function show(Character $character): Response
+    public function show(Character $character, Request $request): Response
     {
         $this->authorize('view', $character);
 
@@ -41,6 +42,13 @@ class CharacterController extends Controller
 
         return Inertia::render('Character', [
             ...compact('character', 'availableSkills'),
+            'notepad' => [
+                'content'          => $request->user()->can('viewNotes', $character) ? $character->notes : null,
+                'visibility'       => ($character->notes_visibility ?? NotesVisibility::Everyone)->value,
+                'canView'          => $request->user()->can('viewNotes', $character),
+                'canEdit'          => $request->user()->can('updateNotes', $character),
+                'canSetVisibility' => ! $character->trashed() && $request->user()->can('manageNotesVisibility', $character),
+            ],
             'storageLocations'     => StorageLocation::query()->orderBy('order_by')->orderBy('name')->get(['id', 'name']),
             'alwaysRelevantSkills' => config('cthulhu.sheet.always_relevant_skills'),
             // The era of the game being played. The sheet leads with what
@@ -195,6 +203,24 @@ class CharacterController extends Controller
         return to_route('character.show', $character->slug);
     }
 
+    public function updateNotes(Character $character, Request $request): RedirectResponse
+    {
+        $this->authorize('updateNotes', $character);
+
+        $validated = $request->validate([
+            'notes'            => ['present', 'nullable', 'string', 'max:200000'],
+            'notes_visibility' => ['sometimes', 'required', Rule::enum(NotesVisibility::class)],
+        ]);
+
+        if (array_key_exists('notes_visibility', $validated)) {
+            $this->authorize('manageNotesVisibility', $character);
+        }
+
+        $character->update($validated);
+
+        return back()->with('success', 'Notes saved.');
+    }
+
     public function aptitude(Character $character, Skill $skill): int
     {
         $this->authorize('view', $character);
@@ -204,6 +230,11 @@ class CharacterController extends Controller
 
     public function update(Character $character, CharacterUpdateRequest $request): RedirectResponse
     {
+        // Older open tabs still save through the general sheet endpoint.
+        if ($request->exists('notes')) {
+            $this->authorize('updateNotes', $character);
+        }
+
         $character->update($request->validated());
 
         return to_route('character.show', $character->slug);

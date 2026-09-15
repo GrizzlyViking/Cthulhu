@@ -1,70 +1,47 @@
 <script setup>
-import { ref } from 'vue'
-import { ChevronDownIcon } from '@heroicons/vue/16/solid'
+import { ref, useId, watch } from 'vue';
+import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue';
+import { ChevronDownIcon } from '@heroicons/vue/20/solid';
 
-defineProps({
-    tabs: {
-        type: Array,
-        required: true,
-    },
-})
+const props = defineProps({
+    tabs: { type: Array, required: true },
+});
 
-const activeTabIndex = ref(0)
+const activeTabIndex = ref(0);
+const selectId = `sheet-section-${useId()}`;
 
-const onSelectChange = (event) => {
-    activeTabIndex.value = parseInt(event.target.value)
-}
+watch(() => props.tabs.length, (length) => {
+    activeTabIndex.value = Math.min(activeTabIndex.value, Math.max(0, length - 1));
+});
 </script>
 
 <template>
-    <div class="space-y-3">
-        <!-- Mobile: a select is easier to hit than a row of tabs. -->
+    <TabGroup v-if="tabs.length" :selected-index="activeTabIndex" as="div" class="space-y-3" @change="activeTabIndex = $event">
         <div class="relative sm:hidden">
-            <select
-                aria-label="Select a section"
-                class="field appearance-none pe-9 font-semibold"
-                @change="onSelectChange($event)"
-            >
-                <option v-for="(tab, index) in tabs" :key="tab.name" :value="index" :selected="index === activeTabIndex">
-                    {{ tab.name }}
-                </option>
+            <label :for="selectId" class="sr-only">Select a section</label>
+            <select :id="selectId" v-model.number="activeTabIndex" class="field appearance-none pe-9 font-semibold">
+                <option v-for="(tab, index) in tabs" :key="tab.name" :value="index">{{ tab.name }}</option>
             </select>
-            <ChevronDownIcon
-                class="pointer-events-none absolute end-3 top-1/2 size-5 -translate-y-1/2 text-cthulhu-green-500"
-                aria-hidden="true"
-            />
+            <ChevronDownIcon class="pointer-events-none absolute end-3 top-1/2 size-5 -translate-y-1/2 text-cthulhu-green-500" aria-hidden="true" />
         </div>
 
-        <div class="hidden sm:block">
-            <nav class="flex flex-wrap gap-1 rounded-xl bg-cthulhu-green-900/60 p-1" aria-label="Tabs">
+        <TabList class="hidden gap-1 border-b border-cthulhu-yellow-500/30 sm:flex" aria-label="Sheet sections">
+            <Tab v-for="tab in tabs" :key="tab.name" v-slot="{ selected }" as="template">
                 <button
-                    v-for="(tab, index) in tabs"
-                    :key="tab.name"
                     type="button"
-                    :class="[
-                        'group inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500',
-                        index === activeTabIndex
-                            ? 'bg-parchment-100 text-cthulhu-green-900 shadow-sm'
-                            : 'text-cthulhu-green-200 hover:bg-cthulhu-green-800 hover:text-parchment-100',
-                    ]"
-                    :aria-current="index === activeTabIndex ? 'page' : undefined"
-                    @click="activeTabIndex = index"
+                    class="group inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-t-md border-b-2 px-3 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500"
+                    :class="selected ? 'border-cthulhu-yellow-500 bg-parchment-100 text-cthulhu-green-900' : 'border-transparent text-cthulhu-green-200 hover:bg-cthulhu-green-800 hover:text-parchment-100'"
                 >
-                    <component
-                        :is="tab.icon"
-                        :class="[
-                            'size-5',
-                            index === activeTabIndex ? 'text-cthulhu-green-600' : 'text-cthulhu-green-300 group-hover:text-cthulhu-yellow-400',
-                        ]"
-                        aria-hidden="true"
-                    />
-                    <span>{{ tab.name }}</span>
+                    <component :is="tab.icon" v-if="tab.icon" class="size-5 shrink-0" aria-hidden="true" />
+                    {{ tab.name }}
                 </button>
-            </nav>
-        </div>
+            </Tab>
+        </TabList>
 
-        <div>
-            <slot :name="tabs[activeTabIndex].name" :tab="tabs[activeTabIndex]" />
-        </div>
-    </div>
+        <TabPanels>
+            <TabPanel v-for="tab in tabs" :key="tab.name" class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cthulhu-yellow-500">
+                <slot :name="tab.name" :tab="tab" />
+            </TabPanel>
+        </TabPanels>
+    </TabGroup>
 </template>

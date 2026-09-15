@@ -5,6 +5,7 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterWizardController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExperienceController;
+use App\Http\Controllers\GameResourceController;
 use App\Http\Controllers\Keeper;
 use App\Http\Controllers\KeeperController;
 use App\Http\Controllers\PageController;
@@ -24,6 +25,10 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/home', [PageController::class, 'home'])->name('home');
 
     Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+    Route::get('/resources', [GameResourceController::class, 'index'])->name('resources.index');
+    Route::post('/games/{game}/resources', [GameResourceController::class, 'store'])->name('resources.store');
+    Route::get('/resources/{resource}/file', [GameResourceController::class, 'file'])->name('resources.file');
+
     Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 
     /*
@@ -76,6 +81,7 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/character/{character}/sheet', [CharacterController::class, 'sheet'])
         ->withTrashed()->name('character.sheet');
     Route::put('/character/{character}/attribute/update', [CharacterController::class, 'updateAttribute'])->name('attribute.update');
+    Route::put('/character/{character}/notes', [CharacterController::class, 'updateNotes'])->name('character.notes.update');
     Route::put('/character/{character}/backstory', [CharacterController::class, 'updateBackstory'])->name('character.backstory.update');
     Route::put('/character/{character}/rename', [CharacterController::class, 'renameCharacter'])->name('character.rename');
     // Which of the group's campaigns this investigator is played in.

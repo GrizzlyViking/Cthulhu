@@ -59,7 +59,7 @@ const attributes = ['strength', 'dexterity', 'intelligence', 'constitution', 'ap
                     class="!w-[9rem] shrink-0"
                     :skill-value="prop.character[attribute]"
                     :interactive="canEdit"
-                    :title="canEdit ? `Adjust ${attribute}` : null"
+                    :aria-label="canEdit ? `Adjust ${attribute}` : null"
                     @click="openEditModal(attribute, prop.character[attribute])"
                 />
             </div>

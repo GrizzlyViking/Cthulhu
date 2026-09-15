@@ -59,7 +59,7 @@ const activateGame = (game) =>
     router.put(route('admin.games.activate', { game: game.id }), {}, { preserveScroll: true });
 
 const deleteGame = (game) => {
-    if (confirm(`Delete “${game.name}”? Its investigators keep their sheets — they simply leave the game.`)) {
+    if (confirm(`Delete “${game.name}”? Its uploaded resources are deleted. Its investigators keep their sheets — they simply leave the game.`)) {
         router.delete(route('admin.games.destroy', { game: game.id }), { preserveScroll: true });
     }
 };

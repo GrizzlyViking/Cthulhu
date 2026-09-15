@@ -10,7 +10,9 @@ export default defineConfig({
         },
     },
     test: {
-        environment: 'jsdom', // or 'happy-dom'
+        // Nested agent worktrees have their own dependencies and are not this suite.
+        include: ['tests/**/*.spec.{js,ts}'],
+        environment: 'jsdom',
         setupFiles: ['tests/vitest.setup.js'],
         globals: true,
     },

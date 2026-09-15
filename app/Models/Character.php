@@ -6,6 +6,7 @@ use App\Enums\Archetype;
 use App\Enums\CharacterKind;
 use App\Enums\CharacterStatus;
 use App\Enums\Era;
+use App\Enums\NotesVisibility;
 use App\Enums\Purse;
 use App\Misc\CharacterCreation;
 use App\Misc\Wealth;
@@ -21,38 +22,40 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
- * @property int           $id
- * @property string        $slug
- * @property int           $strength
- * @property int           $dexterity
- * @property int           $intelligence
- * @property int           $constitution
- * @property int           $appearance
- * @property int           $power
- * @property int           $size
- * @property int           $education
- * @property int           $move_rate
- * @property int           $hit_points
- * @property int           $sanity
- * @property int           $luck
- * @property ?float        $cash
- * @property ?float        $assets
- * @property int           $magic_points
- * @property int           $dodge
- * @property int           $build
- * @property string        $damage_bonus
- * @property ?string       $avatar              the likeness: a stored path, which may outlive the file
- * @property ?string       $banner              the scene behind the name, likewise
- * @property bool          $temporary_insanity
- * @property bool          $indefinite_insanity
- * @property bool          $major_wound
- * @property bool          $unconscious
- * @property bool          $dying
- * @property CharacterKind $kind
- * @property ?Archetype    $archetype
- * @property ?int          $keeper_id
- * @property ?int          $user_id
- * @property ?int          $group_id
+ * @property int             $id
+ * @property string          $slug
+ * @property int             $strength
+ * @property int             $dexterity
+ * @property int             $intelligence
+ * @property int             $constitution
+ * @property int             $appearance
+ * @property int             $power
+ * @property int             $size
+ * @property int             $education
+ * @property int             $move_rate
+ * @property int             $hit_points
+ * @property int             $sanity
+ * @property int             $luck
+ * @property ?float          $cash
+ * @property ?float          $assets
+ * @property int             $magic_points
+ * @property int             $dodge
+ * @property int             $build
+ * @property string          $damage_bonus
+ * @property ?string         $avatar              the likeness: a stored path, which may outlive the file
+ * @property ?string         $banner              the scene behind the name, likewise
+ * @property bool            $temporary_insanity
+ * @property bool            $indefinite_insanity
+ * @property bool            $major_wound
+ * @property bool            $unconscious
+ * @property bool            $dying
+ * @property CharacterKind   $kind
+ * @property ?Archetype      $archetype
+ * @property ?int            $keeper_id
+ * @property ?int            $user_id
+ * @property NotesVisibility $notes_visibility
+ * @property ?string         $notes
+ * @property ?int            $group_id
  */
 class Character extends Model
 {
@@ -93,6 +96,7 @@ class Character extends Model
         'unconscious',
         'dying',
         'notes',
+        'notes_visibility',
         'status',
         'backstory',
         'occupation_id',
@@ -109,6 +113,9 @@ class Character extends Model
      * the sheet's era is read off them. Both are eager loads, not a query per
      * character.
      */
+    // Notes leave the server only through the explicitly authorized notepad prop.
+    protected $hidden = ['notes'];
+
     protected $with = ['skills', 'player', 'weapons', 'games', 'group'];
 
     /** @var list<string> */
@@ -143,6 +150,7 @@ class Character extends Model
             'kind'                => CharacterKind::class,
             'archetype'           => Archetype::class,
             'backstory'           => 'array',
+            'notes_visibility'    => NotesVisibility::class,
             'wizard_step'         => 'integer',
         ];
     }

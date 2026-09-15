@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\NotesVisibility;
 use App\Models\Character;
 use App\Models\User;
 
@@ -19,6 +20,37 @@ class CharacterPolicy
         }
 
         return $user->id === $character->user_id || $this->sharesGroupWith($user, $character);
+    }
+
+    public function viewNotes(User $user, Character $character): bool
+    {
+        if (! $this->view($user, $character)) {
+            return false;
+        }
+
+        if ($this->manageNotesVisibility($user, $character)) {
+            return true;
+        }
+
+        return match ($character->notes_visibility ?? NotesVisibility::Everyone) {
+            NotesVisibility::Everyone => true,
+            NotesVisibility::Keeper   => $user->isKeeper(),
+            NotesVisibility::Private  => false,
+        };
+    }
+
+    public function manageNotesVisibility(User $user, Character $character): bool
+    {
+        return $character->isNpc()
+            ? $this->conjuredBy($user, $character)
+            : $user->id === $character->user_id;
+    }
+
+    public function updateNotes(User $user, Character $character): bool
+    {
+        return ! $character->trashed()
+            && $this->update($user, $character)
+            && $this->viewNotes($user, $character);
     }
 
     public function update(User $user, Character $character): bool

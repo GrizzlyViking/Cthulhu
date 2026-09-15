@@ -16,9 +16,12 @@ const props = defineProps({
     },
 });
 
+const trigger = ref(null);
+
 const closeOnEscape = (e) => {
     if (open.value && e.key === 'Escape') {
         open.value = false;
+        trigger.value?.querySelector('button')?.focus();
     }
 };
 
@@ -49,8 +52,8 @@ const open = ref(false);
 
 <template>
     <div class="relative">
-        <div @click="open = !open">
-            <slot name="trigger" />
+        <div ref="trigger" @click="open = !open">
+            <slot name="trigger" :open="open" />
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
@@ -71,7 +74,7 @@ const open = ref(false);
                 style="display: none"
                 @click="open = false"
             >
-                <div class="overflow-hidden rounded-lg ring-1 ring-cthulhu-green-900/20" :class="contentClasses">
+                <div class="max-h-[70vh] overflow-y-auto rounded-lg ring-1 ring-cthulhu-green-900/20" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

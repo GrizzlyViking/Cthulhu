@@ -79,6 +79,7 @@ class Group extends Model
         return $game;
     }
 
+    /** @return HasMany<Invitation, $this> */
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
@@ -86,6 +87,8 @@ class Group extends Model
 
     /**
      * Invitations that have neither been accepted nor expired.
+     *
+     * @return HasMany<Invitation, $this>
      */
     public function pendingInvitations(): HasMany
     {

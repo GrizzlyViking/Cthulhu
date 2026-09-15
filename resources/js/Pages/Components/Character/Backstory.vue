@@ -106,7 +106,7 @@ const renameCharacter = (event) => {
 </script>
 
 <template>
-    <section class="relative isolate overflow-hidden rounded-2xl shadow-raised ring-1 ring-cthulhu-green-900/40">
+    <section class="relative isolate overflow-hidden rounded-lg shadow-raised ring-1 ring-cthulhu-green-900/40">
         <img
             :src="bannerImg"
             alt=""
@@ -120,7 +120,7 @@ const renameCharacter = (event) => {
 
         <!-- The masthead is the name and the face, and nothing else: everything
              that was once alongside them reads better on the tabs below. -->
-        <div class="flex items-end gap-4 p-6 pt-20 sm:gap-8 sm:p-8 sm:pt-28 lg:pt-32">
+        <div class="flex min-h-48 items-end gap-4 p-5 sm:min-h-64 sm:gap-8 sm:p-7">
             <div class="min-w-0 grow">
                 <p class="eyebrow-on-dark">{{ eyebrow }}</p>
                 <textarea
@@ -146,7 +146,7 @@ const renameCharacter = (event) => {
             </div>
 
             <!--
-                A third of the masthead. The picture fills the frame rather than
+                A third of the masthead, capped so the portrait does not push play below the fold. The picture fills the frame rather than
                 being mounted inside it, so a likeness that is not quite 3:4 loses
                 a little off its edges instead of sitting in bars — and it is
                 cropped from the bottom (`object-top`), because a face is at the
@@ -158,7 +158,7 @@ const renameCharacter = (event) => {
             -->
             <div
                 v-if="portraitImg"
-                class="aspect-[3/4] w-1/3 shrink-0 overflow-hidden rounded-xl bg-cthulhu-green-900/70 shadow-raised ring-1 ring-cthulhu-yellow-600/60 backdrop-blur-sm"
+                class="aspect-[3/4] w-1/3 max-w-40 shrink-0 overflow-hidden rounded-md bg-cthulhu-green-900/70 shadow-raised ring-1 ring-cthulhu-yellow-600/60 backdrop-blur-sm"
             >
                 <img :src="portraitImg" :alt="prop.character.name" class="size-full object-cover object-top" />
             </div>

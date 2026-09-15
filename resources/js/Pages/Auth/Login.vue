@@ -36,7 +36,13 @@ const submit = () => {
     <GuestLayout>
         <Head title="Log in" />
 
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+        <div class="mb-6">
+            <p class="eyebrow">Investigator archive</p>
+            <h1 class="display mt-2 text-2xl text-cthulhu-green-900">Return to the table</h1>
+            <p class="mt-2 text-sm text-cthulhu-green-700">Log in to open your investigator’s sheet.</p>
+        </div>
+
+        <div v-if="status" role="status" class="mb-4 text-sm font-medium text-cthulhu-green-600">
             {{ status }}
         </div>
 
@@ -79,16 +85,16 @@ const submit = () => {
                 </label>
             </div>
 
-            <div class="flex items-center justify-end mt-4">
+            <div class="mt-6 flex flex-col-reverse items-stretch gap-4">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="underline text-sm text-cthulhu-green-700 hover:text-cthulhu-green-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cthulhu-green-600"
+                    class="text-center underline text-sm text-cthulhu-green-700 hover:text-cthulhu-green-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cthulhu-green-600"
                 >
                     Forgot your password?
                 </Link>
 
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton class="w-full" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     Log in
                 </PrimaryButton>
             </div>

@@ -14,7 +14,7 @@ const props = defineProps({
 
 const classes = computed(() =>
     [
-        'block w-full border-l-4 py-2.5 pe-4 ps-4 text-start text-base font-medium transition focus:outline-none',
+        'block w-full border-l-4 py-2.5 pe-4 ps-4 text-start text-base font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-cthulhu-yellow-500',
         props.active
             ? 'border-cthulhu-yellow-500 bg-cthulhu-green-800 text-cthulhu-yellow-400'
             : 'border-transparent text-cthulhu-green-200 hover:border-cthulhu-green-300 hover:bg-cthulhu-green-800 hover:text-parchment-100',
@@ -23,7 +23,7 @@ const classes = computed(() =>
 </script>
 
 <template>
-    <Link :href="href" :class="classes">
+    <Link :href="href" :class="classes" :aria-current="active ? 'page' : undefined">
         <slot />
     </Link>
 </template>

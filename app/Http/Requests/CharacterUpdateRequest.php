@@ -85,7 +85,8 @@ class CharacterUpdateRequest extends FormRequest
             // Media
             'avatar' => ['sometimes', 'nullable', 'image', 'max:2048'],
 
-            'notes' => ['sometimes', 'nullable', 'string'],
+            'notes'            => ['sometimes', 'nullable', 'string', 'max:200000'],
+            'notes_visibility' => ['prohibited'],
         ];
     }
 }

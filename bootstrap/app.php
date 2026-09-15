@@ -43,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // validation runs, so the rules in CharacterImage never get a word in.
         // This was the silent failure players met when they uploaded a photo
         // straight off a phone — the page simply did nothing.
-        $tooLarge = 'That upload was larger than this server accepts, so nothing was saved. Try a smaller picture.';
+        $tooLarge = 'That upload was larger than this server accepts, so nothing was saved. Try a smaller file.';
 
         $exceptions->respond(function (Response $response, Throwable $e, Request $request) use ($stale, $tooLarge): Response {
             if ($response->getStatusCode() === 413) {

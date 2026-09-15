@@ -15,8 +15,7 @@ const sortedUsers = computed(() =>
         <li
             v-for="player in sortedUsers"
             :key="player.id"
-            class="overflow-hidden rounded-xl bg-parchment-50 ring-1 ring-parchment-300 transition"
-            :class="{ 'opacity-60': !player.isOnline }"
+            class="card !p-0"
         >
             <player-card :player="player"></player-card>
         </li>

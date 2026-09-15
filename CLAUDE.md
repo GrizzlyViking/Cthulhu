@@ -309,6 +309,27 @@ one (the first becomes active automatically); `Game::activate()` switches which 
 `php artisan group:create` starts a group off with a campaign, so a new group is playable at once.
 `player:assign` moves characters' game membership along with the group, since games are group-scoped.
 
+### Campaign resources
+`/resources` is the group's shared library. `GameResource` belongs only to a `Game`, never to a
+player or character. The current campaign opens first; previous games are behind a folded list.
+Every group member may upload images, PDF, DOC and DOCX files (15 MB each), and the gallery is paginated.
+Phone JPEGs are prepared by the shared `prepareImage.js`; PNGs and GIFs retain their original pixels.
+Files live on the private `local` disk under `game-resources/`, and every file response checks the
+game's group. Raster images can be shown inline; documents download with `nosniff` and no caching.
+Deleting a game removes its uploaded files as well as its resource rows. No seeder is involved.
+
+### Notepad visibility
+`characters.notes_visibility` is `NotesVisibility`: `everyone` (the existing default), `keeper`
+(player and group Keepers), or `private` (player only). Admin status does not bypass privacy.
+Only the owner changes visibility; a Keeper may edit notes only while allowed to read them.
+For the Keeper's cast, the creating Keeper is the owner and the existing NPC policy still applies.
+
+`Character` always hides `notes` when serialized, including nested relations and shared navigation
+props. The sheet gets a separate, policy-checked `notepad` prop. `Notepad.vue` shows a three-step
+slider; Save notes writes the text and setting together through `character.notes.update`.
+The old generic update route also checks `updateNotes`, so an already-open tab cannot overwrite
+private notes. The printed sheet continues to have a blank journal, without notepad content.
+
 ### Deleting an investigator, and getting them back
 An investigator is a season's worth of play, so `character.destroy` is a **soft delete and nothing
 more**. Nothing is detached: the skills, the belongings and the campaigns all stay attached to the
@@ -367,7 +388,7 @@ The dashboard keeps its own route and its place in the nav.
 A sheet has a **portrait** and a **backdrop**, and they are different jobs.
 
 - `characters.avatar` is the investigator's likeness. It is what the printed sheet prints in its
-  30mm frame, and on screen it fills **a third of the masthead** on the right, in a brass-ringed 3:4
+  30mm frame, and on screen it fills **a third of the masthead, capped at 10rem,** on the right, in a brass-ringed 3:4
   frame. It is `object-cover object-top`: the picture fills the frame rather than sitting in bars,
   and what a not-quite-3:4 likeness loses comes off the **bottom**, because a face is at the top of a
   portrait and the coat is what can be spared. That crop is small — the reason the likeness was split
@@ -386,6 +407,15 @@ A sheet has a **portrait** and a **backdrop**, and they are different jobs.
 player back to (`DELETE character.image.destroy`). *Remove* on the Portrait card is the same route,
 and simply leaves the sheet with no frame. Nothing is confirmed first: a picture taken off can be
 uploaded again in two presses.
+
+### Shared navigation and sheet sections
+`useInvestigatorNavigation.js` groups the shared character lists into the active campaign, previous
+campaigns and unassigned investigators. `InvestigatorLinks.vue` renders these same shelves for both
+navigation layouts; the dashboard uses the same grouping for its investigator cards. The full nav
+starts at `lg` so cumulative roles and account names fit without wrapping on a tablet.
+
+`Tabs.vue` uses Headless UI for tab focus, arrow keys and panel associations. The phone select and
+desktop tabs share one selected index. Inactive panels still unmount, as they did before.
 
 ### The masthead
 `Backstory.vue` — confusingly named, but it is the band at the top of the sheet, not the Backstory

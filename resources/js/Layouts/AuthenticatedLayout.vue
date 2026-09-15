@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import CharacterName from '@/Components/CharacterName.vue';
+import InvestigatorLinks from '@/Components/Navigation/InvestigatorLinks.vue';
+import { useInvestigatorNavigation } from '@/Pages/Composables/useInvestigatorNavigation.js';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
@@ -17,140 +18,74 @@ const { isAdmin, isKeeper } = useRoles();
 
 const page = usePage();
 
-const inPlay = (character) => character.in_active_game === true;
-const gameless = (character) => (character.games ?? []).length === 0;
-
-/*
- * The nav leads with the campaign the group is playing. Investigators from
- * finished campaigns move to "Previous games" rather than disappearing, and so
- * do any that are in no game at all — a fresh draft made while the group had
- * none, or one whose game was deleted.
- */
-const characters = computed(() => {
-    const own = page.props.auth.characters.own ?? [];
-    const others = page.props.auth.characters.others ?? [];
-    const everyone = [...own, ...others];
-
-    return {
-        own: own.filter(inPlay),
-        others: others.filter(inPlay),
-        previous: everyone.filter((character) => !inPlay(character) && !gameless(character)),
-        unassigned: everyone.filter(gameless),
-    };
+const { currentSections, previousSections } = useInvestigatorNavigation();
+const navigation = computed(() => {
+    // Ziggy reads the browser URL; the Inertia URL makes this list reactive after a visit.
+    page.url;
+    return [
+    { label: 'Dashboard', href: route('dashboard'), active: route().current('dashboard') },
+    { label: 'Resources', href: route('resources.index'), active: route().current('resources.*') },
+    { label: 'Calendar', href: route('calendar', { calendar: 'ages-of-madness' }), active: route().current('calendar') },
+    ...(isKeeper.value ? [{ label: 'Keeper', href: route('keeper.index'), active: route().current('keeper.*') }] : []),
+    ...(isAdmin.value ? [{ label: 'Admin', href: route('admin.index'), active: route().current('admin.*') }] : []),
+    ];
 });
 
-const hasPreviousGames = computed(
-    () => characters.value.previous.length > 0 || characters.value.unassigned.length > 0
-);
-
-/** The most recent game an investigator was played in, to label them by. */
-const lastGameName = (character) =>
-    [...(character.games ?? [])].sort((a, b) => b.id - a.id)[0]?.name ?? null;
+watch(() => page.url, () => { showingNavigationDropdown.value = false; });
 </script>
 
 <template>
     <div>
-        <div class="min-h-screen bg-cthulhu-green-950">
-            <nav class="border-b border-cthulhu-green-900 bg-cthulhu-green-900">
+        <a href="#main-content" class="skip-link">Skip to content</a>
+        <div class="app-canvas min-h-screen">
+            <nav aria-label="Main navigation" class="border-b border-cthulhu-yellow-500/20 bg-cthulhu-green-900">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex items-center gap-2">
-                            <Link :href="route('dashboard')" class="shrink-0 rounded-md p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                            <Link aria-label="Dashboard" :href="route('dashboard')" class="shrink-0 rounded-md p-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
                                 <ApplicationLogo class="block h-9 w-auto fill-current text-cthulhu-yellow-400" />
                             </Link>
 
                             <!-- Primary navigation -->
-                            <div class="hidden items-center gap-1 sm:ms-6 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
-                                </NavLink>
-                                <NavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">
-                                    Calendar
-                                </NavLink>
-                                <NavLink v-if="isKeeper" :href="route('keeper.index')" :active="route().current('keeper.*')">
-                                    Keeper
-                                </NavLink>
-                                <NavLink v-if="isAdmin" :href="route('admin.index')" :active="route().current('admin.*')">
-                                    Admin
+                            <div class="hidden items-center gap-1 lg:ms-6 lg:flex">
+                                <NavLink v-for="item in navigation" :key="item.label" :href="item.href" :active="item.active">
+                                    {{ item.label }}
                                 </NavLink>
 
                                 <Dropdown align="left" width="60">
-                                    <template #trigger>
-                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
-                                            Characters
+                                    <template #trigger="{ open }">
+                                        <button type="button" :aria-expanded="open" class="nav-trigger">
+                                            Investigators
                                             <ChevronDownIcon class="size-4" aria-hidden="true" />
                                         </button>
                                     </template>
 
                                     <template #content>
-                                        <p class="px-4 pb-1 pt-2 eyebrow">Your investigators</p>
-                                        <DropdownLink
-                                            v-for="character in characters.own"
-                                            :key="character.slug"
-                                            :href="route('character.show', { character: character.slug })"
-                                        >
-                                            <CharacterName :character="character" />
-                                        </DropdownLink>
-
-                                        <template v-if="characters.others.length">
-                                            <p class="px-4 pb-1 pt-3 eyebrow">Other investigators</p>
-                                            <DropdownLink
-                                                v-for="character in characters.others"
-                                                :key="character.slug"
-                                                :href="route('character.show', { character: character.slug })"
-                                            >
-                                                <CharacterName :character="character" />
-                                                <span class="text-cthulhu-green-500">— {{ character.player.name }}</span>
-                                            </DropdownLink>
-                                        </template>
-
-                                        <div class="my-1 divider"></div>
-                                        <DropdownLink :href="route('character.create')">+ Create new character</DropdownLink>
+                                        <InvestigatorLinks :sections="currentSections" allow-create />
                                     </template>
                                 </Dropdown>
 
                                 <!-- Investigators from campaigns that are over, and any in no game at all. -->
-                                <Dropdown v-if="hasPreviousGames" align="left" width="60">
-                                    <template #trigger>
-                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                                <Dropdown v-if="previousSections.length" align="left" width="60">
+                                    <template #trigger="{ open }">
+                                        <button type="button" :aria-expanded="open" class="nav-trigger">
                                             Previous games
                                             <ChevronDownIcon class="size-4" aria-hidden="true" />
                                         </button>
                                     </template>
 
                                     <template #content>
-                                        <template v-if="characters.previous.length">
-                                            <p class="px-4 pb-1 pt-2 eyebrow">Finished campaigns</p>
-                                            <DropdownLink
-                                                v-for="character in characters.previous"
-                                                :key="character.slug"
-                                                :href="route('character.show', { character: character.slug })"
-                                            >
-                                                <CharacterName :character="character" />
-                                                <span class="text-cthulhu-green-500">— {{ lastGameName(character) }}</span>
-                                            </DropdownLink>
-                                        </template>
-
-                                        <template v-if="characters.unassigned.length">
-                                            <p class="px-4 pb-1 pt-3 eyebrow">Not in a game</p>
-                                            <DropdownLink
-                                                v-for="character in characters.unassigned"
-                                                :key="character.slug"
-                                                :href="route('character.show', { character: character.slug })"
-                                            >
-                                                <CharacterName :character="character" />
-                                            </DropdownLink>
-                                        </template>
+                                        <InvestigatorLinks :sections="previousSections" />
                                     </template>
                                 </Dropdown>
                             </div>
                         </div>
 
                         <!-- Account -->
-                        <div class="hidden items-center sm:flex">
+                        <div class="hidden items-center lg:flex">
                             <Dropdown align="right" width="48">
-                                <template #trigger>
-                                    <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500">
+                                <template #trigger="{ open }">
+                                    <button type="button" :aria-expanded="open" class="nav-trigger">
                                         {{ $page.props.auth.user.name }}
                                         <ChevronDownIcon class="size-4" aria-hidden="true" />
                                     </button>
@@ -166,11 +101,12 @@ const lastGameName = (character) =>
                         </div>
 
                         <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
+                        <div class="-me-2 flex items-center lg:hidden">
                             <button
                                 type="button"
                                 @click="showingNavigationDropdown = !showingNavigationDropdown"
                                 :aria-expanded="showingNavigationDropdown"
+                                aria-controls="mobile-navigation"
                                 aria-label="Toggle navigation"
                                 class="inline-flex items-center justify-center rounded-md p-2 text-cthulhu-green-200 transition hover:bg-cthulhu-green-800 hover:text-parchment-100 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500"
                             >
@@ -182,60 +118,16 @@ const lastGameName = (character) =>
                 </div>
 
                 <!-- Mobile menu -->
-                <div v-show="showingNavigationDropdown" class="border-t border-cthulhu-green-800 sm:hidden">
-                    <div class="space-y-1 py-3">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('calendar', { calendar: 'ages-of-madness' })" :active="route().current('calendar')">Calendar</ResponsiveNavLink>
-                        <ResponsiveNavLink v-if="isKeeper" :href="route('keeper.index')" :active="route().current('keeper.*')">
-                            Keeper
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink v-if="isAdmin" :href="route('admin.index')" :active="route().current('admin.*')">
-                            Admin
+                <div id="mobile-navigation" v-show="showingNavigationDropdown" class="border-t border-cthulhu-green-800 lg:hidden">
+                    <div class="flex flex-col gap-1 py-3">
+                        <ResponsiveNavLink v-for="item in navigation" :key="item.label" :href="item.href" :active="item.active">
+                            {{ item.label }}
                         </ResponsiveNavLink>
                     </div>
 
                     <div class="border-t border-cthulhu-green-800 py-3">
-                        <p class="px-4 pb-1 eyebrow-on-dark">Investigators</p>
-                        <div class="space-y-1">
-                            <ResponsiveNavLink
-                                v-for="character in characters.own"
-                                :key="character.slug"
-                                :href="route('character.show', { character: character.slug })"
-                            >
-                                <CharacterName :character="character" />
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                v-for="character in characters.others"
-                                :key="character.slug"
-                                :href="route('character.show', { character: character.slug })"
-                            >
-                                <CharacterName :character="character" />
-                                <span class="text-cthulhu-green-400">— {{ character.player.name }}</span>
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('character.create')">+ Create character</ResponsiveNavLink>
-                        </div>
-
-                        <template v-if="hasPreviousGames">
-                            <p class="px-4 pb-1 pt-3 eyebrow-on-dark">Previous games</p>
-                            <div class="space-y-1">
-                                <ResponsiveNavLink
-                                    v-for="character in characters.previous"
-                                    :key="character.slug"
-                                    :href="route('character.show', { character: character.slug })"
-                                >
-                                    <CharacterName :character="character" />
-                                    <span class="text-cthulhu-green-400">— {{ lastGameName(character) }}</span>
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    v-for="character in characters.unassigned"
-                                    :key="character.slug"
-                                    :href="route('character.show', { character: character.slug })"
-                                >
-                                    <CharacterName :character="character" />
-                                    <span class="text-cthulhu-green-400">— not in a game</span>
-                                </ResponsiveNavLink>
-                            </div>
-                        </template>
+                        <InvestigatorLinks :sections="currentSections" mobile allow-create />
+                        <InvestigatorLinks v-if="previousSections.length" :sections="previousSections" mobile />
                     </div>
 
                     <div class="border-t border-cthulhu-green-800 py-3">
@@ -254,7 +146,7 @@ const lastGameName = (character) =>
 
             <!-- Page heading -->
             <header v-if="$slots.header" class="border-b border-cthulhu-green-900/60 bg-cthulhu-green-900/60">
-                <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>
@@ -265,7 +157,7 @@ const lastGameName = (character) =>
             </div>
 
             <!-- Page content. Pages own their own container width. -->
-            <main>
+            <main id="main-content" tabindex="-1">
                 <slot />
             </main>
         </div>

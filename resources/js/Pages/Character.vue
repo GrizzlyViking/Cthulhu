@@ -5,7 +5,7 @@ import Skills from '@/Pages/Components/Character/Skills.vue';
 import Equipment from '@/Pages/Components/Character/Equipment.vue';
 import Characteristics from '@/Pages/Components/Character/Characteristics.vue';
 import Vitals from '@/Pages/Components/Character/Vitals.vue';
-import { computed, defineAsyncComponent, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue';
 import Backstory from '@/Pages/Components/Character/Backstory.vue';
 import BackstoryTab from '@/Pages/Components/Character/BackstoryTab.vue';
@@ -15,19 +15,13 @@ import Modal from '@/Components/Modal.vue';
 import { ArrowUturnLeftIcon, BoltIcon, BookOpenIcon, IdentificationIcon, PrinterIcon, TrashIcon, UserIcon } from '@heroicons/vue/20/solid';
 import { useRoles } from '@/Pages/Composables/useRoles.js';
 import { useCharacterImage } from '@/Pages/Composables/useCharacterImage.js';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import Notepad from '@/Pages/Components/Character/Notepad.vue';
 
 const { isKeeper } = useRoles();
 
-/*
- * Quill is only needed on the Notepad tab, and a static import of
- * @vueup/vue-quill makes rollup drop this page's chunk facade — the page then
- * vanishes from the Vite manifest and the route 500s. Load it lazily instead.
- */
-const QuillEditor = defineAsyncComponent(() => import('@vueup/vue-quill').then((m) => m.QuillEditor));
-
 const prop = defineProps({
     character: Object,
+    notepad: { type: Object, default: () => ({ canView: false, canEdit: false, canSetVisibility: false, visibility: 'everyone', content: null }) },
     availableSkills: Array,
     storageLocations: Array,
     alwaysRelevantSkills: Array,
@@ -120,10 +114,6 @@ const createSkill = () => {
     });
 };
 
-const notesForm = useForm({
-    notes: prop.character.notes,
-});
-
 /*
  * Which campaigns this investigator is played in. Ticking one saves straight
  * away — there is nothing to confirm, and the nav regroups on the way back.
@@ -204,11 +194,6 @@ const updateUser = (event) => {
     }, { preserveScroll: true });
 };
 
-const saveNotes = () => {
-    notesForm.put(route('character.update', { character: prop.character.slug }), {
-        preserveScroll: true,
-    });
-};
 </script>
 
 <template>
@@ -253,20 +238,7 @@ const saveNotes = () => {
                         </template>
 
                         <template #Notepad>
-                            <section class="panel flex flex-col gap-3 p-4 sm:p-5">
-                                <h2 class="text-base font-semibold text-cthulhu-green-900">Notepad</h2>
-                                <quill-editor
-                                    v-model:content="notesForm.notes"
-                                    theme="snow"
-                                    content-type="html"
-                                    class="notepad"
-                                />
-                                <div class="flex justify-end">
-                                    <button type="button" class="btn-primary" :disabled="notesForm.processing" @click="saveNotes">
-                                        {{ notesForm.processing ? 'Saving…' : 'Save notes' }}
-                                    </button>
-                                </div>
-                            </section>
+                            <Notepad :key="prop.character.slug" :character-slug="prop.character.slug" :notepad="prop.notepad" />
                         </template>
                     </Tabs>
 

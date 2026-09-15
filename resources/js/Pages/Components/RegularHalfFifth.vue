@@ -20,18 +20,20 @@ const fifthValue = computed(() => Math.ceil(props.skillValue / 5));
         box against the parchment row behind it; the group's rounded corners give
         the leftmost and rightmost cells their rounded outer edge.
     -->
-    <div
+    <component
+        :is="interactive ? 'button' : 'div'"
+        :type="interactive ? 'button' : undefined"
         class="tabular grid w-full max-w-[9rem] grid-cols-3 divide-x divide-cthulhu-green-800/15 overflow-hidden rounded-lg bg-parchment-200/70 text-center ring-1 ring-inset ring-cthulhu-green-800/25 transition"
-        :class="interactive ? 'cursor-pointer hover:ring-2 hover:ring-cthulhu-yellow-500' : ''"
+        :class="interactive ? 'cursor-pointer hover:ring-2 hover:ring-cthulhu-yellow-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800' : ''"
     >
-        <div class="py-2 text-sm font-semibold text-cthulhu-green-900" title="Regular success">
+        <span class="py-2 text-sm font-semibold text-cthulhu-green-900" title="Regular success">
             {{ skillValue }}
-        </div>
-        <div class="py-2 text-sm text-cthulhu-green-700" title="Hard success (half)">
+        </span>
+        <span class="py-2 text-sm text-cthulhu-green-700" title="Hard success (half)">
             {{ halfValue }}
-        </div>
-        <div class="py-2 text-sm text-cthulhu-green-700" title="Extreme success (one fifth)">
+        </span>
+        <span class="py-2 text-sm text-cthulhu-green-700" title="Extreme success (one fifth)">
             {{ fifthValue }}
-        </div>
-    </div>
+        </span>
+    </component>
 </template>

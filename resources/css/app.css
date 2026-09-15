@@ -41,16 +41,33 @@
         padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
     }
 
+    .app-canvas {
+        @apply bg-cthulhu-green-950;
+        background-image: radial-gradient(ellipse at top left, rgb(26 74 56 / 0.35), transparent 65%);
+    }
+
+    .skip-link {
+        @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]
+               focus:rounded focus:bg-parchment-100 focus:px-4 focus:py-3 focus:text-cthulhu-green-900;
+    }
+
+    .nav-trigger {
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-cthulhu-green-200
+               transition hover:bg-cthulhu-green-800 hover:text-parchment-100
+               focus-visible:outline focus-visible:outline-2 focus-visible:outline-cthulhu-yellow-500;
+    }
+
     /* ---- Surfaces --------------------------------------------------- */
 
     /* The main content container: a sheet of aged paper. */
     .panel {
-        @apply rounded-2xl bg-parchment-100 shadow-card ring-1 ring-cthulhu-green-900/15;
+        @apply rounded-lg bg-parchment-100 shadow-card ring-1 ring-cthulhu-green-900/15;
+        background-image: linear-gradient(135deg, rgb(253 251 243 / 0.55), transparent 65%);
     }
 
     /* A block nested inside a panel. */
     .card {
-        @apply rounded-xl bg-parchment-50 p-4 ring-1 ring-parchment-300;
+        @apply rounded-md bg-parchment-50 p-4 ring-1 ring-parchment-300;
     }
 
     /* A card the Keeper should notice. */
@@ -99,7 +116,7 @@
     }
 
     .btn-danger {
-        @apply btn bg-cthulhu-blood-400 text-white shadow-sm
+        @apply btn bg-cthulhu-blood-400 text-parchment-50 shadow-sm
                hover:bg-cthulhu-blood-300 active:bg-cthulhu-blood-500
                focus-visible:outline-cthulhu-blood-400;
     }
