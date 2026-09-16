@@ -113,6 +113,8 @@ Route::middleware('auth', 'verified')->group(function () {
 
     // Equipment. `{equipable}` is a row in the pivot, so these also move and
     // annotate weapons — everything an investigator owns sits in one table.
+    Route::get('/character/{character}/gear/catalogue', [\App\Http\Controllers\GearTransferController::class, 'catalogue'])->name('gear.catalogue');
+    Route::post('/character/{character}/gear/transfer', [\App\Http\Controllers\GearTransferController::class, 'store'])->name('gear.transfer');
     Route::get('/equipment/search', [EquipmentController::class, 'search'])->name('equipment.search');
     Route::post('/character/{character}/equipment', [EquipmentController::class, 'store'])->name('equipment.store');
     Route::put('/character/{character}/equipment/{equipable}', [EquipmentController::class, 'update'])->name('equipment.update');

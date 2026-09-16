@@ -159,3 +159,19 @@ test('credit rating maps onto the 1920s wealth bands', function (int $creditRati
     [95, 'Rich', 250.0],
     [99, 'Super Rich', 5000.0],
 ]);
+
+test('unarmed combat stays in combat but is not a stored possession', function () {
+    $character = Character::factory()->create(['user_id' => $this->user->id]);
+    $brawl     = Weapon::factory()->create(['name' => 'Brawl (Unarmed)', 'skill' => 'fighting-brawl']);
+    $club      = Weapon::factory()->create(['name' => 'Club', 'skill' => 'fighting-brawl']);
+    $location  = StorageLocation::where('slug', 'travel-chest')->firstOrFail();
+    $character->weapons()->attach($brawl->id, ['storage_location_id' => $location->id]);
+    $character->weapons()->attach($club->id, ['storage_location_id' => $location->id]);
+
+    expect($brawl->toArray()['is_physical'])->toBeFalse()
+        ->and($club->toArray()['is_physical'])->toBeTrue()
+        ->and($character->weapons)->toHaveCount(2)
+        ->and(CharacterSheet::carriesUnarmed($character))->toBeTrue()
+        ->and(CharacterSheet::possessions($character)[0]['items'])->toHaveCount(1)
+        ->and(CharacterSheet::possessions($character)[0]['items'][0]['name'])->toBe('Club');
+});

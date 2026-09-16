@@ -185,3 +185,21 @@ describe('the equipment picker', () => {
         wrapper.unmount()
     })
 })
+
+it('inventory excludes unarmed attacks from rows, storage controls and carried counts', () => {
+    const wrapper = mount(EquipmentList, {
+        props: {
+            character: { ...character, weapons: [
+                { ...armoury[0], name: 'Brawl (Unarmed)', is_physical: false, pivot: { id: 101, quantity: 1 } },
+                { ...armoury[2], name: 'Club', skill: 'fighting-brawl', is_physical: true, pivot: { id: 102, quantity: 1 } },
+            ] },
+            canEdit: true,
+        },
+    });
+    expect(wrapper.text()).not.toContain('Brawl (Unarmed)');
+    expect(wrapper.text()).toContain('Club');
+    expect(wrapper.text()).toContain('1 carried');
+    expect(wrapper.find('#loc-w101').exists()).toBe(false);
+    expect(wrapper.find('#loc-w102').exists()).toBe(true);
+    wrapper.unmount();
+});

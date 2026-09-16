@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property array<string> $eras           the same thing the app can filter on
  * @property string        $name
  * @property string        $bullets_in_mag
+ * @property-read bool     $is_physical whether this is an object an investigator can carry
  * @property-read ?int     $magazine_capacity rounds the magazine holds, null when it takes none
  * @property-read MorphPivot $pivot            the `equipables` row, when read off a character
  */
@@ -29,6 +30,8 @@ class Weapon extends Model
 
     protected $fillable = [
         'name',
+        'is_custom',
+        'created_by',
         'category',
         'skill',
         'damage',
@@ -42,13 +45,22 @@ class Weapon extends Model
         'impale',
     ];
 
-    protected $appends = ['magazine_capacity', 'prices'];
+    protected $appends = ['magazine_capacity', 'prices', 'is_physical'];
+
+    /** Unarmed attacks have combat rules, but are not possessions to pack or count. */
+    protected function isPhysical(): Attribute
+    {
+        return Attribute::get(fn (): bool => ! in_array(mb_strtolower(trim($this->name)), [
+            'brawl (unarmed)', 'unarmed (brawl)', 'brawl', 'unarmed',
+        ], true));
+    }
 
     protected function casts(): array
     {
         return [
-            'impale' => 'boolean',
-            'eras'   => 'array',
+            'is_custom' => 'boolean',
+            'impale'    => 'boolean',
+            'eras'      => 'array',
         ];
     }
 

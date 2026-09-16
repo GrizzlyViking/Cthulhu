@@ -159,7 +159,7 @@ class CharacterSheet
     public static function carriesUnarmed(Character $character): bool
     {
         return $character->weapons->contains(
-            fn (Weapon $weapon): bool => Str::contains(Str::lower($weapon->name), ['unarmed', 'brawl'])
+            fn (Weapon $weapon): bool => ! $weapon->is_physical
         );
     }
 
@@ -180,6 +180,10 @@ class CharacterSheet
         $owned = [];
 
         foreach ($character->weapons as $weapon) {
+            if (! $weapon->is_physical) {
+                continue;
+            }
+
             $owned[self::locationKey($weapon)][] = self::possession($weapon->name, $weapon->category, true, $weapon);
         }
 

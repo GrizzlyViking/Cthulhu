@@ -1,4 +1,5 @@
 <script setup>
+import GearTransfer from './GearTransfer.vue';
 import { useForm } from '@inertiajs/vue3';
 import { BookOpenIcon, IdentificationIcon, MapPinIcon, StarIcon } from '@heroicons/vue/20/solid';
 import { KEY_CONNECTION_CATEGORIES } from '@/Pages/Components/Wizard/wizardData.js';
@@ -222,7 +223,10 @@ const save = () => {
 
             <!-- Gear -->
             <div class="card">
-                <label for="backstory-gear" class="field-label">Gear &amp; possessions</label>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label for="backstory-gear" class="field-label">Gear &amp; possessions</label>
+                    <GearTransfer v-if="prop.canEdit" :character="prop.character" :gear="form.gear" @transferred="form.gear = $event" />
+                </div>
                 <template v-if="prop.canEdit">
                     <textarea
                         id="backstory-gear"

@@ -83,12 +83,25 @@ two `morphedByMany` relations over the same table, which is what lets the Equipm
 revolver and its spare rounds side by side. The pivot carries `storage_location_id`, `quantity` and
 `notes` for both.
 
+`Weapon::is_physical` excludes Brawl (Unarmed) from inventory and carried counts on screen and in
+print. It remains in combat; physical weapons using Fighting (Brawl), such as clubs, still count.
+
 `StorageLocation` is a table, not an enum — players add their own from the sheet. The four starting
 places come from `StorageLocation::STARTING_LOCATIONS`.
 
 A name a player types that the catalogue lacks becomes an `EquipmentItem` with `is_custom = true`, so
 the typeahead offers it next time; the admin Equipment page filters to those for pruning. Prices are
 only ever shown while choosing — never against something already owned.
+
+The Backstory tab's **Transfer to Equipment** opens `GearTransfer.vue`: semicolons and line breaks
+split the current text, exact unique catalogue names are matched, and players review types, quantities
+and optional rules for new weapons before adding. `GearTransferController` adds both kinds atomically,
+removes the transferred source entries, spends nothing and skips catalogue items already owned.
+Shortening a name leaves the omitted words in an editable remainder field, including small spelling
+corrections. Only successfully added rows change the gear text; unchecked and already-owned rows stay.
+The gear update and possessions are one transaction, with a saved-text check against stale tabs. New weapons, like equipment,
+carry `is_custom` and `created_by` and become available across eras and groups. Unspecified weapon
+rules stay unspecified; imported weapons start with no ammunition recorded.
 
 ### Money
 `characters.cash` and `characters.assets` are what an investigator has. Both are **nullable, and that

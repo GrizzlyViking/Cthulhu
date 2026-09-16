@@ -32,7 +32,7 @@ const prop = defineProps({
  * while its spare box of rounds is in the travel chest.
  */
 const possessions = computed(() => {
-    const weapons = (prop.character.weapons ?? []).map((weapon) => ({
+    const weapons = (prop.character.weapons ?? []).filter((weapon) => weapon.is_physical !== false).map((weapon) => ({
         key: `w${weapon.pivot.id}`,
         pivotId: weapon.pivot.id,
         name: weapon.name,
