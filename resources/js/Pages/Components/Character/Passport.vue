@@ -1,9 +1,10 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
+import axios from 'axios';
 import { XMarkIcon } from '@heroicons/vue/20/solid';
 
-const props = defineProps({ character: { type: Object, required: true } });
+const props = defineProps({ character: { type: Object, required: true }, canEdit: Boolean });
 const emit = defineEmits(['close']);
 const page = ref(null);
 const identity = ref(null);
@@ -16,6 +17,31 @@ const details = computed(() => [
     ['Birthplace', props.character.birthplace || 'Unrecorded'],
     ['Residence', props.character.residence || 'Unrecorded'],
 ]);
+const firing = ref({});
+const shots = ref({});
+const notices = ref({});
+const errors = computed(() => guns.value.filter(weapon => notices.value[weapon.pivot?.id]));
+const canFire = (weapon) => props.canEdit && weapon.pivot?.ammo > 0 && !firing.value[weapon.pivot.id];
+
+const fire = async (weapon) => {
+    if (!canFire(weapon)) return;
+    const id = weapon.pivot.id;
+    firing.value[id] = true;
+    notices.value[id] = null;
+    try {
+        const { data } = await axios.post(route('fire.weapon', {
+            character: props.character.slug,
+            equipable: id,
+        }));
+        weapon.pivot.ammo = data.ammo;
+        weapon.pivot.ammo_reserve = data.ammo_reserve;
+        shots.value[id] = (shots.value[id] ?? 0) + 1;
+    } catch (error) {
+        notices.value[id] = error.response?.data?.message ?? 'The shot could not be saved. Try again.';
+    } finally {
+        firing.value[id] = false;
+    }
+};
 let observer;
 
 onMounted(async () => {
@@ -70,6 +96,7 @@ onBeforeUnmount(() => observer?.disconnect());
                             </div>
                         </div>
                     </div>
+                    <p v-for="weapon in errors" :key="weapon.pivot.id" class="field-error" role="alert">{{ weapon.name }}: {{ notices[weapon.pivot.id] }}</p>
                     <p class="border-b border-cthulhu-green-900/25 pb-3 text-xs italic text-cthulhu-green-700">Valid for travel into the unknown. Return passage not guaranteed.</p>
                 </div>
                 <!-- Measure the complete optional block, even while hidden, so long names and rotation cannot crowd out the passport. -->
@@ -77,12 +104,21 @@ onBeforeUnmount(() => observer?.disconnect());
                     <section ref="ammunition" class="w-full pt-5" :aria-hidden="!roomForAmmo">
                         <template v-if="guns.length">
                             <h3 class="eyebrow">Customs declaration · bullets in your gun</h3>
-                            <dl class="mt-2 flex flex-col gap-2">
-                                <div v-for="weapon in guns" :key="weapon.pivot?.id ?? weapon.id" class="flex items-baseline justify-between gap-4 border-b border-cthulhu-green-900/20 pb-2">
-                                    <dt class="min-w-0 break-words text-sm">{{ weapon.name }}</dt>
-                                    <dd class="tabular shrink-0 text-right text-xl font-semibold">{{ weapon.pivot?.ammo ?? '—' }} <span class="text-xs font-normal text-cthulhu-green-700">/ {{ weapon.magazine_capacity }}</span></dd>
+                            <div class="mt-2 flex flex-col gap-2">
+                                <div v-for="weapon in guns" :key="weapon.pivot?.id ?? weapon.id">
+                                    <button type="button" class="passport-ammo relative flex min-h-20 w-full items-center justify-between gap-4 overflow-hidden rounded border border-cthulhu-green-900/25 px-4 py-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cthulhu-green-800"
+                                        :class="canFire(weapon) ? 'cursor-pointer hover:bg-parchment-200 active:bg-parchment-300' : 'cursor-default'"
+                                        :disabled="!canFire(weapon)" :aria-label="`Fire ${weapon.name}. ${weapon.pivot?.ammo ?? 0} rounds remaining.`"
+                                        :aria-busy="Boolean(firing[weapon.pivot?.id])" @click="fire(weapon)">
+                                        <span class="min-w-0">
+                                            <span class="block break-words text-sm font-semibold">{{ weapon.name }}</span>
+                                            <span class="block text-xs text-cthulhu-green-700">{{ firing[weapon.pivot?.id] ? 'Firing…' : weapon.pivot?.ammo === 0 ? 'Empty' : canEdit ? 'Tap to fire one round' : 'Rounds loaded' }}</span>
+                                        </span>
+                                        <span class="tabular shrink-0 text-right text-3xl font-semibold" aria-live="polite">{{ weapon.pivot?.ammo ?? '—' }} <span class="text-sm font-normal text-cthulhu-green-700">/ {{ weapon.magazine_capacity }}</span></span>
+                                        <span v-if="shots[weapon.pivot?.id]" :key="shots[weapon.pivot.id]" class="passport-shot pointer-events-none absolute left-4 top-1/2 h-2 w-6 rounded-l-sm rounded-r-full bg-cthulhu-yellow-600" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                            </dl>
+                            </div>
                         </template>
                     </section>
                 </div>
@@ -97,11 +133,19 @@ onBeforeUnmount(() => observer?.disconnect());
     height: 100dvh;
 }
 .passport-identity { grid-template-columns: minmax(0, 1fr); }
-.passport-picture { width: clamp(105px, 20.25dvh, 210px); max-width: 100%; aspect-ratio: 3 / 4; }
+.passport-picture { width: clamp(150px, 26.25dvh, 300px); max-width: 100%; aspect-ratio: 3 / 4; }
 .passport-photo { width: 100%; height: 100%; object-fit: cover; }
 @media (min-width: 640px) {
     .passport { padding: max(1.5rem, env(safe-area-inset-top)) max(2rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(2rem, env(safe-area-inset-left)); }
-    .passport-identity { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
-    .passport-picture { width: 100%; max-width: min(100%, 39.75dvh); }
+    .passport-identity { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+    .passport-picture { width: 100%; max-width: min(100%, 48dvh); }
+}
+.passport-shot { animation: passport-fire 280ms ease-in forwards; }
+@keyframes passport-fire {
+    from { transform: translateX(0) rotate(-8deg); opacity: 1; }
+    to { transform: translateX(80vw) rotate(-8deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .passport-shot { animation: none; display: none; }
 }
 </style>

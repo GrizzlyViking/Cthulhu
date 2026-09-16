@@ -5,7 +5,7 @@ import Passport from './Passport.vue';
 
 const showPassport = ref(false);
 
-const prop = defineProps({ character: Object, editable: Boolean });
+const prop = defineProps({ character: Object, editable: Boolean, canEdit: Boolean });
 
 /**
  * The likeness, shown whole in its own frame. Null when the player has not put
@@ -170,5 +170,5 @@ const renameCharacter = (event) => {
             </button>
         </div>
     </section>
-    <Passport v-if="showPassport" :character="prop.character" @close="showPassport = false" />
+    <Passport v-if="showPassport" :character="prop.character" :can-edit="prop.canEdit" @close="showPassport = false" />
 </template>

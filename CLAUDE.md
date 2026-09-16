@@ -414,8 +414,10 @@ A sheet has a **portrait** and a **backdrop**, and they are different jobs.
   draws outside the border box, where nothing can cover it.
 Tapping the portrait opens `Passport.vue`, a playful full-viewport passport with identity details and
 current hit points. Headless UI handles dialog focus, Escape and scroll locking. Ammunition is
-read-only and appears only when the measured space can fit the whole declaration; the measurement
-updates on rotation and content changes. The passport uses the sheet’s existing character data.
+shown only when the measured space can fit the whole declaration; the measurement
+updates on rotation and content changes. Each gun’s full row fires one round through `fire.weapon`
+when the sheet is editable, with a brass bullet animation after the server saves it. Pending shots
+block repeat taps, empty guns cannot fire, and reduced-motion preferences suppress the animation. The passport uses the sheet’s existing character data.
 
 - `characters.banner` is the scene behind the name. It is cropped to whatever room the masthead has,
   which is what a landscape picture is for. It is **screen only** — the printed sheet never shows it.

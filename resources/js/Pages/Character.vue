@@ -203,7 +203,7 @@ const updateUser = (event) => {
         <div class="page">
             <div class="relative">
                 <div class="space-y-5" :class="{ 'opacity-60': deleted }">
-                    <Backstory :character="prop.character" :editable="editable" />
+                    <Backstory :character="prop.character" :editable="editable" :can-edit="canEdit" />
 
                     <Vitals :character="prop.character" :can-edit="canEdit" />
 
