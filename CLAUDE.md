@@ -412,6 +412,11 @@ A sheet has a **portrait** and a **backdrop**, and they are different jobs.
   The frame's ring is **not** `ring-inset`. An inset ring is painted with the frame's own box
   decorations, so the picture inside lands on top of it and the border vanishes; a plain `ring-1`
   draws outside the border box, where nothing can cover it.
+Tapping the portrait opens `Passport.vue`, a playful full-viewport passport with identity details and
+current hit points. Headless UI handles dialog focus, Escape and scroll locking. Ammunition is
+read-only and appears only when the measured space can fit the whole declaration; the measurement
+updates on rotation and content changes. The passport uses the sheet’s existing character data.
+
 - `characters.banner` is the scene behind the name. It is cropped to whatever room the masthead has,
   which is what a landscape picture is for. It is **screen only** — the printed sheet never shows it.
 

@@ -1,6 +1,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
+import Passport from './Passport.vue';
+
+const showPassport = ref(false);
 
 const prop = defineProps({ character: Object, editable: Boolean });
 
@@ -156,12 +159,16 @@ const renameCharacter = (event) => {
                 is painted with the frame's own box decorations, which puts it
                 under the picture rather than around it.
             -->
-            <div
+            <button
                 v-if="portraitImg"
-                class="aspect-[3/4] w-1/3 max-w-40 shrink-0 overflow-hidden rounded-md bg-cthulhu-green-900/70 shadow-raised ring-1 ring-cthulhu-yellow-600/60 backdrop-blur-sm"
+                type="button"
+                :aria-label="`Open ${prop.character.name}’s passport`"
+                @click="showPassport = true"
+                class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cthulhu-yellow-500 aspect-[3/4] w-1/3 max-w-40 shrink-0 overflow-hidden rounded-md bg-cthulhu-green-900/70 shadow-raised ring-1 ring-cthulhu-yellow-600/60 backdrop-blur-sm"
             >
                 <img :src="portraitImg" :alt="prop.character.name" class="size-full object-cover object-top" />
-            </div>
+            </button>
         </div>
     </section>
+    <Passport v-if="showPassport" :character="prop.character" @close="showPassport = false" />
 </template>
